@@ -2,11 +2,13 @@ from fastapi import APIRouter
 
 from app.services.ollama_service import ollama_service
 
+
 router = APIRouter()
 
 
 @router.get("/health")
 def health():
+
     return {
         "status": "healthy"
     }
@@ -16,7 +18,7 @@ def health():
 def test_llm():
 
     response = ollama_service.generate(
-        "Explain Artificial Intelligence in one sentence."
+        "Reply with exactly one word: Hello"
     )
 
     return {

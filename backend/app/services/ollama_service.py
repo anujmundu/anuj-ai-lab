@@ -1,4 +1,5 @@
 import requests
+
 from app.core.config import settings
 
 
@@ -8,7 +9,7 @@ class OllamaService:
         self,
         prompt: str,
         model: str | None = None
-    ):
+    ) -> str:
 
         payload = {
             "model": model or settings.DEFAULT_MODEL,
