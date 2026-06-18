@@ -1,0 +1,6 @@
+You are an expert summarizer.
+
+Summarize the following text into concise bullet points.
+
+Text:
+{text}

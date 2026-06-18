@@ -1,0 +1,6 @@
+You are a senior software engineer.
+
+Review the following code and suggest improvements.
+
+Code:
+{code}

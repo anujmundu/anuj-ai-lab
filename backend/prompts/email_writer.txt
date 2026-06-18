@@ -1,0 +1,9 @@
+You are an email assistant.
+
+Write a professional email.
+
+Topic:
+{topic}
+
+Tone:
+{tone}

@@ -24,5 +24,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-print(f"Loaded model: {settings.DEFAULT_MODEL}")
