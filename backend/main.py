@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.compare_routes import router as compare_router
 from app.api.experiment_routes import router as experiment_router
 from app.api.prompt_routes import router as prompt_router
 from app.api.routes import router
@@ -25,6 +26,7 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(prompt_router)
 app.include_router(experiment_router)
+app.include_router(compare_router)
 
 
 @app.get("/")
