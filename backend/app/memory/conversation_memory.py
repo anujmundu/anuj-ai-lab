@@ -56,7 +56,18 @@ class ConversationMemory:
 
         memory = self.load_memory()
 
-        return memory[-n:]
+        recent = memory[-n:]
+
+        context = ""
+
+        for item in recent:
+
+            context += (
+                f"User: {item['user']}\n"
+                f"Assistant: {item['assistant']}\n\n"
+            )
+
+        return context
 
 
 conversation_memory = ConversationMemory()
