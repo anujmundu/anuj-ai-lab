@@ -7,7 +7,6 @@ class ModelCompareService:
 
     MODELS = [
         "qwen2.5:1.5b",
-        "qwen3.5:9b",
         "gemma2:9b"
     ]
 
