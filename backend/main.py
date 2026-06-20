@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.assistant_routes import router as assistant_router
 from app.api.collaboration_routes import router as collaboration_router
 from app.api.compare_routes import router as compare_router
 from app.api.executor_routes import router as executor_router
@@ -41,6 +42,7 @@ app.include_router(state_router)
 app.include_router(planner_router)
 app.include_router(executor_router)
 app.include_router(collaboration_router)
+app.include_router(assistant_router)
 
 
 @app.get("/")
