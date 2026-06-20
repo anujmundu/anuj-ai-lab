@@ -2,6 +2,7 @@ from app.agents.code_review_agent import code_review_agent
 from app.agents.email_agent import email_agent
 from app.agents.summarizer_agent import summarizer_agent
 from app.agents.tool_agent import tool_agent
+from app.services.state_service import state_service
 
 
 class RouterAgent:
@@ -13,33 +14,88 @@ class RouterAgent:
 
         query_lower = query.lower()
 
-        tool_response = tool_agent.route(
-            query
-        )
+        if any(char.isdigit() for char in query_lower):
 
-        if tool_response:
+            result = tool_agent.execute(
+                query
+            )
 
-            return tool_response
+            state_service.update_state(
+                active_agent="tool",
+                current_task=query,
+                status="completed",
+                last_response=result["response"]
+            )
 
-        if "email" in query_lower:
+            return result
+
+        elif "time" in query_lower:
+
+            result = tool_agent.execute(
+                query
+            )
+
+            state_service.update_state(
+                active_agent="tool",
+                current_task=query,
+                status="completed",
+                last_response=result["response"]
+            )
+
+            return result
+
+        elif "email" in query_lower:
+
+            response = email_agent.write_email(
+                query
+            )
+
+            state_service.update_state(
+                active_agent="email",
+                current_task=query,
+                status="completed",
+                last_response=response
+            )
 
             return {
                 "agent": "email",
-                "response": email_agent.write_email(query)
+                "response": response
             }
 
         elif "code" in query_lower:
 
+            response = code_review_agent.review_code(
+                query
+            )
+
+            state_service.update_state(
+                active_agent="code-review",
+                current_task=query,
+                status="completed",
+                last_response=response
+            )
+
             return {
                 "agent": "code-review",
-                "response": code_review_agent.review_code(query)
+                "response": response
             }
 
         else:
 
+            response = summarizer_agent.summarize(
+                query
+            )
+
+            state_service.update_state(
+                active_agent="summarizer",
+                current_task=query,
+                status="completed",
+                last_response=response
+            )
+
             return {
                 "agent": "summarizer",
-                "response": summarizer_agent.summarize(query)
+                "response": response
             }
 
 

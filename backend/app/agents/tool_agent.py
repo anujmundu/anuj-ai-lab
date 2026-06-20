@@ -4,7 +4,7 @@ from app.tools.datetime_tool import datetime_tool
 
 class ToolAgent:
 
-    def route(
+    def execute(
         self,
         query: str
     ):
