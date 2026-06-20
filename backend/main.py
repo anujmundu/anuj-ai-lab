@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.compare_routes import router as compare_router
+from app.api.executor_routes import router as executor_router
 from app.api.experiment_routes import router as experiment_router
+from app.api.planner_routes import router as planner_router
 from app.api.prompt_routes import router as prompt_router
 from app.api.router_routes import router as router_agent_router
 from app.api.routes import router
@@ -11,7 +13,7 @@ from app.api.state_routes import router as state_router
 from app.api.tool_routes import router as tool_router
 from app.api.workflow_routes import router as workflow_router
 from app.db.database import create_db_and_tables
-from app.api.planner_routes import router as planner_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +38,7 @@ app.include_router(router_agent_router)
 app.include_router(tool_router)
 app.include_router(state_router)
 app.include_router(planner_router)
+app.include_router(executor_router)
 
 
 @app.get("/")
