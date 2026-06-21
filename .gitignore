@@ -27,3 +27,20 @@ build/
 # IDE
 .vscode/
 .idea/
+
+# pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# coverage
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation artifacts
+project_tree.txt
