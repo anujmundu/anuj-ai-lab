@@ -21,6 +21,7 @@ class RouterAgent:
             or "news" in query_lower
             or "currency" in query_lower
             or "wiki" in query_lower
+            or "search" in query_lower
         ):
 
             response = tool_agent.route(

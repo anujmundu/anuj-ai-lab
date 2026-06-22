@@ -4,6 +4,7 @@ from app.tools.weather_tool import weather_tool
 from app.tools.news_tool import news_tool
 from app.tools.currency_tool import currency_tool
 from app.tools.wikipedia_tool import wikipedia_tool
+from app.tools.search_tool import search_tool
 
 
 class ToolAgent:
@@ -62,12 +63,23 @@ class ToolAgent:
                 ""
             ).strip()
 
-            if topic == "":
-                topic = "Artificial Intelligence"
-
             return {
                 "tool": "wiki",
                 "response": wikipedia_tool.search(
+                    topic
+                )
+            }
+
+        if "search" in query_lower:
+
+            topic = query.replace(
+                "search",
+                ""
+            ).strip()
+
+            return {
+                "tool": "search",
+                "response": search_tool.search(
                     topic
                 )
             }
