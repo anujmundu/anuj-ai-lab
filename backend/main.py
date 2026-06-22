@@ -15,7 +15,7 @@ from app.api.state_routes import router as state_router
 from app.api.tool_routes import router as tool_router
 from app.api.workflow_routes import router as workflow_router
 from app.db.database import create_db_and_tables
-
+from app.api.connector_routes import router as connector_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,6 +43,7 @@ app.include_router(planner_router)
 app.include_router(executor_router)
 app.include_router(collaboration_router)
 app.include_router(assistant_router)
+app.include_router(connector_router)
 
 
 @app.get("/")
