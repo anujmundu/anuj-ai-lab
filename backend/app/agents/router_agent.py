@@ -14,9 +14,16 @@ class RouterAgent:
 
         query_lower = query.lower()
 
-        if any(char.isdigit() for char in query_lower):
+        if (
+            any(op in query for op in ["+", "-", "*", "/"])
+            or "time" in query_lower
+            or "weather" in query_lower
+            or "news" in query_lower
+            or "currency" in query_lower
+            or "wiki" in query_lower
+        ):
 
-            result = tool_agent.execute(
+            response = tool_agent.route(
                 query
             )
 
@@ -24,25 +31,12 @@ class RouterAgent:
                 active_agent="tool",
                 current_task=query,
                 status="completed",
-                last_response=result["response"]
+                last_response=str(
+                    response["response"]
+                )
             )
 
-            return result
-
-        elif "time" in query_lower:
-
-            result = tool_agent.execute(
-                query
-            )
-
-            state_service.update_state(
-                active_agent="tool",
-                current_task=query,
-                status="completed",
-                last_response=result["response"]
-            )
-
-            return result
+            return response
 
         elif "email" in query_lower:
 
