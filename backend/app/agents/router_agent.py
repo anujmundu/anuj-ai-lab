@@ -2,6 +2,7 @@ from app.agents.code_review_agent import code_review_agent
 from app.agents.email_agent import email_agent
 from app.agents.summarizer_agent import summarizer_agent
 from app.agents.tool_agent import tool_agent
+from app.memory.memory_service import memory_service
 from app.services.state_service import state_service
 
 
@@ -13,6 +14,70 @@ class RouterAgent:
     ):
 
         query_lower = query.lower()
+
+        # ---------------- Memory Commands ----------------
+
+        if query_lower in [
+            "last answer",
+            "previous answer",
+            "what was my last answer"
+        ]:
+
+            memory = memory_service.get_memory()
+
+            for item in reversed(memory):
+
+                if item["role"] == "assistant":
+
+                    return item
+
+            return {
+                "message": "No previous answer found"
+            }
+
+        if query_lower in [
+            "last question",
+            "previous question",
+            "what was my last question"
+        ]:
+
+            memory = memory_service.get_memory()
+
+            for item in reversed(memory):
+
+                if item["role"] == "user":
+
+                    return item
+
+            return {
+                "message": "No previous question found"
+            }
+
+        if query_lower in [
+            "again",
+            "repeat"
+        ]:
+
+            memory = memory_service.get_memory()
+
+            for item in reversed(memory):
+
+                if item["role"] == "assistant":
+
+                    return item
+
+            return {
+                "message": "Nothing to repeat"
+            }
+
+        # ---------------- Store User Query ----------------
+
+        memory_service.add_message(
+            "user",
+            query
+        )
+
+        # ---------------- Normal Routing ----------------
 
         if (
             any(op in query for op in ["+", "-", "*", "/"])
@@ -37,6 +102,11 @@ class RouterAgent:
                 )
             )
 
+            memory_service.add_message(
+                "assistant",
+                response
+            )
+
             return response
 
         elif "email" in query_lower:
@@ -45,6 +115,11 @@ class RouterAgent:
                 query
             )
 
+            result = {
+                "agent": "email",
+                "response": response
+            }
+
             state_service.update_state(
                 active_agent="email",
                 current_task=query,
@@ -52,16 +127,23 @@ class RouterAgent:
                 last_response=response
             )
 
-            return {
-                "agent": "email",
-                "response": response
-            }
+            memory_service.add_message(
+                "assistant",
+                result
+            )
+
+            return result
 
         elif "code" in query_lower:
 
             response = code_review_agent.review_code(
                 query
             )
+
+            result = {
+                "agent": "code-review",
+                "response": response
+            }
 
             state_service.update_state(
                 active_agent="code-review",
@@ -70,16 +152,23 @@ class RouterAgent:
                 last_response=response
             )
 
-            return {
-                "agent": "code-review",
-                "response": response
-            }
+            memory_service.add_message(
+                "assistant",
+                result
+            )
+
+            return result
 
         else:
 
             response = summarizer_agent.summarize(
                 query
             )
+
+            result = {
+                "agent": "summarizer",
+                "response": response
+            }
 
             state_service.update_state(
                 active_agent="summarizer",
@@ -88,10 +177,12 @@ class RouterAgent:
                 last_response=response
             )
 
-            return {
-                "agent": "summarizer",
-                "response": response
-            }
+            memory_service.add_message(
+                "assistant",
+                result
+            )
+
+            return result
 
 
 router_agent = RouterAgent()
