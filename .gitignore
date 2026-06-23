@@ -44,3 +44,6 @@ Thumbs.db
 
 # Documentation artifacts
 project_tree.txt
+
+# Streamlit chat history
+frontend/chat_history.json
