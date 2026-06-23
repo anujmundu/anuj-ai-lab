@@ -18,6 +18,7 @@ from app.db.database import create_db_and_tables
 from app.api.connector_routes import router as connector_router
 from app.api.file_routes import router as file_router
 from app.api.search_routes import router as search_router
+from app.api.voice_routes import router as voice_router
 
 
 @asynccontextmanager
@@ -49,6 +50,7 @@ app.include_router(assistant_router)
 app.include_router(connector_router)
 app.include_router(file_router)
 app.include_router(search_router)
+app.include_router(voice_router)
 
 
 @app.get("/")
