@@ -6,7 +6,10 @@
 ![SQLite](https://img.shields.io/badge/SQLite-Database-blue?logo=sqlite)
 ![SQLModel](https://img.shields.io/badge/SQLModel-ORM-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Stage%201-Completed-brightgreen)
+![Status](https://img.shields.io/badge/Stage%202-Completed-brightgreen)
+![Version](https://img.shields.io/badge/Version-v1.1.0-blue)
+![Frontend](https://img.shields.io/badge/Frontend-Streamlit-red)
+![MCP](https://img.shields.io/badge/MCP-Enabled-purple)
 
 # Overview
 
@@ -16,18 +19,45 @@ This project demonstrates how to build a local AI system featuring agents, tools
 
 ---
 
+# Portfolio Summary
+
+Current Version: v1.1.0
+
+Modules Built:
+
+✅ Agents  
+✅ Memory  
+✅ Planning  
+✅ Workflows  
+✅ Autonomous Assistant  
+✅ Connectors  
+✅ Tools  
+✅ Search  
+✅ File Processing  
+✅ Voice AI  
+✅ Streamlit UI  
+✅ MCP Foundations
+
+Next Milestone:
+
+🚀 Stage 3 — RAG Systems & Vector Databases
+
+---
+
 # Features
 
-## Core
+## Core AI Platform
 
-* Local LLM integration with Ollama
+* Local LLM Integration (Ollama)
 * FastAPI REST APIs
 * Prompt Template Engine
+* Multi-Model Evaluation
 
-## Persistence
+## Memory & Persistence
 
 * SQLite Experiment Tracking
 * Local Conversation Memory
+* Persistent Memory System
 * Agent State Manager
 
 ## Agents
@@ -38,11 +68,34 @@ This project demonstrates how to build a local AI system featuring agents, tools
 * CodeReviewAgent
 * RouterAgent
 * ToolAgent
+* VoiceAgent
+* Mini Autonomous Assistant
 
-## Tools
+## External Connectors
 
-* Calculator Tool
-* Datetime Tool
+* Weather Connector
+* News Connector
+* Currency Connector
+* Wikipedia Connector
+* Search Connector
+
+## File Processing
+
+* TXT Reader
+* CSV Reader
+* PDF Reader
+
+## Voice AI
+
+* Whisper Service
+* Text-to-Speech Service
+* Voice Agent API
+
+## MCP (Model Context Protocol)
+
+* MCP Tool Registry
+* MCP Tool Discovery
+* MCP Tool Execution Server
 
 ## Orchestration
 
@@ -50,15 +103,17 @@ This project demonstrates how to build a local AI system featuring agents, tools
 * Task Planner
 * Sequential Workflow Executor
 * Multi-Agent Collaboration
-* Mini Autonomous AI Assistant
 
-## Evaluation
+## Frontend
 
-* Multi-Model Evaluation
+* Streamlit Chat Interface
 
 ## Documentation
 
 * Swagger UI
+* Architecture Documentation
+* Screenshots & Proofs
+
 
 ---
 
@@ -98,84 +153,126 @@ This project demonstrates how to build a local AI system featuring agents, tools
 - Git
 - GitHub
 
+### Frontend
+- Streamlit
+
 ---
 
 # Architecture
 
-```
-                           Ollama
-                 qwen2.5:1.5b / gemma2:9b
-                               │
-                               ▼
-                        FastAPI Backend
-                               │
+```text
+                    Streamlit Chat UI
+                             │
+                             ▼
+                     FastAPI Backend
+                             │
 ══════════════════════════════════════════════
-                               │
-                ┌──────────────┼──────────────┐
-                ▼              ▼              ▼
-             Agents          Tools          Memory
-                │              │              │
-         BaseAgent        CalculatorTool   Local JSON
-         SummarizerAgent  DatetimeTool     Conversation Memory
-         EmailAgent
-         CodeReviewAgent
-         RouterAgent
-         ToolAgent
-                │
-                ▼
+                             │
+      ┌──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼              ▼
+    Agents         Tools           MCP          State Manager 
+      │              │              │
+      ▼              ▼              ▼
+ RouterAgent    Calculator     Tool Registry
+ ToolAgent      Weather        MCP Server
+ VoiceAgent     News
+ EmailAgent     Currency
+ Summarizer     Wiki
+ CodeReview     Search
+                             │
 ══════════════════════════════════════════════
-                │
-                ▼
-            Task Planner
-                │
-                ▼
-       Sequential Executor
-                │
-                ▼
-      Multi-Agent Collaboration
-                │
-                ▼
-      Mini Autonomous Assistant
-                │
+                             ▼
+                       Connectors
+                             │
+      ┌──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼
+  Weather API      Wikipedia      Search
+  News API         Connector      Connector
+  Currency API
+                             │
 ══════════════════════════════════════════════
-                │
-                ▼
-          Agent State Manager
-                │
+                             ▼
+                     Memory Layer
+                             │
+      ┌──────────────┬──────────────┐
+      ▼              ▼              ▼
+ Local Memory   Persistent Memory  State Manager
+                             │
 ══════════════════════════════════════════════
-                │
-                ▼
-       SQLite Experiment Tracking
-             SQLModel + SQLite
-                │
+                             ▼
+                      SQLite Database
+                             │
 ══════════════════════════════════════════════
-                │
-                ▼
-         Multi-Model Evaluation
+                             ▼
+                  Workflow Orchestration
+                             │
+      ┌──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼
+   Planner      Executor      Collaboration
 ```
 
 ---
 
 ## Project Tree
 
-```
+```text
 anuj-ai-lab
 │
 ├── backend
+│   │
 │   ├── app
+│   │   │
 │   │   ├── agents
+│   │   │   ├── base_agent.py
+│   │   │   ├── summarizer_agent.py
+│   │   │   ├── email_agent.py
+│   │   │   ├── code_review_agent.py
+│   │   │   ├── router_agent.py
+│   │   │   └── tool_agent.py
+│   │   │
 │   │   ├── api
+│   │   │   ├── routes.py
+│   │   │   ├── prompt_routes.py
+│   │   │   ├── experiment_routes.py
+│   │   │   ├── compare_routes.py
+│   │   │   ├── workflow_routes.py
+│   │   │   ├── router_routes.py
+│   │   │   ├── tool_routes.py
+│   │   │   ├── state_routes.py
+│   │   │   ├── planner_routes.py
+│   │   │   ├── executor_routes.py
+│   │   │   ├── collaboration_routes.py
+│   │   │   ├── assistant_routes.py
+│   │   │   ├── connector_routes.py
+│   │   │   ├── file_routes.py
+│   │   │   ├── search_routes.py
+│   │   │   ├── voice_routes.py
+│   │   │   └── mcp_routes.py
+│   │   │
 │   │   ├── assistant
 │   │   ├── collaboration
+│   │   ├── connectors
 │   │   ├── core
 │   │   ├── db
 │   │   ├── executor
 │   │   ├── memory
+│   │   ├── mcp
+│   │   │   ├── tool_registry.py
+│   │   │   └── mcp_server.py
+│   │   │
 │   │   ├── models
 │   │   ├── planner
+│   │   ├── search
+│   │   │   └── search_connector.py
+│   │   │
 │   │   ├── services
 │   │   ├── state
 │   │   ├── tools
+│   │   ├── voice
+│   │   │   ├── whisper_service.py
+│   │   │   ├── tts_service.py
+│   │   │   └── voice_agent.py
+│   │   │
 │   │   ├── workflows
 │   │   ├── rag
 │   │   ├── multimodal
@@ -187,12 +284,19 @@ anuj-ai-lab
 │   ├── main.py
 │   └── requirements.txt
 │
+├── frontend
+│   ├── app.py
+│   └── requirements.txt
+│
 ├── assets
 │   └── screenshots
 │
+├── docs
+│
 ├── .env.example
 ├── .gitignore
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
 ---
@@ -265,23 +369,58 @@ http://127.0.0.1:8000/docs
 
 ---
 
+# Quick Start
+
+Terminal 1:
+
+```bash
+cd backend
+uvicorn main:app --reload
+```
+
+Terminal 2:
+
+```bash
+cd frontend
+streamlit run app.py
+```
+
+Backend:
+http://127.0.0.1:8000
+
+Swagger:
+http://127.0.0.1:8000/docs
+
+Frontend:
+http://localhost:8501
+
+---
+
 # Major Endpoints
 
-| Endpoint              | Description               |
-| --------------------- | ------------------------- |
-| `/test-llm`           | Ollama test               |
-| `/prompts/summarize`  | Prompt templates          |
-| `/experiments`        | SQLite experiments        |
-| `/compare`            | Multi-model evaluation    |
-| `/workflow/summarize` | Workflow engine           |
-| `/route`              | Router agent              |
-| `/tool/calculate`     | Calculator tool           |
-| `/state`              | Agent state manager       |
-| `/plan`               | Task planner              |
-| `/execute`            | Sequential executor       |
-| `/collaborate`        | Multi-agent collaboration |
-| `/assistant`          | Autonomous assistant      |
-| `/docs`               | Swagger documentation     |
+| Endpoint            | Description               |
+| ------------------- | ------------------------- |
+| /test-llm           | Ollama Test               |
+| /prompts/summarize  | Prompt Templates          |
+| /experiments        | Experiment Tracking       |
+| /compare            | Multi-Model Evaluation    |
+| /workflow/summarize | Workflow Engine           |
+| /route              | Router Agent              |
+| /tool/calculate     | Calculator Tool           |
+| /state              | Agent State Manager       |
+| /plan               | Task Planner              |
+| /execute            | Sequential Executor       |
+| /collaborate        | Multi-Agent Collaboration |
+| /assistant          | Autonomous Assistant      |
+| /search             | Search Connector          |
+| /reader/txt         | TXT Reader                |
+| /reader/csv         | CSV Reader                |
+| /reader/pdf         | PDF Reader                |
+| /voice              | Voice Agent               |
+| /mcp/tools          | MCP Discovery             |
+| /mcp/execute        | MCP Execution             |
+| /docs               | Swagger Documentation     |
+
 
 ---
 
@@ -329,6 +468,24 @@ http://127.0.0.1:8000/docs
 
 ---
 
+## Streamlit Chat Interface
+
+![Streamlit UI](assets/screenshots/streamlit-ui.png)
+
+---
+
+## MCP Foundations
+
+![MCP](assets/screenshots/mcp-foundations.png)
+
+---
+
+## Voice AI
+
+![Voice](assets/screenshots/voice-ai.png)
+
+---
+
 Additional screenshots demonstrating every module are available in:
 
 ```text
@@ -356,7 +513,7 @@ Including:
 
 ---
 
-# Stage 1 Timeline
+# Development Timeline
 
 ### Jun 17, 2026
 
@@ -395,67 +552,130 @@ Including:
 * Portfolio Proof Collection
 * Stage 1 Completion
 
+### Jun 23, 2026
+
+* External Connectors
+* Weather Tool
+* News Tool
+* Currency Tool
+* Wikipedia Connector
+* Search Connector
+
+### Jun 24, 2026
+
+* File Connectors (TXT / CSV / PDF)
+* Voice AI Foundations
+* Streamlit Chat Interface
+* Persistent Memory
+* MCP Foundations
+* Stage 2 Completion
+
+---
+
+# Release History
+
+## v1.1.0 — Stage 2 Complete
+
+Released: June 2026
+
+Added:
+
+- External Connectors
+- Search System
+- File Readers
+- Voice AI
+- Streamlit Frontend
+- Persistent Memory
+- MCP Foundations
+
+---
+
+## v1.0.0 — Stage 1 Complete
+
+Released: June 2026
+
+Added:
+
+- Ollama Integration
+- Prompt Engineering
+- Experiment Tracking
+- Multi-Agent System
+- Workflow Engine
+- Autonomous Assistant
+
 ---
 
 # Future Roadmap
 
-## Stage 2
+## Stage 3 (Current)
 
-* API Connectors
-* Voice Agents
-* MCP Servers
-
-## Stage 3
-
-* Vector Databases
-* Embeddings
-* RAG Systems
+- Vector Databases
+- Embeddings
+- RAG Pipelines
+- Document Retrieval
+- Semantic Search
 
 ## Stage 4
 
-* LangGraph
-* Multi-Agent Systems
-* Autonomous Agents
+- LangGraph
+- Advanced Multi-Agent Systems
+- Long-Term Memory
+- Autonomous Workflows
 
 ## Stage 5
 
-* Production Deployment
-* Docker
-* Monitoring
-* CI/CD
+- Docker
+- Kubernetes
+- Monitoring
+- CI/CD
+- Production Deployment
 
 ---
 
-# Stage 1 Status
+# Project Status
 
-## ✅ Completed
+## ✅ Stage 1 Complete (v1.0.0)
 
-Built with:
+- Ollama Integration
+- Prompt Engineering
+- Experiment Tracking
+- Memory
+- Agents
+- Planning
+- Workflows
+- Autonomous Assistant
 
-- Python
-- FastAPI
-- Ollama
-- SQLModel
-- SQLite
-- Agent Architecture
-- Modular Design
+## ✅ Stage 2 Complete (v1.1.0)
 
-Release:
+- External Connectors
+- Information Tools
+- File Processing
+- Search System
+- Voice AI
+- Streamlit Chat UI
+- Persistent Memory
+- MCP Foundations
 
-v1.0.0 — Stage 1 Complete
+Current Release:
+
+v1.1.0
 
 ---
 
 # 🌟 Highlights
 
 - Built completely from scratch.
-- Modular agent-based architecture.
-- Local LLM inference using Ollama.
+- Local LLM integration using Ollama.
+- Multi-agent architecture.
+- Workflow orchestration engine.
+- Persistent memory system.
+- External connectors and tools.
+- File processing capabilities.
+- Voice AI integration.
+- Streamlit chat interface.
+- MCP (Model Context Protocol) foundations.
 - SQLite experiment tracking.
-- Workflow orchestration and planning.
-- Multi-agent collaboration.
-- Autonomous assistant.
-- Fully documented with screenshots and Swagger APIs.
+- Fully documented with Swagger APIs and screenshots.
 
 ---
 
@@ -467,3 +687,9 @@ Master of Computer Applications (MCA)
 [Maulana Azad National Institute of Technology Bhopal (MANIT)](https://manit.ac.in)
 
 AI Engineering • Data Science • Machine Learning
+
+GitHub:
+https://github.com/anujmundu
+
+Current Focus:
+Building Production-Ready Agentic AI Systems
