@@ -22,7 +22,7 @@ from app.api.workflow_routes import router as workflow_router
 from app.db.database import create_db_and_tables
 from app.api.mcp_routes import router as mcp_router
 from app.mcp import mcp_server
-
+from app.api.rag_routes import router as rag_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -58,6 +58,7 @@ app.include_router(search_router)
 app.include_router(voice_router)
 app.include_router(memory_router)
 app.include_router(mcp_router)
+app.include_router(rag_router)
 
 
 @app.get("/")
