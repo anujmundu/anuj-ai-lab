@@ -50,3 +50,20 @@ frontend/chat_history.json
 
 # Persistent memory
 backend/app/memory/memory_store.json
+
+# ==========================================
+# RAG / Vector Database
+# ==========================================
+
+backend/vector_db/
+vector_db/
+backend/chroma_db/
+chroma_db/
+
+# Hugging Face cache (optional)
+.huggingface/
+.cache/
+
+# Temporary RAG test files
+test_embedding.py
+test_vector_store.py
