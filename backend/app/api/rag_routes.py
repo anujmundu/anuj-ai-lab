@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.rag.vector_store import vector_store
 from app.rag.models import DocumentRequest
+from app.rag.rag_service import rag_service
 
 
 router = APIRouter()
@@ -29,4 +30,14 @@ def search(
     return vector_store.search(
         query,
         k
+    )
+
+
+@router.get("/rag/ask")
+def ask(
+    question: str
+):
+
+    return rag_service.ask(
+        question
     )
