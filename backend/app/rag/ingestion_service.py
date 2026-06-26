@@ -1,9 +1,10 @@
 from pathlib import Path
 
 from app.rag.document_loader import document_loader
-from app.rag.metadata import metadata_builder
 from app.rag.text_chunker import text_chunker
 from app.rag.vector_store import vector_store
+from app.rag.metadata import metadata_builder
+from app.rag.duplicate_detector import duplicate_detector
 
 
 class IngestionService:
@@ -13,29 +14,32 @@ class IngestionService:
         file_path: str
     ) -> dict:
 
-        # Load document
+        filename = Path(file_path).stem
+
+        # Prevent duplicate indexing
+        if duplicate_detector.is_indexed(filename):
+            return {
+                "filename": filename,
+                "status": "already_indexed"
+            }
+
         text = document_loader.load(file_path)
 
-        # Split into chunks
         chunks = text_chunker.chunk(text)
-
-        # Get filename without extension
-        filename = Path(file_path).stem
 
         chunk_ids = []
 
         total_chunks = len(chunks)
 
-        # Store every chunk
         for index, chunk in enumerate(chunks, start=1):
+
+            chunk_id = f"{filename}_chunk_{index:03d}"
 
             metadata = metadata_builder.build(
                 filename=filename,
                 chunk_number=index,
                 total_chunks=total_chunks
             )
-
-            chunk_id = metadata["chunk_id"]
 
             vector_store.add(
                 doc_id=chunk_id,
