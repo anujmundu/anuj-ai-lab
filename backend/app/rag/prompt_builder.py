@@ -1,10 +1,10 @@
 class PromptBuilder:
 
-    def build_prompt(
-    self,
-    question: str,
-    documents: list[str]
-) -> str:
+    def build(
+        self,
+        question: str,
+        documents: list[str]
+    ) -> str:
 
         context = "\n\n".join(documents)
 

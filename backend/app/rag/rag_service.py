@@ -17,20 +17,34 @@ class RAGService:
         )
 
         documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
 
-        prompt = prompt_builder.build_prompt(
+        prompt = prompt_builder.build(
             question,
             documents
         )
 
-        answer = ollama_service.generate(
-            prompt
-        )
+        answer = ollama_service.generate(prompt)
+
+        sources = []
+
+        for metadata in metadatas:
+
+            if metadata:
+
+                sources.append(
+                    {
+                        "filename": metadata["filename"],
+                        "chunk_id": metadata["chunk_id"],
+                        "chunk_number": metadata["chunk_number"],
+                        "total_chunks": metadata["total_chunks"]
+                    }
+                )
 
         return {
             "question": question,
-            "documents": documents,
-            "answer": answer
+            "answer": answer,
+            "sources": sources
         }
 
 
