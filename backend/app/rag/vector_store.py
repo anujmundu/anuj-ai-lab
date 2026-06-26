@@ -23,7 +23,7 @@ class VectorStore:
         self,
         doc_id: str,
         text: str,
-        metadata: dict | None = None
+        metadata: dict
     ):
 
         embedding = embedding_service.embed(text)
@@ -32,7 +32,7 @@ class VectorStore:
             ids=[doc_id],
             documents=[text],
             embeddings=[embedding],
-            metadatas=[metadata or {}]
+            metadatas=[metadata]
         )
 
     def search(
@@ -47,6 +47,31 @@ class VectorStore:
             query_embeddings=[embedding],
             n_results=k
         )
+
+    def get_document_chunks(
+        self,
+        filename: str
+    ):
+
+        return self.collection.get(
+            where={
+                "filename": filename
+            }
+        )
+
+    def delete_document(
+        self,
+        filename: str
+    ):
+
+        chunks = self.get_document_chunks(filename)
+
+        ids = chunks["ids"]
+
+        if ids:
+            self.collection.delete(
+                ids=ids
+            )
 
 
 vector_store = VectorStore()

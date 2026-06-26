@@ -3,15 +3,13 @@ from app.rag.vector_store import vector_store
 
 class DuplicateDetector:
 
-    def is_indexed(
+    def exists(
         self,
         filename: str
     ) -> bool:
 
-        results = vector_store.collection.get(
-            where={
-                "filename": filename
-            }
+        results = vector_store.get_document_chunks(
+            filename
         )
 
         return len(results["ids"]) > 0
