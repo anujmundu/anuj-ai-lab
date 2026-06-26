@@ -19,10 +19,11 @@ class VectorStore:
 
         print("ChromaDB ready.")
 
-    def add_document(
+    def add(
         self,
         doc_id: str,
-        text: str
+        text: str,
+        metadata: dict | None = None
     ):
 
         embedding = embedding_service.embed(text)
@@ -30,7 +31,8 @@ class VectorStore:
         self.collection.add(
             ids=[doc_id],
             documents=[text],
-            embeddings=[embedding]
+            embeddings=[embedding],
+            metadatas=[metadata or {}]
         )
 
     def search(
@@ -41,12 +43,10 @@ class VectorStore:
 
         embedding = embedding_service.embed(query)
 
-        results = self.collection.query(
+        return self.collection.query(
             query_embeddings=[embedding],
             n_results=k
         )
-
-        return results
 
 
 vector_store = VectorStore()
