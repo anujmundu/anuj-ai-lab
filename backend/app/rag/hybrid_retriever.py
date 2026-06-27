@@ -1,22 +1,13 @@
+from app.rag.base_retriever import BaseRetriever
+from app.rag.keyword_retriever import keyword_retriever
+from app.rag.result_fusion import result_fusion
+from app.rag.retrieval_config import RetrievalConfig
 from app.rag.retriever import retriever
-
-
-class BaseRetriever:
-    """
-    Base interface for all retrieval engines.
-    """
-
-    def retrieve(
-        self,
-        query: str,
-        k: int = 3
-    ):
-        raise NotImplementedError
 
 
 class SemanticRetriever(BaseRetriever):
     """
-    Semantic retrieval powered by ChromaDB embeddings.
+    Adapter around the semantic vector retriever.
     """
 
     def retrieve(
@@ -31,70 +22,64 @@ class SemanticRetriever(BaseRetriever):
         )
 
 
-class KeywordRetriever(BaseRetriever):
+class HybridRetriever(BaseRetriever):
     """
-    Placeholder implementation.
+    Hybrid retrieval engine.
 
-    In the next commit this will be replaced with
-    a BM25-backed keyword retriever.
+    Current retrieval engines:
 
-    Keeping this interface now means future keyword
-    search engines can be swapped without modifying
-    the rest of the RAG pipeline.
+    • Semantic Search
+    • Keyword Search
+
+    Future retrieval engines:
+
+    • BM25
+    • Elasticsearch
+    • OpenSearch
+    • SQLite FTS5
     """
 
-    def retrieve(
+    def __init__(
         self,
-        query: str,
-        k: int = 3
+        config: RetrievalConfig | None = None
     ):
 
-        return {
-            "ids": [[]],
-            "documents": [[]],
-            "metadatas": [[]],
-            "distances": [[]]
-        }
-
-
-class HybridRetriever:
-    """
-    Combines multiple retrieval engines.
-
-    Current:
-        • Semantic Search
-
-    Next commit:
-        • Semantic Search
-        • BM25 Keyword Search
-        • Result Fusion
-    """
-
-    def __init__(self):
+        self.config = config or RetrievalConfig()
 
         self.semantic = SemanticRetriever()
 
-        self.keyword = KeywordRetriever()
+        self.keyword = keyword_retriever
 
     def retrieve(
         self,
         query: str,
-        k: int = 3
+        k: int | None = None
     ):
 
-        semantic_results = self.semantic.retrieve(
-            query=query,
+        k = k or self.config.top_k
+
+        semantic_results = None
+        keyword_results = None
+
+        if self.config.enable_semantic:
+
+            semantic_results = self.semantic.retrieve(
+                query=query,
+                k=k
+            )
+
+        if self.config.enable_keyword:
+
+            keyword_results = self.keyword.retrieve(
+                query=query,
+                k=k
+            )
+
+        return result_fusion.combine(
+            semantic=semantic_results,
+            keyword=keyword_results,
             k=k
         )
-
-        keyword_results = self.keyword.retrieve(
-            query=query,
-            k=k
-        )
-
-        # Currently return semantic results.
-        # In the next commit we will merge both.
-        return semantic_results
 
 
 hybrid_retriever = HybridRetriever()
