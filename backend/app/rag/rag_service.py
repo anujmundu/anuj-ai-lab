@@ -1,4 +1,4 @@
-from app.rag.retriever import retriever
+from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.ranker import ranker
 from app.rag.prompt_builder import prompt_builder
 from app.services.ollama_service import ollama_service
@@ -12,9 +12,9 @@ class RAGService:
         k: int = 3
     ) -> dict:
 
-        results = retriever.retrieve(
-            question,
-            k
+        results = hybrid_retriever.retrieve(
+            query=question,
+            k=k
         )
 
         results = ranker.filter_results(
