@@ -1,4 +1,7 @@
+from collections import Counter
+
 from app.rag.hybrid_retriever import hybrid_retriever
+
 
 results = hybrid_retriever.retrieve(
     query="What is ChromaDB?",
@@ -58,5 +61,61 @@ for rank, (
     print(preview)
 
 print("\n" + "=" * 80)
-print(f"Total Results : {len(ids)}")
+print("FILTER DIAGNOSTICS")
+print("=" * 80)
+
+diagnostics = results.get("diagnostics", [])
+
+if diagnostics:
+
+    kept = 0
+    filtered = 0
+
+    reasons = Counter()
+
+    for item in diagnostics:
+
+        print(f"\n{item['chunk_id']}")
+        print(f"Status : {item['status']}")
+
+        if item["status"] == "FILTERED":
+            print(f"Reason : {item['reason']}")
+            filtered += 1
+            reasons[item["reason"]] += 1
+        else:
+            kept += 1
+
+    print("\n" + "-" * 80)
+    print("FILTER SUMMARY")
+    print("-" * 80)
+
+    print(f"Kept Chunks      : {kept}")
+    print(f"Filtered Chunks  : {filtered}")
+
+    if reasons:
+        print("\nReasons")
+
+        for reason, count in reasons.items():
+            print(f"  {reason:<30} {count}")
+
+else:
+
+    print("\nNo diagnostics available.")
+
+print("\n" + "=" * 80)
+print("FINAL SUMMARY")
+print("=" * 80)
+
+print(f"Returned Results : {len(ids)}")
+
+documents_counter = Counter(
+    metadata["filename"]
+    for metadata in metadatas
+)
+
+print("\nChunks Per Document")
+
+for filename, count in documents_counter.items():
+    print(f"  {filename:<25} {count}")
+
 print("=" * 80)
