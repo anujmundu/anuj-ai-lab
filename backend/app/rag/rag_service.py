@@ -1,6 +1,7 @@
+from app.rag.context_builder import context_builder
 from app.rag.hybrid_retriever import hybrid_retriever
-from app.rag.ranker import ranker
 from app.rag.prompt_builder import prompt_builder
+from app.rag.ranker import ranker
 from app.services.ollama_service import ollama_service
 
 
@@ -12,11 +13,17 @@ class RAGService:
         k: int = 3
     ) -> dict:
 
+        #
+        # Retrieve candidate chunks.
+        #
         results = hybrid_retriever.retrieve(
             query=question,
             k=k
         )
 
+        #
+        # Apply ranking.
+        #
         results = ranker.filter_results(
             results
         )
@@ -24,15 +31,32 @@ class RAGService:
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
 
-        prompt = prompt_builder.build_prompt(
-            question,
-            documents
+        #
+        # Build structured context.
+        #
+        context = context_builder.build_context(
+            documents=documents,
+            metadatas=metadatas
         )
 
+        #
+        # Build the final prompt.
+        #
+        prompt = prompt_builder.build_prompt(
+            question=question,
+            documents=context
+        )
+
+        #
+        # Generate answer.
+        #
         answer = ollama_service.generate(
             prompt
         )
 
+        #
+        # Build source attribution.
+        #
         sources = []
 
         for metadata in metadatas:
