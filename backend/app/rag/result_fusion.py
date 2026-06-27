@@ -5,17 +5,14 @@ class ResultFusion:
     """
     Combines retrieval results from multiple retrieval engines.
 
-    The current implementation performs:
+    Supports:
 
-    • Duplicate removal
-    • Weighted preference
-    • Top-k limiting
-
-    Future versions may implement:
-
+    • Weighted score fusion
     • Reciprocal Rank Fusion (RRF)
-    • BM25 score fusion
-    • Learning-to-Rank
+    • Duplicate removal
+
+    Returns standard ChromaDB-style results along with
+    retrieval diagnostics for debugging and evaluation.
     """
 
     def __init__(
@@ -32,22 +29,18 @@ class ResultFusion:
         k: int
     ) -> dict:
 
-        merged = {}
+        merged: dict = {}
 
-        if (
-            semantic is not None
-            and self.config.enable_semantic
-        ):
+        if semantic and self.config.enable_semantic:
+
             self._merge(
                 merged,
                 semantic,
                 source="semantic"
             )
 
-        if (
-            keyword is not None
-            and self.config.enable_keyword
-        ):
+        if keyword and self.config.enable_keyword:
+
             self._merge(
                 merged,
                 keyword,
@@ -56,7 +49,7 @@ class ResultFusion:
 
         items = sorted(
             merged.items(),
-            key=lambda item: item[1]["score"],
+            key=lambda item: item[1]["combined_score"],
             reverse=True
         )[:k]
 
@@ -64,7 +57,17 @@ class ResultFusion:
             "ids": [[item[0] for item in items]],
             "documents": [[item[1]["document"] for item in items]],
             "metadatas": [[item[1]["metadata"] for item in items]],
-            "distances": [[item[1]["distance"] for item in items]]
+            "distances": [[item[1]["distance"] for item in items]],
+            "retrieval": [[
+                {
+                    "semantic_score": item[1]["semantic_score"],
+                    "keyword_score": item[1]["keyword_score"],
+                    "combined_score": item[1]["combined_score"],
+                    "semantic_rank": item[1]["semantic_rank"],
+                    "keyword_rank": item[1]["keyword_rank"]
+                }
+                for item in items
+            ]]
         }
 
     def _merge(
@@ -79,36 +82,42 @@ class ResultFusion:
         metadatas = results.get("metadatas", [[]])[0]
         distances = results.get("distances", [[]])[0]
 
-        weight = (
-            self.config.semantic_weight
-            if source == "semantic"
-            else self.config.keyword_weight
-        )
-
-        for doc_id, document, metadata, distance in zip(
-            ids,
-            documents,
-            metadatas,
-            distances
+        for rank, (doc_id, document, metadata, value) in enumerate(
+            zip(ids, documents, metadatas, distances),
+            start=1
         ):
 
-            #
-            # Chroma distances:
-            # smaller distance = better match.
-            #
             if source == "semantic":
 
-                score = (
-                    1.0 / (1.0 + distance)
-                ) * weight
+                semantic_score = (
+                    1.0 / (1.0 + value)
+                )
+
+                keyword_score = 0.0
+
+                distance = value
 
             else:
 
-                #
-                # Keyword retriever currently
-                # returns 0.0 for all distances.
-                #
-                score = weight
+                semantic_score = 0.0
+
+                keyword_score = value
+
+                distance = value
+
+            if self.config.fusion_strategy == "weighted":
+
+                combined = (
+                    semantic_score * self.config.semantic_weight
+                    +
+                    keyword_score * self.config.keyword_weight
+                )
+
+            else:
+
+                combined = 1.0 / (
+                    self.config.rrf_k + rank
+                )
 
             if doc_id not in merged:
 
@@ -116,12 +125,36 @@ class ResultFusion:
                     "document": document,
                     "metadata": metadata,
                     "distance": distance,
-                    "score": score
+                    "semantic_score": semantic_score,
+                    "keyword_score": keyword_score,
+                    "combined_score": combined,
+                    "semantic_rank": rank if source == "semantic" else None,
+                    "keyword_rank": rank if source == "keyword" else None
                 }
 
             else:
 
-                merged[doc_id]["score"] += score
+                merged_doc = merged[doc_id]
+
+                merged_doc["semantic_score"] = max(
+                    merged_doc["semantic_score"],
+                    semantic_score
+                )
+
+                merged_doc["keyword_score"] = max(
+                    merged_doc["keyword_score"],
+                    keyword_score
+                )
+
+                merged_doc["combined_score"] += combined
+
+                if source == "semantic":
+
+                    merged_doc["semantic_rank"] = rank
+
+                else:
+
+                    merged_doc["keyword_rank"] = rank
 
 
 result_fusion = ResultFusion()
