@@ -1,39 +1,205 @@
-class PromptBuilder:
+from app.rag.prompt_builder_config import PromptBuilderConfig
 
-    def build(
+
+class PromptBuilder:
+    """
+    Builds prompts for the language model.
+
+    Responsibilities
+
+    • Build structured prompts
+    • Enforce grounding rules
+    • Support future conversation memory
+    • Keep prompting independent from retrieval
+
+    Future responsibilities
+
+    • Few-shot examples
+    • Dynamic system prompts
+    • Citation instructions
+    • Prompt compression
+    """
+
+    def __init__(
         self,
-        question: str,
-        documents: list[str]
+        config: PromptBuilderConfig | None = None
+    ):
+
+        self.config = config or PromptBuilderConfig()
+
+    # --------------------------------------------------
+    # Sections
+    # --------------------------------------------------
+
+    def _role_section(self) -> str:
+
+        return (
+            "ROLE\n"
+            "----\n"
+            "You are a helpful AI assistant."
+        )
+
+    def _task_section(self) -> str:
+
+        return (
+            "TASK\n"
+            "----\n"
+            "Answer the user's question using ONLY "
+            "the retrieved context."
+        )
+
+    def _rules_section(self) -> str:
+
+        rules: list[str] = []
+
+        if self.config.strict_grounding:
+
+            rules.extend([
+                "- Use ONLY the retrieved context.",
+                "- Never invent facts.",
+                "- Never use outside knowledge."
+            ])
+
+        if self.config.preserve_terminology:
+
+            rules.append(
+                "- Preserve technical terminology exactly as written."
+            )
+
+        rules.extend([
+            "- Keep the answer concise and accurate.",
+            (
+                "- Limit the answer to approximately "
+                f"{self.config.max_answer_sentences} sentences."
+            ),
+            (
+                "- If the answer cannot be found in the "
+                "retrieved context, reply exactly:"
+            ),
+            f'  "{self.config.unknown_answer}"'
+        ])
+
+        return (
+            "RULES\n"
+            "-----\n"
+            + "\n".join(rules)
+        )
+
+    def _conversation_section(
+        self,
+        conversation: str | None
     ) -> str:
 
-        context = "\n\n".join(documents)
+        if not self.config.include_conversation:
 
-        prompt = f"""
-You are a helpful AI assistant.
+            conversation = "(none)"
 
-Answer the user's question using ONLY the information provided in the context below.
+        elif not conversation:
 
-If the answer is not contained in the context, say:
+            conversation = "(none)"
 
-"I don't have enough information in the retrieved documents."
+        return (
+            "CONVERSATION\n"
+            "------------\n"
+            f"{conversation}"
+        )
 
--------------------------
-Context:
+    def _context_section(
+        self,
+        context: str
+    ) -> str:
 
-{context}
+        return (
+            "CONTEXT\n"
+            "-------\n"
+            f"{context}"
+        )
 
--------------------------
+    def _question_section(
+        self,
+        question: str
+    ) -> str:
 
-Question:
+        return (
+            "QUESTION\n"
+            "--------\n"
+            f"{question}"
+        )
 
-{question}
+    def _answer_section(self) -> str:
 
--------------------------
+        return (
+            "ANSWER\n"
+            "------"
+        )
 
-Answer:
-"""
+    # --------------------------------------------------
+    # Prompt Assembly
+    # --------------------------------------------------
 
-        return prompt.strip()
+    def _build_sections(
+        self,
+        question: str,
+        context: str,
+        conversation: str | None
+    ) -> list[str]:
+        """
+        Assemble all prompt sections.
+
+        Keeping this separate ensures build_prompt()
+        remains a very small public method as new
+        sections (citations, memory, examples, tool
+        outputs, etc.) are added in future commits.
+        """
+
+        return [
+            self._role_section(),
+            self._task_section(),
+            self._rules_section(),
+            self._conversation_section(
+                conversation
+            ),
+            self._context_section(
+                context
+            ),
+            self._question_section(
+                question
+            ),
+            self._answer_section()
+        ]
+
+    # --------------------------------------------------
+    # Public API
+    # --------------------------------------------------
+
+    def build_prompt(
+        self,
+        question: str,
+        documents: str,
+        conversation: str | None = None
+    ) -> str:
+        """
+        Build the final prompt.
+
+        Parameters
+        ----------
+        question
+            User question.
+
+        documents
+            Structured context produced by ContextBuilder.
+
+        conversation
+            Reserved for future conversation memory.
+        """
+
+        sections = self._build_sections(
+            question=question,
+            context=documents,
+            conversation=conversation
+        )
+
+        return "\n\n".join(sections).strip()
 
 
 prompt_builder = PromptBuilder()
