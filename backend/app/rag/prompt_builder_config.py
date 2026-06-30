@@ -33,6 +33,6 @@ class PromptBuilderConfig:
     # Prompt Sections
     # --------------------------------------------------
 
-    include_conversation: bool = False
+    include_conversation: bool = True
 
     include_citations: bool = False

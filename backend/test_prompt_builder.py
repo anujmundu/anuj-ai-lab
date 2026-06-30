@@ -22,9 +22,14 @@ def main():
         metadatas=metadatas
     )
 
+    # --------------------------------------------------
+    # Prompt without conversation
+    # --------------------------------------------------
+
     prompt = prompt_builder.build_prompt(
         question=QUERY,
-        documents=context
+        context=context,
+        conversation=None,
     )
 
     print("\n" + "=" * 80)
@@ -40,6 +45,28 @@ def main():
     print(f"Characters : {len(prompt)}")
     print(f"Words      : {len(prompt.split())}")
     print(f"Lines      : {len(prompt.splitlines())}")
+
+    # --------------------------------------------------
+    # Prompt with conversation
+    # --------------------------------------------------
+
+    conversation = (
+        "User: Tell me about FastAPI.\n"
+        "Assistant: FastAPI is a modern Python web framework.\n"
+        "User: What is ChromaDB?"
+    )
+
+    prompt = prompt_builder.build_prompt(
+        question=QUERY,
+        context=context,
+        conversation=conversation,
+    )
+
+    print("\n" + "=" * 80)
+    print("PROMPT WITH CONVERSATION")
+    print("=" * 80)
+
+    print(prompt)
 
     print("=" * 80)
 

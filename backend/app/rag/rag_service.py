@@ -99,6 +99,7 @@ class RAGService:
     def ask(
         self,
         question: str,
+        conversation: str | None = None,
         k: int = 3
     ) -> dict:
 
@@ -145,7 +146,8 @@ class RAGService:
 
         prompt = prompt_builder.build_prompt(
             question=question,
-            context=context
+            context=context,
+            conversation=conversation,
         )
 
         prompt_build_seconds = self._elapsed(start)
@@ -186,11 +188,9 @@ class RAGService:
         # Hallucination Detector
         # --------------------------------------------------
 
-        hallucination_result = (
-            hallucination_detector.detect(
-                answer=processed_answer["answer"],
-                context=context
-            )
+        hallucination_result = hallucination_detector.detect(
+            answer=processed_answer["answer"],
+            context=context
         )
 
         # --------------------------------------------------

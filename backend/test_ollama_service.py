@@ -7,8 +7,14 @@ QUESTION = "What is ChromaDB?"
 
 def main():
 
+    conversation = (
+        "User: Tell me about FastAPI.\n"
+        "Assistant: FastAPI is a modern Python web framework."
+    )
+
     response = rag_service.ask(
-        question=QUESTION
+        question=QUESTION,
+        conversation=conversation,
     )
 
     generation = ollama_service.last_generation
