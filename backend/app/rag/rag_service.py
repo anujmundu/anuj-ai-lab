@@ -1,5 +1,6 @@
 import time
 
+from app.rag.answer_processor import answer_processor
 from app.rag.context_builder import context_builder
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
@@ -19,13 +20,13 @@ class RAGService:
     • Context building
     • Prompt construction
     • LLM generation
+    • Answer post-processing
     • Source attribution
 
     Future responsibilities
 
     • Conversation memory
     • Streaming
-    • Answer post-processing
     • Pipeline diagnostics API
     """
 
@@ -148,7 +149,7 @@ class RAGService:
         # LLM Generation
         # --------------------------------------------------
 
-        answer = ollama_service.generate(
+        raw_answer = ollama_service.generate(
             prompt=prompt
         )
 
@@ -158,6 +159,17 @@ class RAGService:
                 0.0
             )
         )
+
+        # --------------------------------------------------
+        # Answer Processor
+        # --------------------------------------------------
+
+        processed = answer_processor.process(
+            answer=raw_answer,
+            context=context
+        )
+
+        answer = processed["answer"]
 
         # --------------------------------------------------
         # Total Time
