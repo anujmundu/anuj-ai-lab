@@ -3,6 +3,7 @@ import time
 from app.rag.answer_processor import answer_processor
 from app.rag.citation_processor import citation_processor
 from app.rag.context_builder import context_builder
+from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
 from app.rag.ranker import ranker
@@ -22,6 +23,7 @@ class RAGService:
     • Prompt construction
     • LLM generation
     • Answer post-processing
+    • Hallucination detection
     • Source attribution
 
     Future responsibilities
@@ -62,7 +64,8 @@ class RAGService:
         context_build_seconds: float,
         prompt_build_seconds: float,
         generation_seconds: float,
-        total_seconds: float
+        total_seconds: float,
+        hallucination_result: dict | None = None
     ) -> None:
 
         self._last_request = {
@@ -71,6 +74,7 @@ class RAGService:
             "prompt_build_seconds": prompt_build_seconds,
             "generation_seconds": generation_seconds,
             "total_seconds": total_seconds,
+            "hallucination": hallucination_result,
         }
 
     def _build_sources(
@@ -179,6 +183,17 @@ class RAGService:
         )
 
         # --------------------------------------------------
+        # Hallucination Detector
+        # --------------------------------------------------
+
+        hallucination_result = (
+            hallucination_detector.detect(
+                answer=processed_answer["answer"],
+                context=context
+            )
+        )
+
+        # --------------------------------------------------
         # Citation Processor
         # --------------------------------------------------
 
@@ -203,7 +218,12 @@ class RAGService:
             prompt_build_seconds=prompt_build_seconds,
             generation_seconds=generation_seconds,
             total_seconds=total_seconds,
+            hallucination_result=hallucination_result,
         )
+
+        # --------------------------------------------------
+        # API Response
+        # --------------------------------------------------
 
         return {
             "question": question,
