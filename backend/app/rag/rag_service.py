@@ -46,6 +46,31 @@ class RAGService:
 
         return self._last_request.copy()
 
+    def diagnostics(self) -> dict:
+        """
+        Return the latest RAG pipeline diagnostics.
+
+        If no request has been processed yet,
+        return an informative response.
+        """
+
+        if not self._last_request:
+
+            return {
+                "message": (
+                    "No RAG requests have been processed yet."
+                ),
+                "request": {},
+                "generation": {}
+            }
+
+        return {
+            "request": self.last_request,
+            "generation": (
+                ollama_service.last_generation.copy()
+            )
+        }
+
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
@@ -60,21 +85,69 @@ class RAGService:
     def _update_request_diagnostics(
         self,
         *,
+        question: str,
         retrieval_seconds: float,
         context_build_seconds: float,
         prompt_build_seconds: float,
         generation_seconds: float,
         total_seconds: float,
-        hallucination_result: dict | None = None
+        prompt: str,
+        answer: str,
+        confidence: float,
+        hallucination_result: dict | None = None,
+        citation_result: dict | None = None,
     ) -> None:
 
         self._last_request = {
-            "retrieval_seconds": retrieval_seconds,
-            "context_build_seconds": context_build_seconds,
-            "prompt_build_seconds": prompt_build_seconds,
-            "generation_seconds": generation_seconds,
-            "total_seconds": total_seconds,
-            "hallucination": hallucination_result,
+
+            "question": question,
+
+            "timings": {
+
+                "retrieval_seconds": retrieval_seconds,
+
+                "context_build_seconds": (
+                    context_build_seconds
+                ),
+
+                "prompt_build_seconds": (
+                    prompt_build_seconds
+                ),
+
+                "generation_seconds": (
+                    generation_seconds
+                ),
+
+                "total_seconds": total_seconds,
+            },
+
+            "prompt": {
+
+                "characters": len(prompt),
+
+                "words": len(
+                    prompt.split()
+                ),
+            },
+
+            "response": {
+
+                "characters": len(answer),
+
+                "words": len(
+                    answer.split()
+                ),
+            },
+
+            "confidence": confidence,
+
+            "hallucination": (
+                hallucination_result
+            ),
+
+            "citations": (
+                citation_result
+            ),
         }
 
     def _build_sources(
@@ -120,7 +193,9 @@ class RAGService:
             results
         )
 
-        retrieval_seconds = self._elapsed(start)
+        retrieval_seconds = self._elapsed(
+            start
+        )
 
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
@@ -136,7 +211,9 @@ class RAGService:
             metadatas=metadatas
         )
 
-        context_build_seconds = self._elapsed(start)
+        context_build_seconds = self._elapsed(
+            start
+        )
 
         # --------------------------------------------------
         # Prompt Builder
@@ -150,7 +227,9 @@ class RAGService:
             conversation=conversation,
         )
 
-        prompt_build_seconds = self._elapsed(start)
+        prompt_build_seconds = self._elapsed(
+            start
+        )
 
         # --------------------------------------------------
         # LLM Generation
@@ -179,27 +258,33 @@ class RAGService:
         # Answer Processor
         # --------------------------------------------------
 
-        processed_answer = answer_processor.process(
-            answer=raw_answer,
-            context=context
+        processed_answer = (
+            answer_processor.process(
+                answer=raw_answer,
+                context=context
+            )
         )
 
         # --------------------------------------------------
         # Hallucination Detector
         # --------------------------------------------------
 
-        hallucination_result = hallucination_detector.detect(
-            answer=processed_answer["answer"],
-            context=context
+        hallucination_result = (
+            hallucination_detector.detect(
+                answer=processed_answer["answer"],
+                context=context
+            )
         )
 
         # --------------------------------------------------
         # Citation Processor
         # --------------------------------------------------
 
-        citation_result = citation_processor.process(
-            answer=processed_answer["answer"],
-            sources=sources
+        citation_result = (
+            citation_processor.process(
+                answer=processed_answer["answer"],
+                sources=sources
+            )
         )
 
         answer = citation_result["answer"]
@@ -213,12 +298,23 @@ class RAGService:
         )
 
         self._update_request_diagnostics(
+            question=question,
             retrieval_seconds=retrieval_seconds,
             context_build_seconds=context_build_seconds,
             prompt_build_seconds=prompt_build_seconds,
             generation_seconds=generation_seconds,
             total_seconds=total_seconds,
-            hallucination_result=hallucination_result,
+            prompt=prompt,
+            answer=answer,
+            confidence=processed_answer[
+                "confidence"
+            ],
+            hallucination_result=(
+                hallucination_result
+            ),
+            citation_result=(
+                citation_result
+            ),
         )
 
         # --------------------------------------------------

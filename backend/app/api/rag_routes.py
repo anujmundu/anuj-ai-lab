@@ -1,15 +1,17 @@
 from fastapi import APIRouter
 
-from app.rag.vector_store import vector_store
 from app.rag.models import DocumentRequest
 from app.rag.rag_service import rag_service
+from app.rag.vector_store import vector_store
 
 
 router = APIRouter()
 
 
 @router.post("/rag/add")
-def add_document(document: DocumentRequest):
+def add_document(
+    document: DocumentRequest
+):
 
     vector_store.add_document(
         document.id,
@@ -35,9 +37,17 @@ def search(
 
 @router.get("/rag/ask")
 def ask(
-    question: str
+    question: str,
+    conversation: str | None = None
 ):
 
     return rag_service.ask(
-        question
+        question=question,
+        conversation=conversation
     )
+
+
+@router.get("/rag/diagnostics")
+def diagnostics():
+
+    return rag_service.diagnostics()
