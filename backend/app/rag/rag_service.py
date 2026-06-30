@@ -1,6 +1,7 @@
 import time
 
 from app.rag.answer_processor import answer_processor
+from app.rag.citation_processor import citation_processor
 from app.rag.context_builder import context_builder
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
@@ -161,15 +162,32 @@ class RAGService:
         )
 
         # --------------------------------------------------
+        # Sources
+        # --------------------------------------------------
+
+        sources = self._build_sources(
+            metadatas
+        )
+
+        # --------------------------------------------------
         # Answer Processor
         # --------------------------------------------------
 
-        processed = answer_processor.process(
+        processed_answer = answer_processor.process(
             answer=raw_answer,
             context=context
         )
 
-        answer = processed["answer"]
+        # --------------------------------------------------
+        # Citation Processor
+        # --------------------------------------------------
+
+        citation_result = citation_processor.process(
+            answer=processed_answer["answer"],
+            sources=sources
+        )
+
+        answer = citation_result["answer"]
 
         # --------------------------------------------------
         # Total Time
@@ -185,14 +203,6 @@ class RAGService:
             prompt_build_seconds=prompt_build_seconds,
             generation_seconds=generation_seconds,
             total_seconds=total_seconds,
-        )
-
-        # --------------------------------------------------
-        # Sources
-        # --------------------------------------------------
-
-        sources = self._build_sources(
-            metadatas
         )
 
         return {
