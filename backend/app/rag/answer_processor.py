@@ -69,6 +69,84 @@ class AnswerProcessor:
             == self.config.unknown_answer
         )
 
+    # --------------------------------------------------
+    # Confidence Scoring
+    # --------------------------------------------------
+
+    def _score_answer_length(
+        self,
+        answer: str
+    ) -> float:
+
+        words = len(answer.split())
+
+        if words == 0:
+            return 0.0
+
+        if words < 5:
+            return 0.30
+
+        if words < 15:
+            return 0.70
+
+        return 1.0
+
+    def _score_context_overlap(
+        self,
+        answer: str,
+        context: str
+    ) -> float:
+
+        answer_words = {
+            word.lower()
+            for word in re.findall(
+                r"\w+",
+                answer
+            )
+        }
+
+        context_words = {
+            word.lower()
+            for word in re.findall(
+                r"\w+",
+                context
+            )
+        }
+
+        if not answer_words:
+            return 0.0
+
+        overlap = len(
+            answer_words & context_words
+        )
+
+        return overlap / len(answer_words)
+
+    def _score_answer_completeness(
+        self,
+        answer: str
+    ) -> float:
+
+        answer = answer.strip()
+
+        if not answer:
+            return 0.0
+
+        words = answer.split()
+
+        score = 0.0
+
+        if len(words) >= 3:
+            score += 0.40
+
+        if len(words) >= 10:
+            score += 0.30
+
+        if answer.endswith((".", "!", "?")):
+            score += 0.30
+
+        return min(score, 1.0)
+
     def _estimate_confidence(
         self,
         answer: str,
@@ -81,35 +159,36 @@ class AnswerProcessor:
         if not answer:
             return 0.0
 
-        if self._is_unknown_answer(
-            answer
-        ):
+        if self._is_unknown_answer(answer):
             return 0.0
 
-        confidence = 1.0
-
-        words = len(
-            answer.split()
+        length_score = self._score_answer_length(
+            answer
         )
 
-        if words < 5:
+        overlap_score = self._score_context_overlap(
+            answer,
+            context
+        )
 
-            confidence -= 0.50
-
-        elif words < 15:
-
-            confidence -= 0.20
-
-        if not context.strip():
-
-            confidence -= 0.30
-
-        return max(
-            0.0,
-            min(
-                confidence,
-                1.0
+        completeness_score = (
+            self._score_answer_completeness(
+                answer
             )
+        )
+
+        confidence = (
+            (0.25 * length_score)
+            + (0.40 * overlap_score)
+            + (0.35 * completeness_score)
+        )
+
+        return round(
+            max(
+                0.0,
+                min(confidence, 1.0)
+            ),
+            2
         )
 
     # --------------------------------------------------
