@@ -47,6 +47,7 @@ frontend/chat_history.json
 
 # Persistent memory
 backend/app/memory/memory_store.json
+backend/data/memory.json
 
 # ==========================================
 # RAG / Vector Database

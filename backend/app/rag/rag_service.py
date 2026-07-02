@@ -289,6 +289,8 @@ class RAGService:
 
         answer = citation_result["answer"]
 
+        confidence = processed_answer["confidence"]
+
         # --------------------------------------------------
         # Total Time
         # --------------------------------------------------
@@ -306,15 +308,9 @@ class RAGService:
             total_seconds=total_seconds,
             prompt=prompt,
             answer=answer,
-            confidence=processed_answer[
-                "confidence"
-            ],
-            hallucination_result=(
-                hallucination_result
-            ),
-            citation_result=(
-                citation_result
-            ),
+            confidence=confidence,
+            hallucination_result=hallucination_result,
+            citation_result=citation_result,
         )
 
         # --------------------------------------------------
@@ -324,6 +320,7 @@ class RAGService:
         return {
             "question": question,
             "answer": answer,
+            "confidence": confidence,
             "sources": sources,
         }
 

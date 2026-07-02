@@ -1,53 +1,42 @@
 from fastapi import APIRouter
 
-from app.rag.models import DocumentRequest
 from app.rag.rag_service import rag_service
 from app.rag.vector_store import vector_store
 
+from app.schemas.rag import (
+    AskRequest,
+    AskResponse,
+)
 
-router = APIRouter()
-
-
-@router.post("/rag/add")
-def add_document(
-    document: DocumentRequest
-):
-
-    vector_store.add_document(
-        document.id,
-        document.text
-    )
-
-    return {
-        "message": "Document added successfully."
-    }
+router = APIRouter(
+    tags=["Retrieval-Augmented Generation"],
+)
 
 
 @router.get("/rag/search")
 def search(
     query: str,
-    k: int = 3
+    k: int = 3,
 ):
-
     return vector_store.search(
-        query,
-        k
+        query=query,
+        k=k,
     )
 
 
-@router.get("/rag/ask")
+@router.post(
+    "/rag/ask",
+    response_model=AskResponse,
+)
 def ask(
-    question: str,
-    conversation: str | None = None
+    request: AskRequest,
 ):
-
     return rag_service.ask(
-        question=question,
-        conversation=conversation
+        question=request.question,
+        conversation=request.conversation,
     )
 
 
 @router.get("/rag/diagnostics")
 def diagnostics():
-
     return rag_service.diagnostics()
