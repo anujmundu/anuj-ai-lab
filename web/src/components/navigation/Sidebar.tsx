@@ -9,7 +9,7 @@ import {
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { SidebarItem } from "./SidebarItem";
+import SidebarItem from "./SidebarItem";
 
 export function Sidebar() {
   return (
@@ -25,32 +25,37 @@ export function Sidebar() {
           <SidebarItem
             icon={MessageSquare}
             label="Chat"
-            active
+            to="/"
           />
 
           <SidebarItem
             icon={FileText}
             label="Documents"
+            to="/documents"
           />
 
           <SidebarItem
             icon={Brain}
             label="Memory"
+            to="/memory"
           />
 
           <SidebarItem
             icon={Wrench}
             label="Tools"
+            to="/tools"
           />
 
           <SidebarItem
             icon={GitBranch}
             label="Pipeline"
+            to="/pipeline"
           />
 
           <SidebarItem
             icon={Settings}
             label="Settings"
+            to="/settings"
           />
         </nav>
       </ScrollArea>
@@ -67,3 +72,5 @@ export function Sidebar() {
     </aside>
   );
 }
+
+export default Sidebar;
