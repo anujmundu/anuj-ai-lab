@@ -175,7 +175,7 @@ class PromptBuilder:
     def build_prompt(
         self,
         question: str,
-        documents: str,
+        context: str,
         conversation: str | None = None
     ) -> str:
         """
@@ -186,7 +186,7 @@ class PromptBuilder:
         question
             User question.
 
-        documents
+        context
             Structured context produced by ContextBuilder.
 
         conversation
@@ -195,7 +195,7 @@ class PromptBuilder:
 
         sections = self._build_sections(
             question=question,
-            context=documents,
+            context=context,
             conversation=conversation
         )
 

@@ -17,9 +17,6 @@ node_modules/
 # Logs
 logs/
 
-# Data
-data/
-
 # Build
 dist/
 build/
@@ -67,3 +64,6 @@ chroma_db/
 # Temporary RAG test files
 test_embedding.py
 test_vector_store.py
+
+# Uploaded documents
+backend/uploads/

@@ -1,0 +1,11 @@
+Python is a programming language.
+
+Python was created by Guido van Rossum.
+
+FastAPI is a modern web framework.
+
+ChromaDB stores embeddings.
+
+Sentence Transformers generate embeddings.
+
+Retrieval Augmented Generation improves LLM accuracy.

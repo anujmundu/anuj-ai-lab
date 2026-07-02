@@ -64,7 +64,9 @@ class VectorStore:
         filename: str
     ):
 
-        chunks = self.get_document_chunks(filename)
+        chunks = self.get_document_chunks(
+            filename
+        )
 
         ids = chunks["ids"]
 
@@ -72,6 +74,39 @@ class VectorStore:
             self.collection.delete(
                 ids=ids
             )
+
+    def get_documents(self):
+
+        results = self.collection.get()
+
+        metadatas = results.get("metadatas") or []
+
+        documents = {}
+
+        for metadata in metadatas:
+
+            if metadata is None:
+                continue
+
+            filename = metadata["filename"]
+
+            documents[filename] = documents.get(
+                filename,
+                0
+            ) + 1
+
+        return documents
+
+    def document_exists(
+        self,
+        filename: str
+    ) -> bool:
+
+        chunks = self.get_document_chunks(
+            filename
+        )
+
+        return len(chunks["ids"]) > 0
 
 
 vector_store = VectorStore()
