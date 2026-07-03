@@ -3,38 +3,43 @@ import { useState } from "react";
 import {
     ChatHistory,
     ChatInput,
-    type Message,
+    EmptyChat,
+    LoadingMessage,
 } from "@/components/chat";
 
 import { useAsk } from "@/hooks";
 
-export default function ChatPage() {
-    const ask = useAsk();
+import type { ChatMessage } from "@/types";
 
+export default function ChatPage() {
     const [question, setQuestion] = useState("");
 
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-    const handleSubmit = () => {
-        if (!question.trim()) {
+    const askMutation = useAsk();
+
+    function handleSubmit() {
+        const trimmed = question.trim();
+
+        if (!trimmed || askMutation.isPending) {
             return;
         }
 
-        const userQuestion = question;
+        const userMessage: ChatMessage = {
+            role: "user",
+            content: trimmed,
+        };
 
         setMessages((previous) => [
             ...previous,
-            {
-                role: "user",
-                content: userQuestion,
-            },
+            userMessage,
         ]);
 
         setQuestion("");
 
-        ask.mutate(
+        askMutation.mutate(
             {
-                question: userQuestion,
+                question: trimmed,
                 conversation: null,
             },
             {
@@ -44,12 +49,25 @@ export default function ChatPage() {
                         {
                             role: "assistant",
                             content: response.answer,
+                            sources: response.sources,
+                        },
+                    ]);
+                },
+
+                onError(error) {
+                    setMessages((previous) => [
+                        ...previous,
+                        {
+                            role: "assistant",
+                            content:
+                                error.message ??
+                                "An unexpected error occurred.",
                         },
                     ]);
                 },
             },
         );
-    };
+    }
 
     return (
         <section className="flex flex-1 flex-col gap-6 p-6">
@@ -59,19 +77,31 @@ export default function ChatPage() {
                 </h1>
 
                 <p className="text-muted-foreground">
-                    Ask questions using the Retrieval-Augmented Generation pipeline
+                    Ask questions using the
+                    Retrieval-Augmented Generation
+                    pipeline.
                 </p>
             </div>
 
-            <ChatHistory
-                messages={messages}
-            />
+            <div className="flex flex-1 flex-col gap-6">
+                {messages.length === 0 ? (
+                    <EmptyChat />
+                ) : (
+                    <ChatHistory
+                        messages={messages}
+                    />
+                )}
+
+                {askMutation.isPending && (
+                    <LoadingMessage />
+                )}
+            </div>
 
             <ChatInput
                 value={question}
                 onChange={setQuestion}
                 onSubmit={handleSubmit}
-                disabled={ask.isPending}
+                disabled={askMutation.isPending}
             />
         </section>
     );

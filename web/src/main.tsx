@@ -5,23 +5,14 @@ import App from "./App";
 
 import "./index.css";
 
-import { QueryProvider } from "./providers/QueryProvider";
-
+import { AppProviders } from "./providers/AppProviders";
 
 ReactDOM.createRoot(
-
     document.getElementById("root")!,
-
 ).render(
-
     <React.StrictMode>
-
-        <QueryProvider>
-
+        <AppProviders>
             <App />
-
-        </QueryProvider>
-
-    </React.StrictMode>
-
+        </AppProviders>
+    </React.StrictMode>,
 );

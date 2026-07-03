@@ -34,5 +34,41 @@ export const queryKeys = {
                 "documents",
                 filename,
             ] as const,
+
+        upload: [
+            "documents",
+            "upload",
+        ] as const,
+
+        recent: [
+            "documents",
+            "recent",
+        ] as const,
+
+        versions: (
+            filename: string,
+        ) =>
+            [
+                "documents",
+                filename,
+                "versions",
+            ] as const,
+    },
+
+    system: {
+        health: [
+            "system",
+            "health",
+        ] as const,
+
+        settings: [
+            "system",
+            "settings",
+        ] as const,
+
+        models: [
+            "system",
+            "models",
+        ] as const,
     },
 } as const;

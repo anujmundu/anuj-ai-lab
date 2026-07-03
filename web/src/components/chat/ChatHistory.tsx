@@ -1,24 +1,22 @@
-import { ChatMessage } from "./ChatMessage";
+import type { ChatMessage } from "@/types";
 
-export interface Message {
-    role: "user" | "assistant";
-    content: string;
-}
+import { ChatMessage as MessageCard } from "./ChatMessage";
 
 interface ChatHistoryProps {
-    messages: Message[];
+    messages: ChatMessage[];
 }
 
 export function ChatHistory({
     messages,
 }: ChatHistoryProps) {
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
             {messages.map((message, index) => (
-                <ChatMessage
+                <MessageCard
                     key={index}
                     role={message.role}
                     content={message.content}
+                    sources={message.sources}
                 />
             ))}
         </div>
