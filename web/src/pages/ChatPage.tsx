@@ -1,21 +1,78 @@
-import { Cpu } from "lucide-react";
+import { useState } from "react";
+
+import {
+    ChatHistory,
+    ChatInput,
+    type Message,
+} from "@/components/chat";
+
+import { useAsk } from "@/hooks";
 
 export default function ChatPage() {
-  return (
-    <section className="flex h-full flex-1 items-center justify-center p-8">
-      <div className="flex max-w-2xl flex-col items-center text-center">
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border bg-card shadow-sm">
-          <Cpu className="h-8 w-8 text-primary" />
-        </div>
+    const ask = useAsk();
 
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Welcome to Anuj AI Lab
-        </h1>
+    const [question, setQuestion] = useState("");
 
-        <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground">
-          Build • RAG • Memory • Agents • Tools
-        </p>
-      </div>
-    </section>
-  );
+    const [messages, setMessages] = useState<Message[]>([]);
+
+    const handleSubmit = () => {
+        if (!question.trim()) {
+            return;
+        }
+
+        const userQuestion = question;
+
+        setMessages((previous) => [
+            ...previous,
+            {
+                role: "user",
+                content: userQuestion,
+            },
+        ]);
+
+        setQuestion("");
+
+        ask.mutate(
+            {
+                question: userQuestion,
+                conversation: null,
+            },
+            {
+                onSuccess(response) {
+                    setMessages((previous) => [
+                        ...previous,
+                        {
+                            role: "assistant",
+                            content: response.answer,
+                        },
+                    ]);
+                },
+            },
+        );
+    };
+
+    return (
+        <section className="flex flex-1 flex-col gap-6 p-6">
+            <div>
+                <h1 className="text-2xl font-bold">
+                    AI Assistant
+                </h1>
+
+                <p className="text-muted-foreground">
+                    Ask questions using the Retrieval-Augmented Generation pipeline
+                </p>
+            </div>
+
+            <ChatHistory
+                messages={messages}
+            />
+
+            <ChatInput
+                value={question}
+                onChange={setQuestion}
+                onSubmit={handleSubmit}
+                disabled={ask.isPending}
+            />
+        </section>
+    );
 }

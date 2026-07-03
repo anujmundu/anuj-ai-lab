@@ -7,6 +7,16 @@ export function useDocuments() {
     return useQuery({
         queryKey: queryKeys.documents.all,
 
-        queryFn: () => documentService.getDocuments(),
+        queryFn: async () => {
+            const documents =
+                await documentService.getDocuments();
+
+            console.log(
+                "[useDocuments]",
+                documents,
+            );
+
+            return documents;
+        },
     });
 }
