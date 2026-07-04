@@ -7,40 +7,38 @@ import type {
 
 export const documentService = {
     async getDocuments(): Promise<DocumentInfo[]> {
-        const response = await api.get<DocumentInfo[]>(
-            "/documents",
-        );
+        const { data } =
+            await api.get<DocumentInfo[]>(
+                "/documents",
+            );
 
-        console.log(
-            "[documentService] GET /documents",
-            response.data,
-        );
-
-        return response.data;
+        return data;
     },
 
     async ingest(
         file: File,
     ): Promise<IngestResponse> {
-        const formData = new FormData();
+        const formData =
+            new FormData();
 
         formData.append(
             "file",
             file,
         );
 
-        const response = await api.post<IngestResponse>(
-            "/ingest",
-            formData,
-            {
-                headers: {
-                    "Content-Type":
-                        "multipart/form-data",
+        const { data } =
+            await api.post<IngestResponse>(
+                "/ingest",
+                formData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data",
+                    },
                 },
-            },
-        );
+            );
 
-        return response.data;
+        return data;
     },
 
     async deleteDocument(
