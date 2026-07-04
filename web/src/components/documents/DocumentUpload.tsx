@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { toast } from "sonner";
+
 import { useIngestDocument } from "@/hooks";
 
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,18 @@ export function DocumentUpload() {
 
         ingestMutation.mutate(file, {
             onSuccess() {
+                toast.success(
+                    "Document uploaded successfully.",
+                );
+
                 setFile(null);
+            },
+
+            onError(error) {
+                toast.error(
+                    error.message ||
+                        "Document upload failed.",
+                );
             },
         });
     }
@@ -52,18 +65,6 @@ export function DocumentUpload() {
                             ? "Uploading..."
                             : "Upload Document"}
                     </Button>
-
-                    {ingestMutation.isError && (
-                        <span className="text-sm font-medium text-red-600">
-                            Upload failed.
-                        </span>
-                    )}
-
-                    {ingestMutation.isSuccess && (
-                        <span className="text-sm font-medium text-green-600">
-                            Upload completed successfully.
-                        </span>
-                    )}
                 </div>
             </CardContent>
         </Card>
