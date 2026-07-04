@@ -9,5 +9,11 @@ export function useDiagnostics() {
 
         queryFn: () =>
             diagnosticsService.getDiagnostics(),
+
+        refetchOnMount: "always",
+
+        refetchOnWindowFocus: true,
+
+        staleTime: 0,
     });
 }
