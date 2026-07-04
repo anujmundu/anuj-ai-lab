@@ -1,21 +1,18 @@
-import { DocumentList } from "@/components/documents";
+import {
+    DocumentList,
+    DocumentUpload,
+} from "@/components/documents";
+
 import { useDocuments } from "@/hooks";
 
 export default function DocumentsPage() {
     const {
         data = [],
         isLoading,
-        error,
     } = useDocuments();
 
-    console.log("DocumentsPage", {
-        data,
-        isLoading,
-        error,
-    });
-
     return (
-        <section className="flex flex-1 flex-col gap-6 p-6">
+        <section className="flex flex-1 flex-col gap-8 p-6">
             <div>
                 <h1 className="text-2xl font-bold">
                     Documents
@@ -26,10 +23,25 @@ export default function DocumentsPage() {
                 </p>
             </div>
 
-            <DocumentList
-                documents={data}
-                isLoading={isLoading}
-            />
+            <DocumentUpload />
+
+            <div className="space-y-4">
+                <div>
+                    <h2 className="text-xl font-semibold">
+                        Indexed Documents
+                    </h2>
+
+                    <p className="text-sm text-muted-foreground">
+                        Documents currently available to the
+                        Retrieval-Augmented Generation pipeline.
+                    </p>
+                </div>
+
+                <DocumentList
+                    documents={data}
+                    isLoading={isLoading}
+                />
+            </div>
         </section>
     );
 }

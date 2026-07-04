@@ -11,24 +11,23 @@ export function DocumentList({
     documents = [],
     isLoading,
 }: DocumentListProps) {
-    console.log(
-        "[DocumentList]",
-        documents,
-    );
-
     if (isLoading) {
         return (
-            <p className="text-sm text-muted-foreground">
-                Loading documents...
-            </p>
+            <div className="rounded-lg border bg-card p-6">
+                <p className="text-sm text-muted-foreground">
+                    Loading documents...
+                </p>
+            </div>
         );
     }
 
     if (documents.length === 0) {
         return (
-            <p className="text-sm text-muted-foreground">
-                No documents indexed.
-            </p>
+            <div className="rounded-lg border bg-card p-6">
+                <p className="text-sm text-muted-foreground">
+                    No documents indexed yet.
+                </p>
+            </div>
         );
     }
 
