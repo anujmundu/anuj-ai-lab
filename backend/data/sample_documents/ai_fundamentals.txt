@@ -1,0 +1,108 @@
+# AI Fundamentals Notes
+
+Artificial Intelligence (AI) is the field of computer science focused on building systems capable of performing tasks that normally require human intelligence. These tasks include reasoning, learning, perception, language understanding, and decision-making.
+
+## Machine Learning
+
+Machine Learning (ML) is a subset of AI where models learn patterns from data instead of being explicitly programmed. Common learning paradigms include:
+
+* Supervised Learning
+* Unsupervised Learning
+* Reinforcement Learning
+
+Examples of supervised learning algorithms include Linear Regression, Decision Trees, Random Forests, and Support Vector Machines.
+
+## Deep Learning
+
+Deep Learning is a specialized branch of Machine Learning that uses artificial neural networks with multiple hidden layers.
+
+Popular deep learning frameworks include:
+
+* PyTorch
+* TensorFlow
+* Keras
+
+Deep learning is widely used in:
+
+* Image Classification
+* Object Detection
+* Speech Recognition
+* Natural Language Processing
+
+## Embeddings
+
+Embeddings are dense numerical vector representations of text, images, or other data. They capture semantic meaning so that similar concepts have similar vector representations.
+
+Embedding models are commonly used in semantic search, recommendation systems, clustering, and Retrieval-Augmented Generation (RAG).
+
+## Vector Databases
+
+Vector databases store embeddings and enable similarity search using distance metrics such as cosine similarity or Euclidean distance.
+
+Popular vector databases include:
+
+* ChromaDB
+* FAISS
+* Pinecone
+* Weaviate
+* Milvus
+
+## Retrieval-Augmented Generation (RAG)
+
+RAG combines document retrieval with a Large Language Model.
+
+A typical RAG pipeline consists of:
+
+1. Load documents.
+2. Split documents into chunks.
+3. Generate embeddings.
+4. Store embeddings in a vector database.
+5. Retrieve the most relevant chunks.
+6. Build a prompt containing the retrieved context.
+7. Generate a grounded answer using an LLM.
+
+This approach reduces hallucinations because the model answers using retrieved knowledge instead of relying only on its internal parameters.
+
+## Large Language Models
+
+Large Language Models (LLMs) are transformer-based neural networks trained on massive text corpora.
+
+Examples include:
+
+* Llama
+* Qwen
+* Mistral
+* Gemma
+
+LLMs can perform tasks such as:
+
+* Question Answering
+* Text Summarization
+* Code Generation
+* Translation
+* Conversational AI
+
+## Prompt Engineering
+
+Prompt engineering is the practice of designing effective prompts that guide an AI model toward producing accurate, relevant, and structured responses.
+
+Well-designed prompts often include:
+
+* Clear instructions
+* Context
+* Constraints
+* Desired output format
+
+## AI Engineering
+
+An AI Engineering workflow typically includes:
+
+* Data collection
+* Data preprocessing
+* Model selection
+* Evaluation
+* Deployment
+* Monitoring
+* Continuous improvement
+
+Modern AI applications often combine APIs, vector databases, orchestration frameworks, and local or cloud-hosted language models to create intelligent systems.
