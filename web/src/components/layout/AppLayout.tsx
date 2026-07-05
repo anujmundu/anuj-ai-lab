@@ -4,17 +4,19 @@ import { Sidebar } from "@/components/navigation/Sidebar";
 import { Workspace } from "@/components/workspace/Workspace";
 
 export default function AppLayout() {
-  return (
-    <div className="flex h-screen flex-col bg-slate-50 dark:bg-slate-950">
-      <Header />
+    return (
+        <div className="flex h-screen flex-col bg-slate-50 dark:bg-slate-950">
+            <Header />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <Sidebar />
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+                <div className="hidden lg:flex">
+                    <Sidebar />
+                </div>
 
-        <Workspace />
+                <Workspace />
 
-        <Inspector />
-      </div>
-    </div>
-  );
+                <Inspector />
+            </div>
+        </div>
+    );
 }
