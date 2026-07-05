@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 to use the .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --background: #f8fafc;
+  --foreground: #020617;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #f8fafc;
+}
+
 *,
 *::before,
 *::after {
@@ -25,6 +41,6 @@ body,
 }
 
 body {
-  background-color: #020617;
-  color: #f8fafc;
+  background: var(--background);
+  color: var(--foreground);
 }

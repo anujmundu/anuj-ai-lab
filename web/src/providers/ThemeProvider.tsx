@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 interface ThemeProviderProps {
@@ -13,7 +12,8 @@ export function ThemeProvider({
         <NextThemesProvider
             attribute="class"
             defaultTheme="system"
-            enableSystem
+            enableSystem={false}
+            storageKey="anuj-ai-lab-theme"
             disableTransitionOnChange
         >
             {children}

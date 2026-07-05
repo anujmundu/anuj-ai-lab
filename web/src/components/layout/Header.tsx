@@ -5,9 +5,8 @@ import {
     Sun,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
 import { useTheme } from "next-themes";
+import { useNavigate } from "react-router-dom";
 
 import { useHealth } from "@/hooks/system/useHealth";
 
@@ -17,8 +16,10 @@ import { Button } from "@/components/ui/button";
 export function Header() {
     const navigate = useNavigate();
 
-    const { resolvedTheme, setTheme } =
-        useTheme();
+    const {
+        resolvedTheme,
+        setTheme,
+    } = useTheme();
 
     const {
         data,
@@ -78,6 +79,7 @@ export function Header() {
                     size="icon"
                     onClick={toggleTheme}
                     title="Toggle theme"
+                    aria-label="Toggle theme"
                 >
                     {resolvedTheme === "dark" ? (
                         <Sun className="h-4 w-4" />
@@ -93,6 +95,7 @@ export function Header() {
                         navigate("/settings")
                     }
                     title="Settings"
+                    aria-label="Open settings"
                 >
                     <Settings className="h-4 w-4" />
                 </Button>
