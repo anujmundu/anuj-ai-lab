@@ -1,76 +1,11 @@
-import {
-  Brain,
-  FileText,
-  GitBranch,
-  MessageSquare,
-  Settings,
-  Wrench,
-} from "lucide-react";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-import SidebarItem from "./SidebarItem";
+import { NavigationContent } from "./NavigationContent";
 
 export function Sidebar() {
-  return (
-    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Navigation
-        </h2>
-      </div>
-
-      <ScrollArea className="flex-1">
-        <nav className="space-y-2 p-4">
-          <SidebarItem
-            icon={MessageSquare}
-            label="Chat"
-            to="/"
-          />
-
-          <SidebarItem
-            icon={FileText}
-            label="Documents"
-            to="/documents"
-          />
-
-          <SidebarItem
-            icon={Brain}
-            label="Memory"
-            to="/memory"
-          />
-
-          <SidebarItem
-            icon={Wrench}
-            label="Tools"
-            to="/tools"
-          />
-
-          <SidebarItem
-            icon={GitBranch}
-            label="Pipeline"
-            to="/pipeline"
-          />
-
-          <SidebarItem
-            icon={Settings}
-            label="Settings"
-            to="/settings"
-          />
-        </nav>
-      </ScrollArea>
-
-      <div className="border-t border-slate-200 p-4 dark:border-slate-800">
-        <p className="text-xs text-slate-500">
-          Anuj AI Lab
-        </p>
-
-        <p className="mt-1 text-xs text-slate-400">
-          Modern AI Engineering Platform
-        </p>
-      </div>
-    </aside>
-  );
+    return (
+        <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+            <NavigationContent />
+        </aside>
+    );
 }
 
 export default Sidebar;
