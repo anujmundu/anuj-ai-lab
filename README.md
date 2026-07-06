@@ -1,19 +1,34 @@
 # 🚀 Anuj AI Lab
 
+> A production-grade local AI engineering platform built with FastAPI, React, TypeScript, Ollama, and Retrieval-Augmented Generation (RAG).
+
+Build modern AI systems locally with document ingestion, semantic retrieval, diagnostics, memory, and agent workflows—all inside a modular engineering platform.
+
 ![Python](https://img.shields.io/badge/Python-3.14-blue?logo=python)
+
 ![FastAPI](https://img.shields.io/badge/FastAPI-Framework-green?logo=fastapi)
+
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+
+![Vite](https://img.shields.io/badge/Vite-8-purple?logo=vite)
+
+![Tailwind](https://img.shields.io/badge/TailwindCSS-v4-38BDF8?logo=tailwindcss)
+
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-black)
-![SQLite](https://img.shields.io/badge/SQLite-Database-blue?logo=sqlite)
-![SQLModel](https://img.shields.io/badge/SQLModel-ORM-orange)
+
+![ChromaDB](https://img.shields.io/badge/VectorDB-Chroma-orange)
+
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Stage%202-Completed-brightgreen)
-![Version](https://img.shields.io/badge/Version-v1.1.0-blue)
-![Frontend](https://img.shields.io/badge/Frontend-Streamlit-red)
-![MCP](https://img.shields.io/badge/MCP-Enabled-purple)
+
+![Version](https://img.shields.io/badge/Version-v0.5.0-blue)
+
+![Status](https://img.shields.io/badge/Development-Active-brightgreen)
 
 # Overview
 
-A modular local AI engineering framework built from scratch using **FastAPI**, **Ollama**, **SQLModel**, and an agent-based architecture.
+A modular AI engineering platform for developing production-ready Retrieval-Augmented Generation systems, document intelligence, diagnostics, memory, and autonomous AI workflows.
 
 This project demonstrates how to build a local AI system featuring agents, tools, memory, planning, orchestration, experiment tracking, and autonomous execution.
 
@@ -21,26 +36,21 @@ This project demonstrates how to build a local AI system featuring agents, tools
 
 # Portfolio Summary
 
-Current Version: v1.1.0
+Current Version: v0.5.0
 
-Modules Built:
+Completed Stages
 
-✅ Agents  
-✅ Memory  
-✅ Planning  
-✅ Workflows  
-✅ Autonomous Assistant  
-✅ Connectors  
-✅ Tools  
-✅ Search  
-✅ File Processing  
-✅ Voice AI  
-✅ Streamlit UI  
-✅ MCP Foundations
+✅ Stage 1 — AI Foundations
 
-Next Milestone:
+✅ Stage 2 — Connectors & Voice
 
-🚀 Stage 3 — RAG Systems & Vector Databases
+✅ Stage 3 — RAG Platform
+
+✅ Stage 3.5 — Modern React Client
+
+Current Focus
+
+🚧 Stage 4 — Persistent Memory
 
 ---
 
@@ -104,9 +114,17 @@ Next Milestone:
 * Sequential Workflow Executor
 * Multi-Agent Collaboration
 
-## Frontend
+### Frontend
 
-* Streamlit Chat Interface
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS v4
+- React Router
+- React Query
+- Radix UI
+- Lucide React
+- Zustand
 
 ## Documentation
 
@@ -114,6 +132,39 @@ Next Milestone:
 * Architecture Documentation
 * Screenshots & Proofs
 
+## Workspace
+
+* Modern React Dashboard
+* Responsive Layout
+* Theme Switching
+* React Query
+* Zustand State Management
+
+## Document Intelligence
+
+* Upload Documents
+* Automatic Parsing
+* Chunking
+* Embeddings
+* Vector Search
+
+## RAG
+
+* Semantic Retrieval
+* Context Builder
+* Prompt Builder
+* Ollama Integration
+
+## Diagnostics
+
+* Pipeline Diagnostics
+* Execution Timings
+* Confidence Score
+* Citation Mapping
+* Hallucination Detection
+* Prompt Statistics
+* Response Statistics
+* Source Attribution
 
 ---
 
@@ -161,59 +212,64 @@ Next Milestone:
 # Architecture
 
 ```text
-                    Streamlit Chat UI
-                             │
-                             ▼
-                     FastAPI Backend
-                             │
-══════════════════════════════════════════════
-                             │
+                          React + TypeScript UI
+                     (Vite • Tailwind • React Query)
+                                   │
+                                   ▼
+                        Modern Workspace Interface
       ┌──────────────┬──────────────┬──────────────┐
+      │              │              │              │
       ▼              ▼              ▼              ▼
-    Agents         Tools           MCP          State Manager 
-      │              │              │
-      ▼              ▼              ▼
- RouterAgent    Calculator     Tool Registry
- ToolAgent      Weather        MCP Server
- VoiceAgent     News
- EmailAgent     Currency
- Summarizer     Wiki
- CodeReview     Search
-                             │
-══════════════════════════════════════════════
-                             ▼
-                       Connectors
-                             │
-      ┌──────────────┬──────────────┬──────────────┐
-      ▼              ▼              ▼
-  Weather API      Wikipedia      Search
-  News API         Connector      Connector
-  Currency API
-                             │
-══════════════════════════════════════════════
-                             ▼
-                     Memory Layer
-                             │
-      ┌──────────────┬──────────────┐
-      ▼              ▼              ▼
- Local Memory   Persistent Memory  State Manager
-                             │
-══════════════════════════════════════════════
-                             ▼
-                      SQLite Database
-                             │
-══════════════════════════════════════════════
-                             ▼
-                  Workflow Orchestration
-                             │
-      ┌──────────────┬──────────────┬──────────────┐
-      ▼              ▼              ▼
-   Planner      Executor      Collaboration
+    Chat         Documents      Settings      Inspector
+      │              │              │              │
+      └──────────────┴──────────────┴──────────────┘
+                                   │
+                                   ▼
+                           FastAPI Backend API
+                                   │
+══════════════════════════════════════════════════════════════════════
+                                   │
+      ┌──────────────┬──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼              ▼
+ Document        Retrieval      Diagnostics      System
+ Ingestion          RAG             Engine       Services
+      │              │              │              │
+      ▼              ▼              ▼              ▼
+ File Parser   Semantic Search   Timing Metrics   Health Check
+ Chunking      Context Builder   Citations       Configuration
+ Metadata      Prompt Builder    Confidence      Model Info
+ Embeddings    Response Engine   Hallucination
+                                   │
+══════════════════════════════════════════════════════════════════════
+                                   │
+                     Local AI Inference Layer
+      ┌─────────────────────────────┴─────────────────────────────┐
+      ▼                                                           ▼
+  Ollama Server                                          Local Embedding Model
+      │                                                           │
+      └─────────────────────────────┬─────────────────────────────┘
+                                    ▼
+                           Vector Database
+                              (ChromaDB)
+                                    │
+══════════════════════════════════════════════════════════════════════
+                                    │
+      ┌──────────────┬──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼              ▼
+ Documents      Embeddings      Metadata      Source Chunks
+                                    │
+══════════════════════════════════════════════════════════════════════
+                                    │
+                     Future Platform Expansion
+      ┌──────────────┬──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼              ▼
+   Memory          Tools         Agents      Multi-Agent
+   (Stage 4)      (Stage 5)     (Stage 6)    (Stage 7)
 ```
 
 ---
 
-## Project Tree
+## Project Structure
 
 ```text
 anuj-ai-lab
@@ -222,83 +278,123 @@ anuj-ai-lab
 │   │
 │   ├── app
 │   │   │
-│   │   ├── agents
-│   │   │   ├── base_agent.py
-│   │   │   ├── summarizer_agent.py
-│   │   │   ├── email_agent.py
-│   │   │   ├── code_review_agent.py
-│   │   │   ├── router_agent.py
-│   │   │   └── tool_agent.py
-│   │   │
 │   │   ├── api
-│   │   │   ├── routes.py
-│   │   │   ├── prompt_routes.py
-│   │   │   ├── experiment_routes.py
-│   │   │   ├── compare_routes.py
-│   │   │   ├── workflow_routes.py
-│   │   │   ├── router_routes.py
-│   │   │   ├── tool_routes.py
-│   │   │   ├── state_routes.py
-│   │   │   ├── planner_routes.py
-│   │   │   ├── executor_routes.py
-│   │   │   ├── collaboration_routes.py
 │   │   │   ├── assistant_routes.py
+│   │   │   ├── collaboration_routes.py
+│   │   │   ├── compare_routes.py
 │   │   │   ├── connector_routes.py
-│   │   │   ├── file_routes.py
+│   │   │   ├── document_routes.py
+│   │   │   ├── ingestion_routes.py
+│   │   │   ├── rag_routes.py
 │   │   │   ├── search_routes.py
-│   │   │   ├── voice_routes.py
-│   │   │   └── mcp_routes.py
+│   │   │   ├── system_routes.py
+│   │   │   ├── workflow_routes.py
+│   │   │   └── voice_routes.py
 │   │   │
-│   │   ├── assistant
-│   │   ├── collaboration
-│   │   ├── connectors
 │   │   ├── core
+│   │   │
 │   │   ├── db
-│   │   ├── executor
-│   │   ├── memory
-│   │   ├── mcp
-│   │   │   ├── tool_registry.py
-│   │   │   └── mcp_server.py
 │   │   │
 │   │   ├── models
-│   │   ├── planner
-│   │   ├── search
-│   │   │   └── search_connector.py
+│   │   │
+│   │   ├── rag
+│   │   │   ├── chunking.py
+│   │   │   ├── embeddings.py
+│   │   │   ├── ingestion_service.py
+│   │   │   ├── prompt_builder.py
+│   │   │   ├── rag_service.py
+│   │   │   ├── retrieval_models.py
+│   │   │   └── vector_store.py
 │   │   │
 │   │   ├── services
-│   │   ├── state
-│   │   ├── tools
-│   │   ├── voice
-│   │   │   ├── whisper_service.py
-│   │   │   ├── tts_service.py
-│   │   │   └── voice_agent.py
 │   │   │
-│   │   ├── workflows
-│   │   ├── rag
-│   │   ├── multimodal
-│   │   └── utils
+│   │   ├── utils
+│   │   │
+│   │   └── future
+│   │       ├── memory
+│   │       ├── tools
+│   │       ├── agents
+│   │       └── workflows
 │   │
-│   ├── prompts
-│   ├── tests
 │   ├── data
+│   │   ├── documents
+│   │   ├── embeddings
+│   │   └── sample_documents
+│   │
+│   ├── tests
+│   │
 │   ├── main.py
 │   └── requirements.txt
 │
-├── frontend
-│   ├── app.py
-│   └── requirements.txt
-│
-├── assets
-│   └── screenshots
+├── web
+│   │
+│   ├── public
+│   │
+│   ├── src
+│   │   │
+│   │   ├── app
+│   │   │
+│   │   ├── components
+│   │   │   ├── chat
+│   │   │   ├── documents
+│   │   │   ├── inspector
+│   │   │   ├── layout
+│   │   │   ├── navigation
+│   │   │   ├── ui
+│   │   │   └── workspace
+│   │   │
+│   │   ├── hooks
+│   │   │   ├── chat
+│   │   │   ├── document
+│   │   │   ├── rag
+│   │   │   └── system
+│   │   │
+│   │   ├── lib
+│   │   │
+│   │   ├── pages
+│   │   │   ├── ChatPage.tsx
+│   │   │   ├── DocumentsPage.tsx
+│   │   │   ├── MemoryPage.tsx
+│   │   │   ├── PipelinePage.tsx
+│   │   │   ├── SettingsPage.tsx
+│   │   │   └── ToolsPage.tsx
+│   │   │
+│   │   ├── providers
+│   │   │
+│   │   ├── services
+│   │   │
+│   │   ├── stores
+│   │   │
+│   │   ├── types
+│   │   │
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   │
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
 │
 ├── docs
+│   ├── architecture
+│   ├── screenshots
+│   └── roadmap
+│
+├── infrastructure
+│
+├── notebooks
+│
+├── portfolio
+│
+├── scripts
+│
+├── .github
 │
 ├── .env.example
 ├── .gitignore
-├── README.md
-└── LICENSE
+├── LICENSE
+└── README.md
 ```
-
 ---
 
 # Installation
@@ -369,30 +465,31 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# Quick Start
+## Quick Start
 
-Terminal 1:
+### Terminal 1
 
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
-Terminal 2:
+### Terminal 2
 
 ```bash
-cd frontend
-streamlit run app.py
+cd web
+npm install
+npm run dev
 ```
 
 Backend:
 http://127.0.0.1:8000
 
+Frontend:
+http://localhost:5173
+
 Swagger:
 http://127.0.0.1:8000/docs
-
-Frontend:
-http://localhost:8501
 
 ---
 
@@ -426,63 +523,78 @@ http://localhost:8501
 
 # 📸 Screenshots
 
-## Swagger API Documentation
+## Chat Workspace
 
-![Swagger UI](assets/screenshots/swagger-ui.png)
-
----
-
-## Autonomous Assistant
-
-![Assistant](assets/screenshots/assistant.png)
+![Chat Workspace](assets/screenshots/chat-workspace.png)
 
 ---
 
-## Multi-Agent Collaboration
+## Chat
 
-![Collaboration](assets/screenshots/collaboration.png)
-
----
-
-## Task Planner
-
-![Planner](assets/screenshots/planner.png)
+![Chat](assets/screenshots/chat.png)
 
 ---
 
-## Multi-Model Evaluation
+## Documents
 
-![Model Comparison](assets/screenshots/model-comparison.png)
-
----
-
-## Terminal Proof
-
-![Terminal Proof](assets/screenshots/terminal-proof.png)
+![Documents](assets/screenshots/documents.png)
 
 ---
 
-## Project Structure
+## Document Upload
 
-![Project Tree](assets/screenshots/project-tree-1.png)
-
----
-
-## Streamlit Chat Interface
-
-![Streamlit UI](assets/screenshots/streamlit-ui.png)
+![Document Upload](assets/screenshots/document-upload.png)
 
 ---
 
-## MCP Foundations
+## Pipeline Diagnostics
 
-![MCP](assets/screenshots/mcp-foundations.png)
+![Pipeline Diagnostics](assets/screenshots/pipeline-diagnostics.png)
 
 ---
 
-## Voice AI
+## Pipeline Citations
 
-![Voice](assets/screenshots/voice-ai.png)
+![Pipeline Citations](assets/screenshots/pipeline-citations.png)
+
+---
+
+## Settings
+
+![Settings](assets/screenshots/settings.png)
+
+---
+
+## Dark Theme
+
+![Dark Theme](assets/screenshots/dark-theme.png)
+
+---
+
+## Light Theme
+
+![Light Theme](assets/screenshots/light-theme.png)
+
+---
+
+## Additional Screenshots
+
+Additional screenshots demonstrating the platform architecture, backend APIs, and future development stages are available in:
+
+```text
+assets/screenshots/
+```
+
+Examples include:
+
+- Backend Health
+- RAG Responses
+- Document Retrieval
+- Citation Mapping
+- Prompt Diagnostics
+- Hallucination Analysis
+- Project Architecture
+- Future Platform Development
 
 ---
 
@@ -515,167 +627,327 @@ Including:
 
 # Development Timeline
 
-### Jun 17, 2026
+Stage 1
 
-* Initialize project structure
+FastAPI Foundations
 
-### Jun 18, 2026
+✔
 
-* Configuration layer
-* Environment setup
-* Ollama integration
+Stage 2
 
-### Jun 19, 2026
+Connectors & Voice
 
-* Prompt templates
-* Experiment tracking
-* Multi-model evaluation
+✔
 
-### Jun 20, 2026
+Stage 3
 
-* Workflow engine
-* Local memory
-* Router agent
-* Tool agent
-* State manager
-* Task planner
+RAG Backend
 
-### Jun 21, 2026
+✔
 
-* Sequential executor
-* Multi-agent collaboration
-* Mini autonomous assistant
+Stage 3.5
 
-### Jun 22, 2026
+Modern React Client
 
-* Repository Documentation
-* Portfolio Proof Collection
-* Stage 1 Completion
+✔
 
-### Jun 23, 2026
+Stage 4
 
-* External Connectors
-* Weather Tool
-* News Tool
-* Currency Tool
-* Wikipedia Connector
-* Search Connector
+Memory
 
-### Jun 24, 2026
+🚧
 
-* File Connectors (TXT / CSV / PDF)
-* Voice AI Foundations
-* Streamlit Chat Interface
-* Persistent Memory
-* MCP Foundations
-* Stage 2 Completion
+Stage 5
+
+Tools
+
+⏳
+
+Stage 6
+
+Agents
+
+⏳
+
+Stage 7
+
+Multi-Agent Platform
+
+⏳
+---
+
+#  Release History
+
+## v0.5.0 — Modern React AI Platform
+
+**Released:** July 2026
+
+### Added
+
+- Modern React 19 + TypeScript frontend
+- Vite-powered development environment
+- Responsive application workspace
+- Dark / Light theme support
+- React Query data layer
+- Document upload workflow
+- Automatic document refresh after upload
+- RAG document management
+- Pipeline Diagnostics dashboard
+- Execution timing metrics
+- Citation mapping
+- Hallucination analysis
+- Confidence scoring
+- Backend health monitoring
+- Settings dashboard
+- Inspector panel
+- Improved UI component library
+- Toast notifications
+- Production-ready application layout
 
 ---
 
-# Release History
+## v0.4.0 — Retrieval-Augmented Generation (RAG)
 
-## v1.1.0 — Stage 2 Complete
+**Released:** July 2026
 
-Released: June 2026
+### Added
 
-Added:
+- Document ingestion pipeline
+- Automatic chunking
+- Embedding generation
+- ChromaDB vector database integration
+- Semantic document retrieval
+- Prompt builder
+- Context builder
+- Citation generation
+- Source mapping
+- Local Ollama integration
+- FastAPI RAG APIs
+
+---
+
+## v0.3.0 — AI Platform Foundations
+
+**Released:** June 2026
+
+### Added
+
+- FastAPI backend architecture
+- REST API foundation
+- Local AI inference using Ollama
+- Modular project structure
+- Configuration management
+- Logging system
+- Testing framework
+- Core AI service layer
+
+---
+
+## v0.2.0 — Connectors & Voice
+
+**Released:** June 2026
+
+### Added
+
+- External connectors
+- Search services
+- File processing
+- Voice AI foundations
+- Workflow improvements
+
+---
+
+## v0.1.0 — Initial Release
+
+**Released:** June 2026
+
+### Added
+
+- Project initialization
+- Local LLM experimentation
+- Prompt engineering
+- Early workflow engine
+- Agent architecture foundation
+
+---
+
+#  Future Roadmap
+
+## ✅ Stage 1 — AI Foundations
+
+- FastAPI Backend
+- Local LLM Integration (Ollama)
+- Prompt Engineering
+- Workflow Foundations
+- API Architecture
+
+---
+
+## ✅ Stage 2 — Connectors & Voice
 
 - External Connectors
-- Search System
-- File Readers
-- Voice AI
-- Streamlit Frontend
-- Persistent Memory
-- MCP Foundations
-
----
-
-## v1.0.0 — Stage 1 Complete
-
-Released: June 2026
-
-Added:
-
-- Ollama Integration
-- Prompt Engineering
-- Experiment Tracking
-- Multi-Agent System
-- Workflow Engine
-- Autonomous Assistant
-
----
-
-# Future Roadmap
-
-## Stage 3 (Current)
-
-- Vector Databases
-- Embeddings
-- RAG Pipelines
-- Document Retrieval
-- Semantic Search
-
-## Stage 4
-
-- LangGraph
-- Advanced Multi-Agent Systems
-- Long-Term Memory
-- Autonomous Workflows
-
-## Stage 5
-
-- Docker
-- Kubernetes
-- Monitoring
-- CI/CD
-- Production Deployment
-
----
-
-# Project Status
-
-## ✅ Stage 1 Complete (v1.0.0)
-
-- Ollama Integration
-- Prompt Engineering
-- Experiment Tracking
-- Memory
-- Agents
-- Planning
-- Workflows
-- Autonomous Assistant
-
-## ✅ Stage 2 Complete (v1.1.0)
-
-- External Connectors
-- Information Tools
+- Search Services
 - File Processing
-- Search System
-- Voice AI
-- Streamlit Chat UI
-- Persistent Memory
-- MCP Foundations
-
-Current Release:
-
-v1.1.0
+- Voice AI Foundations
+- Workflow Improvements
 
 ---
 
-# 🌟 Highlights
+## ✅ Stage 3 — Retrieval-Augmented Generation (RAG)
 
-- Built completely from scratch.
-- Local LLM integration using Ollama.
-- Multi-agent architecture.
-- Workflow orchestration engine.
-- Persistent memory system.
-- External connectors and tools.
-- File processing capabilities.
-- Voice AI integration.
-- Streamlit chat interface.
-- MCP (Model Context Protocol) foundations.
-- SQLite experiment tracking.
-- Fully documented with Swagger APIs and screenshots.
+- Document Ingestion
+- Automatic Chunking
+- Embedding Generation
+- ChromaDB Vector Database
+- Semantic Search
+- Context Builder
+- Prompt Builder
+- Citation Mapping
+- Pipeline Diagnostics
+- Hallucination Detection
+
+---
+
+## ✅ Stage 3.5 — Modern React Platform
+
+- React 19 + TypeScript Frontend
+- Vite Development Environment
+- Tailwind CSS UI
+- Responsive Workspace
+- Document Management
+- Live Pipeline Inspector
+- Backend Health Monitoring
+- Settings Dashboard
+- Dark / Light Theme
+- React Query Integration
+
+---
+
+##  Stage 4 — Memory
+
+- Persistent Conversation Memory
+- Session Management
+- User Profiles
+- Memory Retrieval
+- Memory Visualization
+
+---
+
+## ⏳ Stage 5 — Tool Calling
+
+- Function Calling
+- Local Tool Registry
+- File System Tools
+- Python Execution
+- Web Search Integration
+- Tool Permission System
+
+---
+
+## ⏳ Stage 6 — AI Agents
+
+- Autonomous Agents
+- Planning Engine
+- Multi-Step Reasoning
+- Task Execution
+- Agent Collaboration
+
+---
+
+## ⏳ Stage 7 — Multi-Agent Platform
+
+- Agent Orchestration
+- Shared Memory
+- Workflow Automation
+- Parallel Agent Execution
+- Production AI Engineering Platform
+
+---
+
+#  Project Status
+
+## ✅ Stage 1 — AI Foundations
+
+- FastAPI Backend
+- Local LLM Integration
+- Prompt Engineering
+- Workflow Engine
+- REST APIs
+
+---
+
+## ✅ Stage 2 — Connectors & Voice
+
+- External Connectors
+- Search Services
+- File Processing
+- Voice AI
+- Workflow Improvements
+
+---
+
+## ✅ Stage 3 — RAG Platform
+
+- Document Upload
+- Chunking
+- Embeddings
+- ChromaDB
+- Semantic Retrieval
+- Prompt Builder
+- Citation Mapping
+- Diagnostics Engine
+
+---
+
+## ✅ Stage 3.5 — Modern React Client
+
+- React + TypeScript
+- Responsive Workspace
+- Document Management
+- Pipeline Inspector
+- Settings Dashboard
+- Theme Switching
+- Backend Health Monitoring
+- Toast Notifications
+
+---
+
+## 🚧 Currently Working On
+
+**Stage 4 — Memory System**
+
+- Persistent Memory
+- Conversation History
+- User Sessions
+- Memory Retrieval
+
+---
+
+### Current Release
+
+**v0.5.0**
+
+---
+
+# Highlights
+
+- Built completely from scratch using a modular architecture.
+- Modern React 19 + TypeScript frontend.
+- FastAPI-powered backend APIs.
+- Local AI inference using Ollama.
+- Retrieval-Augmented Generation (RAG) pipeline.
+- ChromaDB vector database integration.
+- Semantic document retrieval.
+- Automatic document ingestion and chunking.
+- Live Pipeline Diagnostics dashboard.
+- Execution timing analysis.
+- Citation mapping and source attribution.
+- Hallucination detection and confidence scoring.
+- Responsive multi-page workspace.
+- Dark and Light theme support.
+- React Query for efficient server state management.
+- Production-ready project structure.
+- Fully documented with architecture diagrams, screenshots, and API documentation.
 
 ---
 
@@ -684,12 +956,17 @@ v1.1.0
 **Anuj Mundu**
 
 Master of Computer Applications (MCA)  
-[Maulana Azad National Institute of Technology Bhopal (MANIT)](https://manit.ac.in)
+Maulana Azad National Institute of Technology (MANIT), Bhopal
 
-AI Engineering • Data Science • Machine Learning
+**Interests**
+- Artificial Intelligence
+- Retrieval-Augmented Generation (RAG)
+- AI Agents
+- Data Science
+- Machine Learning
+- Full-Stack AI Engineering
 
-GitHub:
-https://github.com/anujmundu
+GitHub: https://github.com/anujmundu
 
 Current Focus:
 Building Production-Ready Agentic AI Systems
