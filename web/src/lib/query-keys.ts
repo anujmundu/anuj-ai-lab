@@ -1,4 +1,28 @@
 export const queryKeys = {
+
+    memory: {
+        all: [
+            "memory",
+        ] as const,
+
+        detail: (
+            id: number,
+        ) =>
+            [
+                "memory",
+                id,
+            ] as const,
+
+        search: (
+            query: string,
+        ) =>
+            [
+                "memory",
+                "search",
+                query,
+            ] as const,
+    },
+
     rag: {
         ask: [
             "rag",
