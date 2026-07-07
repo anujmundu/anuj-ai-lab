@@ -32,6 +32,9 @@ from app.api.rag_routes import router as rag_router
 from app.api.ingestion_routes import router as ingestion_router
 from app.api.document_routes import router as document_router
 
+# Stage 4 Persistent Memory
+from app.memory.routes import router as persistent_memory_router
+
 from app.db.database import create_db_and_tables
 
 
@@ -62,18 +65,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==========================
+# ==========================================
 # Core APIs
-# ==========================
+# ==========================================
 
 app.include_router(router)
 app.include_router(prompt_router)
 app.include_router(experiment_router)
 app.include_router(compare_router)
 
-# ==========================
+# ==========================================
 # Workflow & Agents
-# ==========================
+# ==========================================
 
 app.include_router(workflow_router)
 app.include_router(router_agent_router)
@@ -84,9 +87,9 @@ app.include_router(executor_router)
 app.include_router(collaboration_router)
 app.include_router(assistant_router)
 
-# ==========================
+# ==========================================
 # Integrations
-# ==========================
+# ==========================================
 
 app.include_router(connector_router)
 app.include_router(file_router)
@@ -95,13 +98,19 @@ app.include_router(voice_router)
 app.include_router(memory_router)
 app.include_router(mcp_router)
 
-# ==========================
+# ==========================================
 # RAG
-# ==========================
+# ==========================================
 
 app.include_router(rag_router)
 app.include_router(ingestion_router)
 app.include_router(document_router)
+
+# ==========================================
+# Stage 4 Persistent Memory
+# ==========================================
+
+app.include_router(persistent_memory_router)
 
 
 @app.get("/")

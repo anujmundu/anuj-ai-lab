@@ -1,4 +1,5 @@
 from sqlmodel import Session, SQLModel, create_engine
+import app.memory.models
 
 
 sqlite_url = "sqlite:///experiments.db"
