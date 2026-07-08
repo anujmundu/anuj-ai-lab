@@ -164,60 +164,99 @@ class RAGService:
             }
             for metadata in metadatas
         ]
-
-    # --------------------------------------------------
-    # Public API
-    # --------------------------------------------------
-
-    def ask(
+    
+    def _retrieve_documents(
         self,
+        *,
         question: str,
-        conversation: str | None = None,
-        k: int = 3
-    ) -> dict:
+        k: int,
+    ) -> tuple[list[str], list[dict], float]:
+        """
+        Retrieve and rank documents.
 
-        total_start = time.perf_counter()
-
-        # --------------------------------------------------
-        # Retrieval + Ranking
-        # --------------------------------------------------
+        Returns
+        -------
+        (
+            documents,
+            metadatas,
+            retrieval_seconds,
+        )
+        """
 
         start = time.perf_counter()
 
         results = hybrid_retriever.retrieve(
             query=question,
-            k=k
+            k=k,
         )
 
         results = ranker.filter_results(
-            results
+            results,
         )
 
         retrieval_seconds = self._elapsed(
-            start
+            start,
         )
 
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
 
-        # --------------------------------------------------
-        # Context Builder
-        # --------------------------------------------------
+        return (
+            documents,
+            metadatas,
+            retrieval_seconds,
+        )
+        
+    def _build_context(
+        self,
+        *,
+        documents: list[str],
+        metadatas: list[dict],
+    ) -> tuple[str, float]:
+        """
+        Build structured context from retrieved documents.
+
+        Returns
+        -------
+        (
+            context,
+            context_build_seconds,
+        )
+        """
 
         start = time.perf_counter()
 
         context = context_builder.build_context(
             documents=documents,
-            metadatas=metadatas
+            metadatas=metadatas,
         )
 
         context_build_seconds = self._elapsed(
-            start
+            start,
         )
 
-        # --------------------------------------------------
-        # Prompt Builder
-        # --------------------------------------------------
+        return (
+            context,
+            context_build_seconds,
+        )   
+        
+    def _build_prompt(
+        self,
+        *,
+        question: str,
+        context: str,
+        conversation: str | None,
+    ) -> tuple[str, float]:
+        """
+        Build the final LLM prompt.
+
+        Returns
+        -------
+        (
+            prompt,
+            prompt_build_seconds,
+        )
+        """
 
         start = time.perf_counter()
 
@@ -228,62 +267,81 @@ class RAGService:
         )
 
         prompt_build_seconds = self._elapsed(
-            start
+            start,
         )
 
-        # --------------------------------------------------
-        # LLM Generation
-        # --------------------------------------------------
+        return (
+            prompt,
+            prompt_build_seconds,
+        ) 
+    
+    def _generate_answer(
+        self,
+        *,
+        prompt: str,
+    ) -> tuple[str, float]:
+        """
+        Generate an answer from the language model.
+
+        Returns
+        -------
+        (
+            raw_answer,
+            generation_seconds,
+        )
+        """
 
         raw_answer = ollama_service.generate(
-            prompt=prompt
+            prompt=prompt,
         )
 
         generation_seconds = (
             ollama_service.last_generation.get(
                 "latency_seconds",
-                0.0
+                0.0,
             )
         )
 
-        # --------------------------------------------------
-        # Sources
-        # --------------------------------------------------
-
-        sources = self._build_sources(
-            metadatas
+        return (
+            raw_answer,
+            generation_seconds,
         )
-
-        # --------------------------------------------------
-        # Answer Processor
-        # --------------------------------------------------
+        
+    def _process_answer(
+        self,
+        *,
+        raw_answer: str,
+        context: str,
+        sources: list[dict],
+    ) -> tuple[
+        str,
+        float,
+        dict,
+        dict,
+    ]:
+        """
+        Process the generated answer and run
+        post-generation analysis.
+        """
 
         processed_answer = (
             answer_processor.process(
                 answer=raw_answer,
-                context=context
+                context=context,
             )
         )
-
-        # --------------------------------------------------
-        # Hallucination Detector
-        # --------------------------------------------------
 
         hallucination_result = (
             hallucination_detector.detect(
                 answer=processed_answer["answer"],
-                context=context
+                context=context,
             )
         )
-
-        # --------------------------------------------------
-        # Citation Processor
-        # --------------------------------------------------
 
         citation_result = (
             citation_processor.process(
                 answer=processed_answer["answer"],
-                sources=sources
+                sources=sources,
             )
         )
 
@@ -291,12 +349,104 @@ class RAGService:
 
         confidence = processed_answer["confidence"]
 
+        return (
+            answer,
+            confidence,
+            hallucination_result,
+            citation_result,
+        )    
+
+    # --------------------------------------------------
+    # Public API
+    # --------------------------------------------------
+
+    def ask(
+        self,
+        question: str,
+        conversation: str | None = None,
+        k: int = 3,
+    ) -> dict:
+
+        total_start = time.perf_counter()
+
+        # --------------------------------------------------
+        # Retrieval + Ranking
+        # --------------------------------------------------
+
+        (
+            documents,
+            metadatas,
+            retrieval_seconds,
+        ) = self._retrieve_documents(
+            question=question,
+            k=k,
+        )
+
+        # --------------------------------------------------
+        # Context Builder
+        # --------------------------------------------------
+
+        (
+            context,
+            context_build_seconds,
+        ) = self._build_context(
+            documents=documents,
+            metadatas=metadatas,
+        )
+
+        # --------------------------------------------------
+        # Prompt Builder
+        # --------------------------------------------------
+
+        (
+            prompt,
+            prompt_build_seconds,
+        ) = self._build_prompt(
+            question=question,
+            context=context,
+            conversation=conversation,
+        )
+
+        # --------------------------------------------------
+        # LLM Generation
+        # --------------------------------------------------
+
+        (
+            raw_answer,
+            generation_seconds,
+        ) = self._generate_answer(
+            prompt=prompt,
+        )
+
+        # --------------------------------------------------
+        # Sources
+        # --------------------------------------------------
+
+        sources = self._build_sources(
+            metadatas,
+        )
+
+        # --------------------------------------------------
+        # Answer Processing
+        # --------------------------------------------------
+
+        (
+            answer,
+            confidence,
+            hallucination_result,
+            citation_result,
+        ) = self._process_answer(
+            raw_answer=raw_answer,
+            context=context,
+            sources=sources,
+        )
+
         # --------------------------------------------------
         # Total Time
         # --------------------------------------------------
 
         total_seconds = self._elapsed(
-            total_start
+            total_start,
         )
 
         self._update_request_diagnostics(
