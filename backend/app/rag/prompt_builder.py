@@ -9,7 +9,8 @@ class PromptBuilder:
 
     • Build structured prompts
     • Enforce grounding rules
-    • Support future conversation memory
+    • Support conversation history
+    • Support persistent memory
     • Keep prompting independent from retrieval
 
     Future responsibilities
@@ -22,9 +23,8 @@ class PromptBuilder:
 
     def __init__(
         self,
-        config: PromptBuilderConfig | None = None
+        config: PromptBuilderConfig | None = None,
     ):
-
         self.config = config or PromptBuilderConfig()
 
     # --------------------------------------------------
@@ -32,7 +32,6 @@ class PromptBuilder:
     # --------------------------------------------------
 
     def _role_section(self) -> str:
-
         return (
             "ROLE\n"
             "----\n"
@@ -40,7 +39,6 @@ class PromptBuilder:
         )
 
     def _task_section(self) -> str:
-
         return (
             "TASK\n"
             "----\n"
@@ -49,35 +47,36 @@ class PromptBuilder:
         )
 
     def _rules_section(self) -> str:
-
         rules: list[str] = []
 
         if self.config.strict_grounding:
-
-            rules.extend([
-                "- Use ONLY the retrieved context.",
-                "- Never invent facts.",
-                "- Never use outside knowledge."
-            ])
+            rules.extend(
+                [
+                    "- Use ONLY the retrieved context.",
+                    "- Never invent facts.",
+                    "- Never use outside knowledge.",
+                ]
+            )
 
         if self.config.preserve_terminology:
-
             rules.append(
                 "- Preserve technical terminology exactly as written."
             )
 
-        rules.extend([
-            "- Keep the answer concise and accurate.",
-            (
-                "- Limit the answer to approximately "
-                f"{self.config.max_answer_sentences} sentences."
-            ),
-            (
-                "- If the answer cannot be found in the "
-                "retrieved context, reply exactly:"
-            ),
-            f'  "{self.config.unknown_answer}"'
-        ])
+        rules.extend(
+            [
+                "- Keep the answer concise and accurate.",
+                (
+                    "- Limit the answer to approximately "
+                    f"{self.config.max_answer_sentences} sentences."
+                ),
+                (
+                    "- If the answer cannot be found in the "
+                    "retrieved context, reply exactly:"
+                ),
+                f'  "{self.config.unknown_answer}"',
+            ]
+        )
 
         return (
             "RULES\n"
@@ -87,15 +86,13 @@ class PromptBuilder:
 
     def _conversation_section(
         self,
-        conversation: str | None
+        conversation: str | None,
     ) -> str:
 
         if not self.config.include_conversation:
-
             conversation = "(none)"
 
         elif not conversation:
-
             conversation = "(none)"
 
         return (
@@ -104,11 +101,30 @@ class PromptBuilder:
             f"{conversation}"
         )
 
+    def _memory_section(
+        self,
+        memory: str | None,
+    ) -> str:
+        """
+        Persistent long-term memory.
+
+        This section is intentionally separate from
+        retrieved documents and conversation history.
+        """
+
+        if not memory:
+            memory = "(none)"
+
+        return (
+            "MEMORY\n"
+            "------\n"
+            f"{memory}"
+        )
+
     def _context_section(
         self,
-        context: str
+        context: str,
     ) -> str:
-
         return (
             "CONTEXT\n"
             "-------\n"
@@ -117,9 +133,8 @@ class PromptBuilder:
 
     def _question_section(
         self,
-        question: str
+        question: str,
     ) -> str:
-
         return (
             "QUESTION\n"
             "--------\n"
@@ -127,7 +142,6 @@ class PromptBuilder:
         )
 
     def _answer_section(self) -> str:
-
         return (
             "ANSWER\n"
             "------"
@@ -139,17 +153,18 @@ class PromptBuilder:
 
     def _build_sections(
         self,
+        *,
         question: str,
         context: str,
-        conversation: str | None
+        conversation: str | None,
+        memory: str | None,
     ) -> list[str]:
         """
         Assemble all prompt sections.
 
-        Keeping this separate ensures build_prompt()
-        remains a very small public method as new
-        sections (citations, memory, examples, tool
-        outputs, etc.) are added in future commits.
+        New sections (memory, tools, citations,
+        examples, etc.) can be added here without
+        affecting the public API.
         """
 
         return [
@@ -157,15 +172,18 @@ class PromptBuilder:
             self._task_section(),
             self._rules_section(),
             self._conversation_section(
-                conversation
+                conversation,
+            ),
+            self._memory_section(
+                memory,
             ),
             self._context_section(
-                context
+                context,
             ),
             self._question_section(
-                question
+                question,
             ),
-            self._answer_section()
+            self._answer_section(),
         ]
 
     # --------------------------------------------------
@@ -174,9 +192,11 @@ class PromptBuilder:
 
     def build_prompt(
         self,
+        *,
         question: str,
         context: str,
-        conversation: str | None = None
+        conversation: str | None = None,
+        memory: str | None = None,
     ) -> str:
         """
         Build the final prompt.
@@ -187,19 +207,25 @@ class PromptBuilder:
             User question.
 
         context
-            Structured context produced by ContextBuilder.
+            Retrieved document context.
 
         conversation
-            Reserved for future conversation memory.
+            Recent conversation history.
+
+        memory
+            Long-term persistent memory.
         """
 
         sections = self._build_sections(
             question=question,
             context=context,
-            conversation=conversation
+            conversation=conversation,
+            memory=memory,
         )
 
-        return "\n\n".join(sections).strip()
+        return "\n\n".join(
+            sections
+        ).strip()
 
 
 prompt_builder = PromptBuilder()

@@ -13,6 +13,10 @@ class MemoryRepository:
     ):
         self.session = session
 
+    # ==========================================
+    # Create
+    # ==========================================
+
     def create(
         self,
         memory: MemoryCreate,
@@ -26,6 +30,10 @@ class MemoryRepository:
         self.session.refresh(db_memory)
 
         return db_memory
+
+    # ==========================================
+    # Read
+    # ==========================================
 
     def get_all(
         self,
@@ -49,6 +57,96 @@ class MemoryRepository:
             Memory,
             memory_id,
         )
+
+    def exists(
+        self,
+        memory_id: int,
+    ) -> bool:
+        return (
+            self.get_by_id(memory_id)
+            is not None
+        )
+
+    def find_duplicate(
+        self,
+        content: str,
+    ) -> Memory | None:
+        statement = (
+            select(Memory)
+            .where(
+                Memory.content == content
+            )
+        )
+
+        return self.session.exec(
+            statement
+        ).first()
+
+    def get_recent(
+        self,
+        limit: int = 10,
+    ) -> list[Memory]:
+        statement = (
+            select(Memory)
+            .order_by(
+                Memory.created_at.desc()
+            )
+            .limit(limit)
+        )
+
+        return list(
+            self.session.exec(statement)
+        )
+
+    def get_pinned(
+        self,
+    ) -> list[Memory]:
+        statement = (
+            select(Memory)
+            .where(
+                Memory.pinned.is_(True)
+            )
+            .order_by(
+                Memory.created_at.desc()
+            )
+        )
+
+        return list(
+            self.session.exec(statement)
+        )
+
+    def get_by_category(
+        self,
+        category: str,
+    ) -> list[Memory]:
+        statement = (
+            select(Memory)
+            .where(
+                Memory.category == category
+            )
+            .order_by(
+                Memory.created_at.desc()
+            )
+        )
+
+        return list(
+            self.session.exec(statement)
+        )
+
+    def count(
+        self,
+    ) -> int:
+        statement = select(Memory)
+
+        return len(
+            list(
+                self.session.exec(statement)
+            )
+        )
+
+    # ==========================================
+    # Update
+    # ==========================================
 
     def update(
         self,
@@ -77,6 +175,10 @@ class MemoryRepository:
 
         return memory
 
+    # ==========================================
+    # Delete
+    # ==========================================
+
     def delete(
         self,
         memory_id: int,
@@ -92,6 +194,10 @@ class MemoryRepository:
         self.session.commit()
 
         return True
+
+    # ==========================================
+    # Search
+    # ==========================================
 
     def search(
         self,
