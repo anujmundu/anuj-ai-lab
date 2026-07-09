@@ -8,6 +8,10 @@ from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
 from app.rag.ranker import ranker
 from app.services.ollama_service import ollama_service
+from sqlmodel import Session
+
+from app.db.database import engine
+from app.memory.manager import MemoryManager
 
 
 class RAGService:
@@ -370,7 +374,13 @@ class RAGService:
         conversation-specific memory retrieval.
         """
 
-        return ""    
+        with Session(engine) as session:
+
+            manager = MemoryManager(
+                session=session,
+            )
+
+            return manager.recent_context()  
 
     # --------------------------------------------------
     # Public API
