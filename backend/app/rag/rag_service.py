@@ -246,6 +246,7 @@ class RAGService:
         question: str,
         context: str,
         conversation: str | None,
+        memory: str,
     ) -> tuple[str, float]:
         """
         Build the final LLM prompt.
@@ -264,6 +265,7 @@ class RAGService:
             question=question,
             context=context,
             conversation=conversation,
+            memory=memory,
         )
 
         prompt_build_seconds = self._elapsed(
@@ -355,6 +357,20 @@ class RAGService:
             hallucination_result,
             citation_result,
         )    
+        
+    def _prepare_memory(
+        self,
+        question: str,
+        conversation: str | None,
+    ) -> str:
+        """
+        Prepare persistent memory for prompt construction.
+
+        Conversation support is reserved for future
+        conversation-specific memory retrieval.
+        """
+
+        return ""    
 
     # --------------------------------------------------
     # Public API
@@ -393,6 +409,11 @@ class RAGService:
             documents=documents,
             metadatas=metadatas,
         )
+        
+        memory = self._prepare_memory(
+            question=question,
+            conversation=conversation,
+        )
 
         # --------------------------------------------------
         # Prompt Builder
@@ -405,6 +426,7 @@ class RAGService:
             question=question,
             context=context,
             conversation=conversation,
+            memory=memory,
         )
 
         # --------------------------------------------------
