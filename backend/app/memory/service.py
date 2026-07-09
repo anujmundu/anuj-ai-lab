@@ -69,6 +69,19 @@ class MemoryService:
         return self.repository.search(
             query,
         )
+    
+    def get_relevant_memories(
+        self,
+        query: str,
+    ):
+        """
+        Retrieve memories that are relevant
+        to the supplied query.
+        """
+
+        return self.repository.search(
+            query,
+        )
 
     def get_recent_memories(
         self,

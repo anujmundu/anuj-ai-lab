@@ -380,7 +380,9 @@ class RAGService:
                 session=session,
             )
 
-            return manager.recent_context()  
+            return manager.relevant_context(
+                query=question,
+            )
 
     # --------------------------------------------------
     # Public API

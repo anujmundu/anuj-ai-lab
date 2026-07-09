@@ -80,6 +80,36 @@ class MemoryManager:
         return "\n".join(
             context,
         )
+        
+    def relevant_context(
+        self,
+        query: str,
+    ) -> str:
+        """
+        Build prompt context using memories that
+        are relevant to the supplied query.
+        """
+
+        memories = (
+            self.service.get_relevant_memories(
+                query,
+            )
+        )
+
+        if not memories:
+            return ""
+
+        context = []
+
+        for memory in memories:
+
+            context.append(
+                f"- {memory.content}"
+            )
+
+        return "\n".join(
+            context,
+        )    
 
     # --------------------------------------------------
     # Statistics
