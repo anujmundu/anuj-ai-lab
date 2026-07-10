@@ -1,6 +1,7 @@
 from app.memory.repository import MemoryRepository
 from app.memory.schemas import MemoryCreate
 from app.memory.schemas import MemoryUpdate
+from app.memory.vector_store import memory_vector_store
 
 
 class MemoryService:
@@ -41,9 +42,16 @@ class MemoryService:
         if duplicate is not None:
             return duplicate
 
-        return self.repository.create(
+        saved_memory = self.repository.create(
             memory,
         )
+
+        memory_vector_store.add(
+            memory_id=saved_memory.id,
+            text=saved_memory.content,
+        )
+
+        return saved_memory
 
     # ==========================================
     # Read
@@ -69,7 +77,7 @@ class MemoryService:
         return self.repository.search(
             query,
         )
-    
+
     def get_relevant_memories(
         self,
         query: str,
@@ -132,10 +140,19 @@ class MemoryService:
             ),
         )
 
-        return self.repository.update(
+        updated = self.repository.update(
             memory_id,
             update,
         )
+
+        if updated is not None:
+
+            memory_vector_store.update(
+                memory_id=updated.id,
+                text=updated.content,
+            )
+
+        return updated
 
     # ==========================================
     # Delete
@@ -145,6 +162,14 @@ class MemoryService:
         self,
         memory_id: int,
     ):
-        return self.repository.delete(
+        deleted = self.repository.delete(
             memory_id,
         )
+
+        if deleted:
+
+            memory_vector_store.delete(
+                memory_id,
+            )
+
+        return deleted

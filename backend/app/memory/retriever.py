@@ -1,131 +1,65 @@
-import re
+from app.memory.vector_store import (
+    memory_vector_store,
+)
+
 
 class MemoryRetriever:
-    
-    STOP_WORDS = {
-        "a",
-        "an",
-        "the",
-        "is",
-        "are",
-        "was",
-        "were",
-        "am",
-        "i",
-        "me",
-        "my",
-        "mine",
-        "you",
-        "your",
-        "yours",
-        "he",
-        "she",
-        "it",
-        "they",
-        "them",
-        "we",
-        "our",
-        "ours",
-        "what",
-        "which",
-        "who",
-        "where",
-        "when",
-        "why",
-        "how",
-        "do",
-        "does",
-        "did",
-        "to",
-        "of",
-        "for",
-        "on",
-        "in",
-        "at",
-        "with",
-        "and",
-        "or",
-    }
+    """
+    Retrieves semantically relevant memories.
 
-    def __init__(self, repository):
-        self.repository = repository
-        
-    def _extract_keywords(
+    The retriever intentionally asks the vector store
+    for more candidates than are ultimately needed.
+    This improves recall and leaves room for future
+    reranking strategies.
+    """
+
+    SEARCH_CANDIDATES = 20
+
+    def __init__(
         self,
-        query: str,
-    ) -> list[str]:
-        """
-        Extract searchable keywords from
-        a natural language question.
-        """
-
-        normalized = query.lower()
-
-        normalized = re.sub(
-            r"[^a-z0-9\s]",
-            " ",
-            normalized,
-        )
-
-        words = normalized.split()
-
-        keywords = []
-
-        for word in words:
-
-            if (
-                word
-                and word not in self.STOP_WORDS
-            ):
-                keywords.append(word)
-
-        return keywords
+        repository,
+    ):
+        self.repository = repository
 
     def relevant(
         self,
         query: str,
     ):
         """
-        Retrieve memories that are relevant
-        to the supplied query.
+        Retrieve memories using semantic search.
         """
 
-        keywords = self._extract_keywords(
-            query,
+        results = memory_vector_store.search(
+            query=query,
+            limit=self.SEARCH_CANDIDATES,
         )
 
-        if not keywords:
+        ids = results.get(
+            "ids",
+            [],
+        )
+
+        if not ids:
             return []
 
-        scored = {}
+        ids = ids[0]
 
-        for keyword in keywords:
+        if not ids:
+            return []
 
-            memories = self.repository.search(
-                keyword,
-            )
-
-            for memory in memories:
-
-                if memory.id not in scored:
-
-                    scored[memory.id] = {
-                        "memory": memory,
-                        "score": 0,
-                    }
-
-                scored[memory.id]["score"] += 1
-
-        ranked = sorted(
-            scored.values(),
-            key=lambda item: item["score"],
-            reverse=True,
-        )
-
-        return [
-            item["memory"]
-            for item in ranked
+        memory_ids = [
+            int(memory_id)
+            for memory_id in ids
         ]
 
-    def recent(self, limit=5):
-        return self.repository.get_recent(limit)
+        return self.repository.get_by_ids(
+            memory_ids,
+        )
+
+    def recent(
+        self,
+        limit: int = 5,
+    ):
+        return self.repository.get_recent(
+            limit,
+        )

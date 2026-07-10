@@ -57,6 +57,42 @@ class MemoryRepository:
             Memory,
             memory_id,
         )
+        
+    def get_by_ids(
+        self,
+        memory_ids: list[int],
+    ) -> list[Memory]:
+        """
+        Retrieve multiple memories by their IDs.
+
+        The returned order matches the order of
+        the supplied IDs.
+        """
+
+        if not memory_ids:
+            return []
+
+        statement = (
+            select(Memory)
+            .where(
+                Memory.id.in_(memory_ids)
+            )
+        )
+
+        memories = list(
+            self.session.exec(statement)
+        )
+
+        memory_map = {
+            memory.id: memory
+            for memory in memories
+        }
+
+        return [
+            memory_map[memory_id]
+            for memory_id in memory_ids
+            if memory_id in memory_map
+        ]
 
     def exists(
         self,
@@ -216,3 +252,5 @@ class MemoryRepository:
         return list(
             self.session.exec(statement)
         )
+        
+    

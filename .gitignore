@@ -68,3 +68,5 @@ test_vector_store.py
 
 # Uploaded documents
 backend/uploads/
+
+.obsidian/

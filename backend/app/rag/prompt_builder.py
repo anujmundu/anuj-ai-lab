@@ -42,8 +42,8 @@ class PromptBuilder:
         return (
             "TASK\n"
             "----\n"
-            "Answer the user's question using ONLY "
-            "the retrieved context."
+            "Answer the user's question using ONLY the "
+            "MEMORY section and the retrieved CONTEXT section."
         )
 
     def _rules_section(self) -> str:
@@ -52,7 +52,7 @@ class PromptBuilder:
         if self.config.strict_grounding:
             rules.extend(
                 [
-                    "- Use ONLY the retrieved context.",
+                    "- Use ONLY the MEMORY section and the retrieved CONTEXT section.",
                     "- Never invent facts.",
                     "- Never use outside knowledge.",
                 ]
@@ -72,7 +72,8 @@ class PromptBuilder:
                 ),
                 (
                     "- If the answer cannot be found in the "
-                    "retrieved context, reply exactly:"
+                    "MEMORY section or the retrieved CONTEXT section, "
+                    "reply exactly:"
                 ),
                 f'  "{self.config.unknown_answer}"',
             ]
@@ -118,6 +119,8 @@ class PromptBuilder:
         return (
             "MEMORY\n"
             "------\n"
+            "These are persistent facts about the user. "
+            "Treat them as true when answering questions.\n\n"
             f"{memory}"
         )
 

@@ -19,8 +19,7 @@ class PromptBuilderConfig:
     preserve_terminology: bool = True
 
     unknown_answer: str = (
-        "I don't have enough information "
-        "in the retrieved documents."
+        "I don't have enough information to answer that based on the available memory and retrieved context."
     )
 
     # --------------------------------------------------
