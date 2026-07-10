@@ -13,11 +13,41 @@ class MemoryExtractor:
     - Produce a MemoryCreate schema.
     """
 
+    QUESTION_PREFIXES = (
+        "what",
+        "why",
+        "how",
+        "when",
+        "where",
+        "who",
+        "which",
+        "do",
+        "does",
+        "did",
+        "can",
+        "could",
+        "would",
+        "should",
+        "is",
+        "are",
+    )
+
     def should_extract(
         self,
         text: str,
     ) -> bool:
+
         text = text.strip()
+
+        normalized = text.lower()
+
+        if (
+            text.endswith("?")
+            or normalized.startswith(
+                self.QUESTION_PREFIXES
+            )
+        ):
+            return False
 
         if len(text) < 10:
             return False
