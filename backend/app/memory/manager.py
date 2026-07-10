@@ -1,9 +1,10 @@
+from sqlmodel import Session
+
 from app.memory.extractor import memory_extractor
+from app.memory.ranker import memory_ranker
 from app.memory.repository import MemoryRepository
 from app.memory.retriever import MemoryRetriever
 from app.memory.service import MemoryService
-
-from sqlmodel import Session
 
 
 class MemoryManager:
@@ -16,6 +17,7 @@ class MemoryManager:
     • Prevent duplicates
     • Persist memories
     • Retrieve recent memories
+    • Rank retrieved memories
     • Prepare memory context
     """
 
@@ -30,7 +32,7 @@ class MemoryManager:
         self.service = MemoryService(
             repository,
         )
-        
+
         self.retriever = MemoryRetriever(
             repository,
         )
@@ -85,19 +87,25 @@ class MemoryManager:
         return "\n".join(
             context,
         )
-        
+
     def relevant_context(
         self,
         query: str,
     ) -> str:
         """
-        Build prompt context using memories that
-        are relevant to the supplied query.
+        Build prompt context using memories
+        relevant to the supplied query.
         """
 
         memories = (
             self.retriever.relevant(
                 query,
+            )
+        )
+
+        memories = (
+            memory_ranker.rank(
+                memories,
             )
         )
 
@@ -114,7 +122,7 @@ class MemoryManager:
 
         return "\n".join(
             context,
-        )    
+        )
 
     # --------------------------------------------------
     # Statistics
