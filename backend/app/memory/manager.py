@@ -1,5 +1,6 @@
 from app.memory.extractor import memory_extractor
 from app.memory.repository import MemoryRepository
+from app.memory.retriever import MemoryRetriever
 from app.memory.service import MemoryService
 
 from sqlmodel import Session
@@ -27,6 +28,10 @@ class MemoryManager:
         )
 
         self.service = MemoryService(
+            repository,
+        )
+        
+        self.retriever = MemoryRetriever(
             repository,
         )
 
@@ -91,7 +96,7 @@ class MemoryManager:
         """
 
         memories = (
-            self.service.get_relevant_memories(
+            self.retriever.relevant(
                 query,
             )
         )

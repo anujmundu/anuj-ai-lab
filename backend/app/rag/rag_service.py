@@ -383,6 +383,28 @@ class RAGService:
             return manager.relevant_context(
                 query=question,
             )
+            
+    def _store_memory(
+        self,
+        question: str,
+    ) -> None:
+        """
+        Extract and persist useful user memories.
+
+        This currently stores only the user's message.
+        Future versions may also process assistant
+        responses and conversation history.
+        """
+
+        with Session(engine) as session:
+
+            manager = MemoryManager(
+                session=session,
+            )
+
+            manager.process(
+                question,
+            )
 
     # --------------------------------------------------
     # Public API
@@ -495,6 +517,10 @@ class RAGService:
             confidence=confidence,
             hallucination_result=hallucination_result,
             citation_result=citation_result,
+        )
+        
+        self._store_memory(
+            question,
         )
 
         # --------------------------------------------------
