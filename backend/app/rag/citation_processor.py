@@ -1,3 +1,5 @@
+import re
+
 from app.rag.citation_processor_config import CitationProcessorConfig
 
 
@@ -8,14 +10,13 @@ class CitationProcessor:
     Responsibilities
 
     • Build source mappings
-    • Reserve citation numbering
-    • Prepare future inline citations
+    • Extract inline citations
+    • Validate citation references
     • Keep citation logic independent from answer generation
 
     Future responsibilities
 
-    • Inline citation insertion
-    • Citation validation
+    • Citation validation against sources
     • Citation deduplication
     • Multiple citation styles
     """
@@ -25,7 +26,10 @@ class CitationProcessor:
         config: CitationProcessorConfig | None = None
     ):
 
-        self.config = config or CitationProcessorConfig()
+        self.config = (
+            config
+            or CitationProcessorConfig()
+        )
 
     # --------------------------------------------------
     # Helpers
@@ -62,21 +66,30 @@ class CitationProcessor:
 
         return mapping
 
-    def _build_citations(
+    def _extract_citations(
         self,
-        answer: str,
-        source_mapping: list[dict]
-    ) -> tuple[str, list[str]]:
+        answer: str
+    ) -> list[str]:
+        """
+        Extract inline citations that already
+        exist in the generated answer.
 
-        if not self.config.include_inline_citations:
-            return answer, []
+        Example:
+            "...Python... [1] [2]"
 
-        citations = [
-            item["citation"]
-            for item in source_mapping
-        ]
+        Returns:
+            ["[1]", "[2]"]
+        """
 
-        return answer, citations
+        citations = re.findall(
+            r"\[\d+\]",
+            answer,
+        )
+
+        # Preserve order while removing duplicates.
+        return list(
+            dict.fromkeys(citations)
+        )
 
     # --------------------------------------------------
     # Public API
@@ -88,21 +101,24 @@ class CitationProcessor:
         sources: list[dict]
     ) -> dict:
         """
-        Prepare an answer for future citation support.
+        Build citation diagnostics.
 
-        The answer itself is intentionally left
-        unchanged in this milestone. This component
-        establishes the architecture for future
-        inline citation insertion.
+        Inline citation insertion is handled by
+        citation_inserter.py.
+
+        This component extracts citations from the
+        final answer and maps them back to the
+        retrieved source chunks.
         """
 
-        source_mapping = self._build_source_mapping(
-            sources
+        source_mapping = (
+            self._build_source_mapping(
+                sources
+            )
         )
 
-        answer, citations = self._build_citations(
-            answer,
-            source_mapping
+        citations = self._extract_citations(
+            answer
         )
 
         return {

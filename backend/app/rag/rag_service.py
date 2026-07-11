@@ -2,6 +2,7 @@ import time
 
 from app.rag.answer_processor import answer_processor
 from app.rag.citation_processor import citation_processor
+from app.rag.citation_inserter import citation_inserter
 from app.rag.context_builder import context_builder
 from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
@@ -412,16 +413,23 @@ class RAGService:
             )
         )
 
+        citation_insert_result = (
+            citation_inserter.insert(
+                answer=processed_answer["answer"],
+                sources=sources,
+            )
+        )
+
         hallucination_result = (
             hallucination_detector.detect(
-                answer=processed_answer["answer"],
+                answer=citation_insert_result["answer"],
                 context=context,
             )
         )
 
         citation_result = (
             citation_processor.process(
-                answer=processed_answer["answer"],
+                answer=citation_insert_result["answer"],
                 sources=sources,
             )
         )
