@@ -1,13 +1,55 @@
+from datetime import datetime
+
+
 class MemoryRanker:
     """
-    Lightweight ranking for retrieved memories.
+    Rank retrieved memories before they are added
+    to the prompt.
 
-    Higher importance memories are preferred.
+    Current ranking signals
 
-    Pinned memories receive an additional bonus.
+    • Importance
+    • Recency
+    • Pinned status
+
+    Future ranking signals
+
+    • Keyword overlap
+    • Semantic similarity
+    • User feedback
+    • Cross-encoder reranking
     """
 
     PINNED_BONUS = 10
+
+    RECENT_MEMORY_DAYS = 7
+
+    RECENT_BONUS = 3
+
+    OLDER_BONUS = 1
+
+    def recency_bonus(
+        self,
+        memory,
+    ) -> int:
+        """
+        Compute the recency contribution
+        for a memory.
+        """
+
+        now = datetime.now()
+
+        age = (
+            now
+            - memory.created_at.replace(
+                tzinfo=None,
+            )
+        ).days
+
+        if age <= self.RECENT_MEMORY_DAYS:
+            return self.RECENT_BONUS
+
+        return self.OLDER_BONUS
 
     def rank(
         self,
@@ -16,34 +58,47 @@ class MemoryRanker:
         """
         Rank memories using deterministic scoring.
         """
-        
-        if not memories:
-            return []
 
         scored = []
 
         for memory in memories:
 
-            score = memory.importance
+            recency = self.recency_bonus(
+                memory,
+            )
 
-            if memory.pinned:
-                score += self.PINNED_BONUS
+            pinned_bonus = (
+                self.PINNED_BONUS
+                if memory.pinned
+                else 0
+            )
+
+            score = 0
+
+            score += memory.importance
+
+            score += recency
+
+            score += pinned_bonus
 
             scored.append(
-                (
-                    score,
-                    memory,
-                )
+                {
+                    "memory": memory,
+                    "importance": memory.importance,
+                    "recency": recency,
+                    "pinned": pinned_bonus,
+                    "score": score,
+                }
             )
 
         scored.sort(
-            key=lambda item: item[0],
+            key=lambda item: item["score"],
             reverse=True,
         )
 
         return [
-            memory
-            for _, memory in scored
+            item["memory"]
+            for item in scored
         ]
 
 
