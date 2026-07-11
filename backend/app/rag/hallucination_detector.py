@@ -42,6 +42,14 @@ STOPWORDS = {
     "your",
 }
 
+FALLBACK_RESPONSES = (
+    "i don't have enough information",
+    "i do not have enough information",
+    "i don't know",
+    "i do not know",
+    "not enough information",
+)
+
 class HallucinationDetector:
     """
     Estimates hallucination risk for generated answers.
@@ -118,6 +126,22 @@ class HallucinationDetector:
         }
 
         return tokens
+    
+    def _is_fallback_response(
+        self,
+        answer: str,
+    ) -> bool:
+        """
+        Detect known fallback responses that intentionally
+        avoid making unsupported claims.
+        """
+
+        normalized = self._normalize_text(answer)
+
+        return any(
+            normalized.startswith(response)
+            for response in FALLBACK_RESPONSES
+        )
 
     def _context_overlap(
         self,
@@ -204,6 +228,22 @@ class HallucinationDetector:
         context_tokens = self._tokenize(
             context
         )
+        
+        is_fallback = self._is_fallback_response(
+            answer
+        )
+
+        if is_fallback:
+            return {
+                "hallucination_analysis": "not_applicable",
+                "reason": "fallback_response",
+                "hallucination_risk": None,
+                "context_overlap": None,
+                "supported_terms": None,
+                "unsupported_terms": None,
+                "unsupported_term_list": [],
+                "is_potential_hallucination": False,
+            }
 
         overlap = self._context_overlap(
             answer_tokens,
