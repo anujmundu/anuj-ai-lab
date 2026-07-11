@@ -97,6 +97,9 @@ class RAGService:
         generation_seconds: float,
         total_seconds: float,
         prompt: str,
+        context: str,
+        memory: str,
+        conversation: str | None,
         answer: str,
         confidence: float,
         hallucination_result: dict | None = None,
@@ -135,6 +138,53 @@ class RAGService:
                 "words": len(
                     prompt.split()
                 ),
+
+                "composition": {
+
+                    "template_characters": (
+                        len(prompt)
+                        - len(context)
+                        - len(memory)
+                        - len(question)
+                    ),
+
+                    "template_words": (
+                        len(prompt.split())
+                        - len(context.split())
+                        - len(memory.split())
+                        - len(question.split())
+                    ),
+
+                    "context_characters": len(context),
+
+                    "context_words": len(
+                        context.split()
+                    ),
+
+                    "memory_characters": len(memory),
+
+                    "memory_words": len(
+                        memory.split()
+                    ),
+
+                    "question_characters": len(question),
+
+                    "question_words": len(
+                        question.split()
+                    ),
+
+                    "conversation_characters": (
+                        len(conversation)
+                        if conversation
+                        else 0
+                    ),
+
+                    "conversation_words": (
+                        len(conversation.split())
+                        if conversation
+                        else 0
+                    ),
+                },
             },
 
             "response": {
@@ -540,6 +590,9 @@ class RAGService:
             generation_seconds=generation_seconds,
             total_seconds=total_seconds,
             prompt=prompt,
+            context=context,
+            memory=memory,
+            conversation=conversation,
             answer=answer,
             confidence=confidence,
             hallucination_result=hallucination_result,
