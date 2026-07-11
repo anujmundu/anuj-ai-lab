@@ -4,6 +4,43 @@ from app.rag.hallucination_detector_config import (
     HallucinationDetectorConfig,
 )
 
+STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "because",
+    "by",
+    "for",
+    "from",
+    "have",
+    "has",
+    "had",
+    "i",
+    "in",
+    "including",
+    "is",
+    "it",
+    "its",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "their",
+    "there",
+    "they",
+    "this",
+    "to",
+    "was",
+    "were",
+    "with",
+    "you",
+    "your",
+}
 
 class HallucinationDetector:
     """
@@ -64,12 +101,23 @@ class HallucinationDetector:
 
         text = self._normalize_text(text)
 
-        return set(
+        tokens = set(
             re.findall(
                 r"\b\w+\b",
                 text
             )
         )
+
+        tokens = {
+            token
+            for token in tokens
+            if (
+                len(token) > 1
+                and token not in STOPWORDS
+            )
+        }
+
+        return tokens
 
     def _context_overlap(
         self,
