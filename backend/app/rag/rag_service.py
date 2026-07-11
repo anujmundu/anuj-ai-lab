@@ -91,6 +91,7 @@ class RAGService:
         *,
         question: str,
         retrieval_seconds: float,
+        retrieval_diagnostics: dict,
         context_build_seconds: float,
         prompt_build_seconds: float,
         generation_seconds: float,
@@ -124,6 +125,8 @@ class RAGService:
 
                 "total_seconds": total_seconds,
             },
+            
+            "retrieval": retrieval_diagnostics,
 
             "prompt": {
 
@@ -174,7 +177,12 @@ class RAGService:
         *,
         question: str,
         k: int,
-    ) -> tuple[list[str], list[dict], float]:
+    ) -> tuple[
+        list[str],
+        list[dict],
+        float,
+        dict,
+    ]:
         """
         Retrieve and rank documents.
 
@@ -197,6 +205,22 @@ class RAGService:
         results = ranker.filter_results(
             results,
         )
+        
+        retrieval_diagnostics = {
+            "requested_k": k,
+            "retrieved_documents": len(
+                results["documents"][0]
+            ),
+            "documents": [
+                {
+                    "filename": metadata["filename"],
+                    "chunk_id": metadata["chunk_id"],
+                    "chunk_number": metadata["chunk_number"],
+                    "total_chunks": metadata["total_chunks"],
+                }
+                for metadata in results["metadatas"][0]
+            ],
+        }
 
         retrieval_seconds = self._elapsed(
             start,
@@ -209,6 +233,7 @@ class RAGService:
             documents,
             metadatas,
             retrieval_seconds,
+            retrieval_diagnostics,
         )
         
     def _build_context(
@@ -427,6 +452,7 @@ class RAGService:
             documents,
             metadatas,
             retrieval_seconds,
+            retrieval_diagnostics,
         ) = self._retrieve_documents(
             question=question,
             k=k,
@@ -508,6 +534,7 @@ class RAGService:
         self._update_request_diagnostics(
             question=question,
             retrieval_seconds=retrieval_seconds,
+            retrieval_diagnostics=retrieval_diagnostics,
             context_build_seconds=context_build_seconds,
             prompt_build_seconds=prompt_build_seconds,
             generation_seconds=generation_seconds,
