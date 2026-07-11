@@ -33,6 +33,35 @@ class MemoryRanker:
 
     MAX_KEYWORD_BONUS = 3
     
+    STOPWORDS = {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "my",
+        "your",
+        "i",
+        "you",
+        "do",
+        "does",
+        "did",
+        "what",
+        "which",
+        "who",
+        "where",
+        "when",
+        "why",
+        "how",
+        "to",
+        "of",
+        "in",
+        "on",
+        "for",
+    }
+    
 
     def recency_bonus(
         self,
@@ -80,6 +109,10 @@ class MemoryRanker:
                 memory.content.lower(),
             )
         )
+        
+        question_tokens -= self.STOPWORDS
+        
+        memory_tokens -= self.STOPWORDS
 
         overlap = len(
             question_tokens &
