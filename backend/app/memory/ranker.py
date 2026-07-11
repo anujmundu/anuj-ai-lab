@@ -203,6 +203,57 @@ class MemoryRanker:
             item["memory"]
             for item in scored[:limit]
         ]
+        
+    def explain_ranking(
+        self,
+        memories,
+        question: str,
+    ):
+        """
+        Return ranking diagnostics for each memory.
+        """
+
+        ranked = []
+
+        for memory in memories:
+
+            recency = self.recency_bonus(memory)
+
+            keyword_bonus = self.keyword_overlap_bonus(
+                question,
+                memory,
+            )
+
+            pinned_bonus = (
+                self.PINNED_BONUS
+                if memory.pinned
+                else 0
+            )
+
+            score = (
+                memory.importance * self.IMPORTANCE_WEIGHT
+                + recency * self.RECENCY_WEIGHT
+                + keyword_bonus * self.KEYWORD_WEIGHT
+                + pinned_bonus * self.PINNED_WEIGHT
+            )
+
+            ranked.append(
+                {
+                    "memory_id": memory.id,
+                    "importance": memory.importance,
+                    "recency": recency,
+                    "keyword_overlap": keyword_bonus,
+                    "pinned": memory.pinned,
+                    "score": score,
+                }
+            )
+
+        ranked.sort(
+            key=lambda item: item["score"],
+            reverse=True,
+        )
+
+        return ranked
 
 
 memory_ranker = MemoryRanker()
