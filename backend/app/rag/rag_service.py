@@ -4,6 +4,7 @@ from app.rag.answer_processor import answer_processor
 from app.rag.citation_processor import citation_processor
 from app.rag.citation_inserter import citation_inserter
 from app.rag.context_builder import context_builder
+from app.rag.context_compressor import context_compressor
 from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
@@ -232,7 +233,6 @@ class RAGService:
         list[str],
         list[dict],
         float,
-        dict,
     ]:
         """
         Retrieve and rank documents.
@@ -256,22 +256,6 @@ class RAGService:
         results = ranker.filter_results(
             results,
         )
-        
-        retrieval_diagnostics = {
-            "requested_k": k,
-            "retrieved_documents": len(
-                results["documents"][0]
-            ),
-            "documents": [
-                {
-                    "filename": metadata["filename"],
-                    "chunk_id": metadata["chunk_id"],
-                    "chunk_number": metadata["chunk_number"],
-                    "total_chunks": metadata["total_chunks"],
-                }
-                for metadata in results["metadatas"][0]
-            ],
-        }
 
         retrieval_seconds = self._elapsed(
             start,
@@ -284,8 +268,33 @@ class RAGService:
             documents,
             metadatas,
             retrieval_seconds,
-            retrieval_diagnostics,
         )
+        
+    def _build_retrieval_diagnostics(
+        self,
+        *,
+        documents: list[str],
+        metadatas: list[dict],
+        requested_k: int,
+    ) -> dict:
+        """
+        Build retrieval diagnostics after ranking and
+        context compression.
+        """
+
+        return {
+            "requested_k": requested_k,
+            "retrieved_documents": len(documents),
+            "documents": [
+                {
+                    "filename": metadata["filename"],
+                    "chunk_id": metadata["chunk_id"],
+                    "chunk_number": metadata["chunk_number"],
+                    "total_chunks": metadata["total_chunks"],
+                }
+                for metadata in metadatas
+            ],
+        }
         
     def _build_context(
         self,
@@ -510,10 +519,25 @@ class RAGService:
             documents,
             metadatas,
             retrieval_seconds,
-            retrieval_diagnostics,
         ) = self._retrieve_documents(
             question=question,
             k=k,
+        )
+        
+        (
+            documents,
+            metadatas,
+        ) = context_compressor.compress(
+            documents=documents,
+            metadatas=metadatas,
+        )
+        
+        retrieval_diagnostics = (
+            self._build_retrieval_diagnostics(
+                documents=documents,
+                metadatas=metadatas,
+                requested_k=k,
+            )
         )
 
         # --------------------------------------------------
