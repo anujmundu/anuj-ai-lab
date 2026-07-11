@@ -33,6 +33,14 @@ class MemoryRanker:
 
     MAX_KEYWORD_BONUS = 3
     
+    IMPORTANCE_WEIGHT = 1
+    
+    RECENCY_WEIGHT = 1
+    
+    KEYWORD_WEIGHT = 1
+    
+    PINNED_WEIGHT = 1
+    
     STOPWORDS = {
         "the",
         "a",
@@ -159,15 +167,12 @@ class MemoryRanker:
                 else 0
             )
 
-            score = 0
-
-            score += memory.importance
-
-            score += recency
-
-            score += keyword_bonus
-
-            score += pinned_bonus
+            score = (
+                memory.importance * self.IMPORTANCE_WEIGHT
+                + recency * self.RECENCY_WEIGHT
+                + keyword_bonus * self.KEYWORD_WEIGHT
+                + pinned_bonus * self.PINNED_WEIGHT
+            )
 
             scored.append(
                 {
