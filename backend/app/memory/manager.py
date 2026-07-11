@@ -106,6 +106,7 @@ class MemoryManager:
         memories = (
             memory_ranker.rank(
                 memories,
+                query,
             )
         )
 
