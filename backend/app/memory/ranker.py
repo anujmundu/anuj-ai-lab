@@ -41,6 +41,8 @@ class MemoryRanker:
     
     PINNED_WEIGHT = 1
     
+    DEFAULT_TOP_K = 5
+    
     STOPWORDS = {
         "the",
         "a",
@@ -141,6 +143,7 @@ class MemoryRanker:
         self,
         memories,
         question: str,
+        top_k: int | None = None,
     ):
         """
         Rank memories using deterministic scoring.
@@ -190,9 +193,15 @@ class MemoryRanker:
             reverse=True,
         )
 
+        limit = (
+            top_k
+            if top_k is not None
+            else self.DEFAULT_TOP_K
+        )
+
         return [
             item["memory"]
-            for item in scored
+            for item in scored[:limit]
         ]
 
 
