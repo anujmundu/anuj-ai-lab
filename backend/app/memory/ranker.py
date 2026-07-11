@@ -1,44 +1,50 @@
 class MemoryRanker:
     """
-    Ranks retrieved memories before they are
-    inserted into the prompt.
+    Lightweight ranking for retrieved memories.
 
-    Responsibilities
+    Higher importance memories are preferred.
 
-    • Limit prompt memory size
-    • Preserve retrieval order
-    • Prepare for future ranking strategies
-
-    Future responsibilities
-
-    • Importance weighting
-    • Pinned memory boosting
-    • Recency weighting
-    • Keyword overlap scoring
-    • Cross-encoder reranking
+    Pinned memories receive an additional bonus.
     """
+
+    PINNED_BONUS = 10
 
     def rank(
         self,
-        memories: list,
-        limit: int = 5,
-    ) -> list:
+        memories,
+    ):
         """
-        Rank retrieved memories.
-
-        The current implementation preserves the
-        semantic retrieval order produced by the
-        vector search while limiting the number of
-        memories sent to the prompt.
-
-        Future versions may reorder memories using
-        additional ranking signals.
+        Rank memories using deterministic scoring.
         """
-
+        
         if not memories:
             return []
 
-        return memories[:limit]
+        scored = []
+
+        for memory in memories:
+
+            score = memory.importance
+
+            if memory.pinned:
+                score += self.PINNED_BONUS
+
+            scored.append(
+                (
+                    score,
+                    memory,
+                )
+            )
+
+        scored.sort(
+            key=lambda item: item[0],
+            reverse=True,
+        )
+
+        return [
+            memory
+            for _, memory in scored
+        ]
 
 
 memory_ranker = MemoryRanker()
