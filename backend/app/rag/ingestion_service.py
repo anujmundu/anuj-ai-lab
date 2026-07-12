@@ -20,7 +20,10 @@ class IngestionService:
 
         if duplicate_detector.exists(filename):
 
-            vector_store.delete_document(filename)
+            vector_store.delete_document(
+                filename,
+                sync_bm25=False,
+            )
 
             status = "reindexed"
 
@@ -49,6 +52,13 @@ class IngestionService:
             chunk_ids.append(
                 metadata["chunk_id"]
             )
+
+        # ------------------------------------------
+        # Rebuild BM25 once after the document
+        # has been fully indexed.
+        # ------------------------------------------
+
+        vector_store.sync_bm25_index()
 
         return {
             "filename": filename,

@@ -36,12 +36,44 @@ from app.api.document_routes import router as document_router
 from app.memory.routes import router as persistent_memory_router
 
 from app.db.database import create_db_and_tables
+from app.rag.vector_store import vector_store
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Application lifecycle.
+
+    Startup
+    --------
+    • Create database tables
+    • Synchronize the in-memory BM25 index with
+      the persisted ChromaDB corpus
+
+    Shutdown
+    --------
+    • Reserved for future cleanup tasks
+    """
+
     create_db_and_tables()
+
+    # ------------------------------------------
+    # Build the BM25 index from all persisted
+    # ChromaDB chunks during startup.
+    # ------------------------------------------
+
+    stats = vector_store.sync_bm25_index()
+
+    print("\n===== BM25 Initialized =====")
+    print(f'Documents indexed: {stats["documents_loaded"]}')
+    print(
+        f'BM25 documents: {stats["bm25_documents"]}'
+    )
+    print("============================\n")
+
     yield
+
+    # Future shutdown hooks can be added here.
 
 
 app = FastAPI(

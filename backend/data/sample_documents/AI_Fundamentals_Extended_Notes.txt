@@ -1,0 +1,155 @@
+AI Fundamentals (Extended Notes)
+Artificial Intelligence (AI) is the field of computer science focused on building systems capable of performing tasks that normally require human intelligence. These tasks include reasoning, learning, perception, language understanding, and decision-making. AI systems are increasingly integrated into everyday applications, from search engines and recommendation systems to autonomous vehicles and healthcare diagnostics.
+
+Machine Learning
+Machine Learning (ML) is a subset of AI where models learn patterns from data instead of being explicitly programmed. ML systems improve their performance as they are exposed to more data.
+
+Learning Paradigms
+Supervised Learning: Models are trained on labeled datasets. Example tasks: spam detection, sentiment analysis.
+
+Unsupervised Learning: Models discover hidden patterns in unlabeled data. Example tasks: clustering customers, dimensionality reduction.
+
+Reinforcement Learning: Agents learn by interacting with an environment and receiving rewards or penalties. Example tasks: robotics, game-playing AI.
+
+Common Algorithms
+Linear Regression: Predicts continuous values.
+
+Decision Trees: Splits data into branches for classification/regression.
+
+Random Forests: Ensemble of decision trees for improved accuracy.
+
+Support Vector Machines (SVMs): Finds optimal boundaries between classes.
+
+Deep Learning
+Deep Learning is a specialized branch of ML that uses artificial neural networks with multiple hidden layers, enabling complex feature extraction.
+
+Frameworks
+PyTorch
+
+TensorFlow
+
+Keras
+
+Applications
+Image Classification: Identifying objects in photos.
+
+Object Detection: Locating and labeling objects in images.
+
+Speech Recognition: Converting spoken language into text.
+
+Natural Language Processing (NLP): Understanding and generating human language.
+
+Embeddings
+Embeddings are dense numerical vector representations of text, images, or other data. They capture semantic meaning so that similar concepts have similar vector representations.
+
+Use Cases
+Semantic Search: Finding documents based on meaning, not keywords.
+
+Recommendation Systems: Suggesting products or content based on similarity.
+
+Clustering: Grouping similar items together.
+
+Retrieval-Augmented Generation (RAG): Enhancing LLMs with external knowledge.
+
+Vector Databases
+Vector databases store embeddings and enable similarity search using distance metrics such as cosine similarity or Euclidean distance.
+
+Popular Options
+ChromaDB
+
+FAISS
+
+Pinecone
+
+Weaviate
+
+Milvus
+
+These databases are critical for building scalable semantic search and recommendation systems.
+
+Retrieval-Augmented Generation (RAG)
+RAG combines document retrieval with a Large Language Model (LLM).
+
+Pipeline Steps
+Load documents.
+
+Split documents into chunks.
+
+Generate embeddings.
+
+Store embeddings in a vector database.
+
+Retrieve the most relevant chunks.
+
+Build a prompt containing the retrieved context.
+
+Generate a grounded answer using an LLM.
+
+This approach reduces hallucinations because the model answers using retrieved knowledge instead of relying only on its internal parameters.
+
+Large Language Models (LLMs)
+LLMs are transformer-based neural networks trained on massive text corpora.
+
+Examples
+Llama
+
+Qwen
+
+Mistral
+
+Gemma
+
+Capabilities
+Question Answering
+
+Text Summarization
+
+Code Generation
+
+Translation
+
+Conversational AI
+
+Prompt Engineering
+Prompt engineering is the practice of designing effective prompts that guide an AI model toward producing accurate, relevant, and structured responses.
+
+Best Practices
+Clear instructions
+
+Contextual information
+
+Constraints (e.g., word limits, style)
+
+Desired output format
+
+Example: “Summarize the following article in three bullet points focusing on economic impacts.”
+
+AI Engineering
+An AI Engineering workflow typically includes:
+
+Data collection
+
+Data preprocessing
+
+Model selection
+
+Evaluation
+
+Deployment
+
+Monitoring
+
+Continuous improvement
+
+Modern AI applications often combine APIs, vector databases, orchestration frameworks, and local or cloud-hosted language models to create intelligent systems.
+
+Additional Concepts
+Explainable AI (XAI): Making AI decisions interpretable for humans.
+
+Ethics in AI: Addressing bias, fairness, and accountability.
+
+Federated Learning: Training models across decentralized devices without sharing raw data.
+
+Edge AI: Running AI models on local devices for low-latency applications.
+
+AI Orchestration: Managing workflows that combine multiple AI components.

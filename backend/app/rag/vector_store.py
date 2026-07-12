@@ -1,20 +1,33 @@
 import chromadb
 
+from app.rag.bm25_index import bm25_index
 from app.rag.embedding_service import embedding_service
 
 
 class VectorStore:
+    """
+    Persistent vector database backed by ChromaDB.
+
+    Responsibilities
+
+    • Store embeddings
+    • Semantic retrieval
+    • Document CRUD
+    • BM25 synchronization
+    """
 
     def __init__(self):
 
         print("Initializing ChromaDB...")
 
         self.client = chromadb.PersistentClient(
-            path="vector_db"
+            path="vector_db",
         )
 
-        self.collection = self.client.get_or_create_collection(
-            name="documents"
+        self.collection = (
+            self.client.get_or_create_collection(
+                name="documents",
+            )
         )
 
         print("ChromaDB ready.")
@@ -28,7 +41,7 @@ class VectorStore:
         doc_id: str,
         text: str,
         metadata: dict,
-    ):
+    ) -> None:
 
         embedding = embedding_service.embed(
             text,
@@ -75,19 +88,51 @@ class VectorStore:
         self,
     ) -> dict:
         """
-        Return the complete indexed corpus.
+        Return the complete corpus.
 
-        This serves as the canonical source for
-        downstream systems such as:
+        Used by:
 
-        • BM25 indexing
-        • Corpus statistics
+        • BM25
         • Diagnostics
-        • Export utilities
-        • Offline evaluation
+        • Corpus statistics
+        • Evaluation
         """
 
         return self.collection.get()
+
+    # --------------------------------------------------
+    # BM25 Synchronization
+    # --------------------------------------------------
+
+    def sync_bm25_index(
+        self,
+    ) -> dict:
+        """
+        Synchronize the in-memory BM25 index
+        with the current ChromaDB corpus.
+        """
+
+        corpus = self.get_all_chunks()
+
+        documents = (
+            corpus.get("documents")
+            or []
+        )
+
+        bm25_index.rebuild(
+            documents,
+        )
+
+        stats = {
+            "documents_loaded": len(documents),
+            "bm25_documents": bm25_index.document_count,
+        }
+
+        print(
+            f"BM25 synchronized ({stats['bm25_documents']} documents)."
+        )
+
+        return stats
 
     # --------------------------------------------------
     # Deletion
@@ -96,7 +141,8 @@ class VectorStore:
     def delete_document(
         self,
         filename: str,
-    ):
+        sync_bm25: bool = True,
+    ) -> None:
 
         chunks = self.get_document_chunks(
             filename,
@@ -110,13 +156,16 @@ class VectorStore:
                 ids=ids,
             )
 
+            if sync_bm25:
+                self.sync_bm25_index()
+
     # --------------------------------------------------
     # Diagnostics
     # --------------------------------------------------
 
     def get_documents(
         self,
-    ):
+    ) -> dict:
 
         results = self.get_all_chunks()
 
@@ -153,9 +202,9 @@ class VectorStore:
             filename,
         )
 
-        return len(
-            chunks["ids"]
-        ) > 0
+        return (
+            len(chunks["ids"]) > 0
+        )
 
 
 vector_store = VectorStore()
