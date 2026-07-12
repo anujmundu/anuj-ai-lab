@@ -242,6 +242,7 @@ class RAGService:
         (
             documents,
             metadatas,
+            retrieval,
             retrieval_seconds,
         )
         """
@@ -263,10 +264,12 @@ class RAGService:
 
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
+        retrieval = results["retrieval"][0]
 
         return (
             documents,
             metadatas,
+            retrieval,
             retrieval_seconds,
         )
         
@@ -275,6 +278,7 @@ class RAGService:
         *,
         documents: list[str],
         metadatas: list[dict],
+        retrieval: dict,
         requested_k: int,
     ) -> dict:
         """
@@ -291,8 +295,18 @@ class RAGService:
                     "chunk_id": metadata["chunk_id"],
                     "chunk_number": metadata["chunk_number"],
                     "total_chunks": metadata["total_chunks"],
+
+                    "semantic_score": scores["semantic_score"],
+                    "keyword_score": scores["keyword_score"],
+                    "combined_score": scores["combined_score"],
+
+                    "semantic_rank": scores["semantic_rank"],
+                    "keyword_rank": scores["keyword_rank"],
                 }
-                for metadata in metadatas
+                for metadata, scores in zip(
+                    metadatas,
+                    retrieval,
+                )
             ],
         }
         
@@ -518,6 +532,7 @@ class RAGService:
         (
             documents,
             metadatas,
+            retrieval,
             retrieval_seconds,
         ) = self._retrieve_documents(
             question=question,
@@ -536,6 +551,7 @@ class RAGService:
             self._build_retrieval_diagnostics(
                 documents=documents,
                 metadatas=metadatas,
+                retrieval=retrieval,
                 requested_k=k,
             )
         )

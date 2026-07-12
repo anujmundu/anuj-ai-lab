@@ -10,6 +10,16 @@ class Ranker:
         ids = results["ids"][0]
         distances = results["distances"][0]
 
+        retrieval = results.get(
+            "retrieval",
+            [[]]
+        )[0]
+
+        diagnostics = results.get(
+            "diagnostics",
+            []
+        )
+
         print("\n===== RAG Search Results =====")
 
         for doc_id, distance in zip(ids, distances):
@@ -21,7 +31,9 @@ class Ranker:
             "documents": [documents],
             "metadatas": [metadatas],
             "ids": [ids],
-            "distances": [distances]
+            "distances": [distances],
+            "retrieval": [retrieval],
+            "diagnostics": diagnostics,
         }
 
 
