@@ -277,38 +277,26 @@ class AnswerConsistencyChecker:
             2,
         )
 
-        if score >= self.config.contradiction_threshold:
+        if pair_count == 0:
+            score = 1.0
+        else:
+            score = 1 - (len(issues) / pair_count)
 
+        if score >= self.config.consistent_threshold:
             status = "consistent"
 
-        elif score >= 0.50:
-
+        elif score >= self.config.uncertain_threshold:
             status = "uncertain"
 
         else:
-
             status = "needs_review"
 
         return {
-
             "status": status,
-
-            "consistent": (
-                status == "consistent"
-            ),
-
-            "total_sentences": len(
-                sentences
-            ),
-
+            "total_sentences": len(sentences),
             "sentence_pairs": pair_count,
-
-            "possible_conflicts": len(
-                issues
-            ),
-
-            "consistency_score": score,
-
+            "low_overlap_pairs": len(issues),
+            "consistency_score": round(score, 2),
             "details": issues,
         }
 
