@@ -90,6 +90,80 @@ class CitationProcessor:
         return list(
             dict.fromkeys(citations)
         )
+        
+    def _coverage_metrics(
+        self,
+        answer: str,
+        citations: list[str],
+    ) -> dict:
+
+        if not self.config.include_coverage_metrics:
+            return {}
+
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            answer.strip(),
+        )
+
+        sentences = [
+            sentence.strip()
+            for sentence in sentences
+            if sentence.strip()
+        ]
+
+        # Ignore citation-only fragments like "[1]"
+        sentences = [
+            sentence
+            for sentence in sentences
+            if re.search(
+                r"[A-Za-z]",
+                sentence,
+            )
+        ]
+
+        total_sentences = len(sentences)
+
+        cited_sentences = sum(
+            1
+            for sentence in sentences
+            if re.search(
+                r"\[\d+\]",
+                sentence,
+            )
+        )
+
+        uncited_sentences = (
+            total_sentences
+            - cited_sentences
+        )
+
+        coverage = (
+            cited_sentences
+            / total_sentences
+            if total_sentences
+            else 0.0
+        )
+
+        density = (
+            len(citations)
+            / total_sentences
+            if total_sentences
+            else 0.0
+        )
+
+        return {
+            "total_sentences": total_sentences,
+            "cited_sentences": cited_sentences,
+            "uncited_sentences": uncited_sentences,
+            "coverage": round(
+                coverage,
+                2,
+            ),
+            "citation_density": round(
+                density,
+                2,
+            ),
+        }
 
     # --------------------------------------------------
     # Public API
@@ -120,10 +194,20 @@ class CitationProcessor:
         citations = self._extract_citations(
             answer
         )
+        
+        coverage = self._coverage_metrics(
+            answer,
+            citations,
+        )
 
         return {
+
             "answer": answer,
+
             "citations": citations,
+
+            "coverage": coverage,
+
             "source_mapping": source_mapping,
         }
 

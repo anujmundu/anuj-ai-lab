@@ -17,6 +17,8 @@ class CitationProcessorConfig:
     include_inline_citations: bool = False
 
     include_source_mapping: bool = True
+    
+    include_coverage_metrics: bool = True
 
     # --------------------------------------------------
     # Citation Style
