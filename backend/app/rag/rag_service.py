@@ -9,6 +9,7 @@ from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
 from app.rag.ranker import ranker
+from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
 from sqlmodel import Session
 
@@ -107,6 +108,46 @@ class RAGService:
         hallucination_result: dict | None = None,
         citation_result: dict | None = None,
     ) -> None:
+        
+        
+        template = (
+            prompt
+            .replace(context, "", 1)
+            .replace(memory, "", 1)
+            .replace(question, "", 1)
+        )
+
+        template = (
+            template.replace(
+                conversation or "",
+                "",
+                1,
+            )
+        )
+
+        prompt_tokens = token_estimator.estimate(
+            prompt,
+        )
+
+        template_tokens = token_estimator.estimate(
+            template,
+        )
+
+        context_tokens = token_estimator.estimate(
+            context,
+        )
+
+        memory_tokens = token_estimator.estimate(
+            memory,
+        )
+
+        question_tokens = token_estimator.estimate(
+            question,
+        )
+
+        conversation_tokens = token_estimator.estimate(
+            conversation,
+        )
 
         self._last_request = {
 
@@ -141,6 +182,8 @@ class RAGService:
                     prompt.split()
                 ),
 
+                "estimated_tokens": prompt_tokens,
+
                 "composition": {
 
                     "template_characters": (
@@ -156,24 +199,32 @@ class RAGService:
                         - len(memory.split())
                         - len(question.split())
                     ),
+                    
+                    "template_tokens": template_tokens,
 
                     "context_characters": len(context),
 
                     "context_words": len(
                         context.split()
                     ),
+                    
+                    "context_tokens": context_tokens,
 
                     "memory_characters": len(memory),
 
                     "memory_words": len(
                         memory.split()
                     ),
+                    
+                    "memory_tokens": memory_tokens,
 
                     "question_characters": len(question),
 
                     "question_words": len(
                         question.split()
                     ),
+                    
+                    "question_tokens": question_tokens,
 
                     "conversation_characters": (
                         len(conversation)
@@ -186,6 +237,8 @@ class RAGService:
                         if conversation
                         else 0
                     ),
+                    
+                    "conversation_tokens": conversation_tokens,
                 },
             },
 
@@ -208,6 +261,7 @@ class RAGService:
                 citation_result
             ),
         }
+        
 
     def _build_sources(
         self,
