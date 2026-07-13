@@ -10,6 +10,7 @@ class RetrievalConfig:
     This configuration controls:
 
     • Retrieval engines
+    • Retrieval strategy
     • Result fusion
     • Retrieval quality
     • Future retrieval strategies
@@ -24,6 +25,23 @@ class RetrievalConfig:
 
     top_k: int = 5
 
+    #
+    # Preferred retrieval mode.
+    #
+    # semantic -> vector search only
+    # keyword  -> BM25 only
+    # hybrid   -> semantic + BM25
+    #
+    retrieval_strategy: Literal[
+        "semantic",
+        "keyword",
+        "hybrid",
+    ] = "hybrid"
+
+    #
+    # Legacy flags retained temporarily for
+    # backward compatibility during migration.
+    #
     enable_semantic: bool = True
 
     enable_keyword: bool = True
@@ -34,7 +52,7 @@ class RetrievalConfig:
 
     fusion_strategy: Literal[
         "weighted",
-        "rrf"
+        "rrf",
     ] = "weighted"
 
     semantic_weight: float = 0.70

@@ -287,8 +287,12 @@ class RAGService:
         """
 
         return {
+            "strategy": hybrid_retriever.strategy,
+
             "requested_k": requested_k,
+
             "retrieved_documents": len(documents),
+
             "documents": [
                 {
                     "filename": metadata["filename"],

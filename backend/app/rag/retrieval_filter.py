@@ -70,6 +70,21 @@ class RetrievalFilter:
         self,
         scores: dict
     ) -> bool:
+        """
+        Apply retrieval thresholds based on the active
+        retrieval strategy.
+
+        Semantic and Hybrid retrieval require a minimum
+        semantic similarity score.
+
+        Keyword retrieval currently performs no thresholding,
+        since BM25 already returns ranked lexical matches.
+        """
+
+        strategy = self.config.retrieval_strategy
+
+        if strategy == "keyword":
+            return True
 
         return (
             scores.get(
@@ -198,7 +213,11 @@ class RetrievalFilter:
                         "chunk_id": doc_id,
                         "filename": filename,
                         "status": "FILTERED",
-                        "reason": "LOW_SEMANTIC_SCORE"
+                        "reason": (
+                            "LOW_SEMANTIC_SCORE"
+                            if self.config.retrieval_strategy != "keyword"
+                            else "LOW_RETRIEVAL_SCORE"
+                        )
                     }
                 )
 

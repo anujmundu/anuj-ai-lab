@@ -14,12 +14,12 @@ class SemanticRetriever(BaseRetriever):
     def retrieve(
         self,
         query: str,
-        k: int = 3
+        k: int = 3,
     ):
 
         return retriever.retrieve(
             query=query,
-            k=k
+            k=k,
         )
 
 
@@ -27,7 +27,7 @@ class HybridRetriever(BaseRetriever):
     """
     Hybrid retrieval pipeline.
 
-    Pipeline:
+    Pipeline
 
         Semantic Retriever
                 │
@@ -39,14 +39,22 @@ class HybridRetriever(BaseRetriever):
                 │
           Final Results
 
-    This class intentionally contains no ranking or
-    filtering logic. It only orchestrates the retrieval
-    pipeline.
+    Retrieval execution is controlled by the
+    configured retrieval strategy.
+
+    semantic
+        Run only semantic retrieval.
+
+    keyword
+        Run only BM25 retrieval.
+
+    hybrid
+        Run both retrieval engines.
     """
 
     def __init__(
         self,
-        config: RetrievalConfig | None = None
+        config: RetrievalConfig | None = None,
     ):
 
         self.config = config or RetrievalConfig()
@@ -54,11 +62,44 @@ class HybridRetriever(BaseRetriever):
         self.semantic = SemanticRetriever()
 
         self.keyword = keyword_retriever
+        
+    @property
+    def strategy(self) -> str:
+
+        return self.config.retrieval_strategy
+
+    # --------------------------------------------------
+    # Helpers
+    # --------------------------------------------------
+
+    def _use_semantic(self) -> bool:
+
+        return (
+            self.config.retrieval_strategy
+            in (
+                "semantic",
+                "hybrid",
+            )
+        )
+
+    def _use_keyword(self) -> bool:
+
+        return (
+            self.config.retrieval_strategy
+            in (
+                "keyword",
+                "hybrid",
+            )
+        )
+
+    # --------------------------------------------------
+    # Retrieval
+    # --------------------------------------------------
 
     def retrieve(
         self,
         query: str,
-        k: int | None = None
+        k: int | None = None,
     ) -> dict:
 
         k = k or self.config.top_k
@@ -70,22 +111,22 @@ class HybridRetriever(BaseRetriever):
         # Semantic Retrieval
         #
 
-        if self.config.enable_semantic:
+        if self._use_semantic():
 
             semantic_results = self.semantic.retrieve(
                 query=query,
-                k=k
+                k=k,
             )
 
         #
         # Keyword Retrieval
         #
 
-        if self.config.enable_keyword:
+        if self._use_keyword():
 
             keyword_results = self.keyword.retrieve(
                 query=query,
-                k=k
+                k=k,
             )
 
         #
@@ -95,7 +136,7 @@ class HybridRetriever(BaseRetriever):
         fused_results = result_fusion.combine(
             semantic=semantic_results,
             keyword=keyword_results,
-            k=k
+            k=k,
         )
 
         #
@@ -104,7 +145,7 @@ class HybridRetriever(BaseRetriever):
 
         filtered_results = retrieval_filter.apply(
             results=fused_results,
-            k=k
+            k=k,
         )
 
         return filtered_results
