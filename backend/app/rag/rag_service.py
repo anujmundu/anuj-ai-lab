@@ -9,6 +9,7 @@ from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
 from app.rag.ranker import ranker
+from app.rag.answer_consistency_checker import (answer_consistency_checker,)
 from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
 from sqlmodel import Session
@@ -106,6 +107,7 @@ class RAGService:
         answer: str,
         confidence: float,
         hallucination_result: dict | None = None,
+        consistency_result: dict | None = None,
         citation_result: dict | None = None,
     ) -> None:
         
@@ -255,6 +257,10 @@ class RAGService:
 
             "hallucination": (
                 hallucination_result
+            ),
+            
+            "consistency": (
+                consistency_result
             ),
 
             "citations": (
@@ -569,6 +575,7 @@ class RAGService:
         float,
         dict,
         dict,
+        dict,
     ]:
         """
         Process the generated answer and run
@@ -595,6 +602,12 @@ class RAGService:
                 context=context,
             )
         )
+        
+        consistency_result = (
+            answer_consistency_checker.detect(
+                answer=citation_insert_result["answer"],
+            )
+        )
 
         citation_result = (
             citation_processor.process(
@@ -611,6 +624,7 @@ class RAGService:
             answer,
             confidence,
             hallucination_result,
+            consistency_result,
             citation_result,
         )    
         
@@ -762,6 +776,7 @@ class RAGService:
             answer,
             confidence,
             hallucination_result,
+            consistency_result,
             citation_result,
         ) = self._process_answer(
             raw_answer=raw_answer,
@@ -792,6 +807,7 @@ class RAGService:
             answer=answer,
             confidence=confidence,
             hallucination_result=hallucination_result,
+            consistency_result=consistency_result,
             citation_result=citation_result,
         )
         
