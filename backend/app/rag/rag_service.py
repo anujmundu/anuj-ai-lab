@@ -232,6 +232,8 @@ class RAGService:
     ) -> tuple[
         list[str],
         list[dict],
+        list[dict],
+        dict,
         float,
     ]:
         """
@@ -263,13 +265,21 @@ class RAGService:
         )
 
         documents = results["documents"][0]
+        
         metadatas = results["metadatas"][0]
+        
         retrieval = results["retrieval"][0]
+        
+        pipeline = results.get(
+            "pipeline",
+            {}
+        )
 
         return (
             documents,
             metadatas,
             retrieval,
+            pipeline,
             retrieval_seconds,
         )
         
@@ -278,7 +288,8 @@ class RAGService:
         *,
         documents: list[str],
         metadatas: list[dict],
-        retrieval: dict,
+        retrieval: list[dict],
+        pipeline: dict,
         requested_k: int,
     ) -> dict:
         """
@@ -287,7 +298,7 @@ class RAGService:
         """
 
         return {
-            "strategy": hybrid_retriever.strategy,
+            **pipeline,
 
             "requested_k": requested_k,
 
@@ -537,6 +548,7 @@ class RAGService:
             documents,
             metadatas,
             retrieval,
+            pipeline,
             retrieval_seconds,
         ) = self._retrieve_documents(
             question=question,
@@ -556,6 +568,7 @@ class RAGService:
                 documents=documents,
                 metadatas=metadatas,
                 retrieval=retrieval,
+                pipeline=pipeline,
                 requested_k=k,
             )
         )

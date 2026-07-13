@@ -1,8 +1,21 @@
 class Ranker:
+    """
+    Lightweight ranking stage.
+
+    Currently this stage only logs the retrieved
+    documents and preserves retrieval metadata.
+
+    Future versions may perform:
+
+    • Cross-encoder reranking
+    • Score normalization
+    • Diversity optimization
+    • Metadata-aware reranking
+    """
 
     def filter_results(
         self,
-        results: dict
+        results: dict,
     ) -> dict:
 
         documents = results["documents"][0]
@@ -12,12 +25,17 @@ class Ranker:
 
         retrieval = results.get(
             "retrieval",
-            [[]]
+            [[]],
         )[0]
 
         diagnostics = results.get(
             "diagnostics",
-            []
+            [],
+        )
+
+        pipeline = results.get(
+            "pipeline",
+            {},
         )
 
         print("\n===== RAG Search Results =====")
@@ -34,6 +52,7 @@ class Ranker:
             "distances": [distances],
             "retrieval": [retrieval],
             "diagnostics": diagnostics,
+            "pipeline": pipeline,
         }
 
 

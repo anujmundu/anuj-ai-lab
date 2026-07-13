@@ -16,7 +16,6 @@ class SemanticRetriever(BaseRetriever):
         query: str,
         k: int = 3,
     ):
-
         return retriever.retrieve(
             query=query,
             k=k,
@@ -27,8 +26,6 @@ class HybridRetriever(BaseRetriever):
     """
     Hybrid retrieval pipeline.
 
-    Pipeline
-
         Semantic Retriever
                 │
         Keyword Retriever
@@ -38,18 +35,6 @@ class HybridRetriever(BaseRetriever):
         Retrieval Filter
                 │
           Final Results
-
-    Retrieval execution is controlled by the
-    configured retrieval strategy.
-
-    semantic
-        Run only semantic retrieval.
-
-    keyword
-        Run only BM25 retrieval.
-
-    hybrid
-        Run both retrieval engines.
     """
 
     def __init__(
@@ -60,41 +45,23 @@ class HybridRetriever(BaseRetriever):
         self.config = config or RetrievalConfig()
 
         self.semantic = SemanticRetriever()
-
         self.keyword = keyword_retriever
-        
+
     @property
     def strategy(self) -> str:
-
         return self.config.retrieval_strategy
 
-    # --------------------------------------------------
-    # Helpers
-    # --------------------------------------------------
-
     def _use_semantic(self) -> bool:
-
-        return (
-            self.config.retrieval_strategy
-            in (
-                "semantic",
-                "hybrid",
-            )
+        return self.strategy in (
+            "semantic",
+            "hybrid",
         )
 
     def _use_keyword(self) -> bool:
-
-        return (
-            self.config.retrieval_strategy
-            in (
-                "keyword",
-                "hybrid",
-            )
+        return self.strategy in (
+            "keyword",
+            "hybrid",
         )
-
-    # --------------------------------------------------
-    # Retrieval
-    # --------------------------------------------------
 
     def retrieve(
         self,
@@ -107,31 +74,17 @@ class HybridRetriever(BaseRetriever):
         semantic_results = None
         keyword_results = None
 
-        #
-        # Semantic Retrieval
-        #
-
         if self._use_semantic():
-
             semantic_results = self.semantic.retrieve(
                 query=query,
                 k=k,
             )
 
-        #
-        # Keyword Retrieval
-        #
-
         if self._use_keyword():
-
             keyword_results = self.keyword.retrieve(
                 query=query,
                 k=k,
             )
-
-        #
-        # Merge retrieval engines
-        #
 
         fused_results = result_fusion.combine(
             semantic=semantic_results,
@@ -139,14 +92,30 @@ class HybridRetriever(BaseRetriever):
             k=k,
         )
 
-        #
-        # Improve retrieval quality
-        #
-
         filtered_results = retrieval_filter.apply(
             results=fused_results,
             k=k,
         )
+
+        filtered_results["pipeline"] = {
+            "strategy": self.strategy,
+            "semantic_candidates": (
+                len(semantic_results["ids"][0])
+                if semantic_results
+                else 0
+            ),
+            "keyword_candidates": (
+                len(keyword_results["ids"][0])
+                if keyword_results
+                else 0
+            ),
+            "fused_candidates": len(
+                fused_results["ids"][0]
+            ),
+            "filtered_candidates": len(
+                filtered_results["ids"][0]
+            ),
+        }
 
         return filtered_results
 
