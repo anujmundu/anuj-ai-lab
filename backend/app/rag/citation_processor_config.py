@@ -6,8 +6,9 @@ class CitationProcessorConfig:
     """
     Configuration for CitationProcessor.
 
-    Controls how citations are prepared before
-    answers are returned to the API.
+    Controls citation extraction,
+    coverage analysis, and grounding
+    validation diagnostics.
     """
 
     # --------------------------------------------------
@@ -17,8 +18,26 @@ class CitationProcessorConfig:
     include_inline_citations: bool = False
 
     include_source_mapping: bool = True
-    
+
     include_coverage_metrics: bool = True
+
+    # --------------------------------------------------
+    # Grounding Validation
+    # --------------------------------------------------
+
+    validate_grounding: bool = True
+
+    grounding_threshold: float = 0.50
+
+    partial_grounding_threshold: float = 0.25
+
+    # --------------------------------------------------
+    # Text Processing
+    # --------------------------------------------------
+
+    ignore_case: bool = True
+
+    minimum_token_length: int = 3
 
     # --------------------------------------------------
     # Citation Style

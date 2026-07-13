@@ -164,7 +164,95 @@ class CitationProcessor:
                 2,
             ),
         }
+        
+    def _grounding_validation(
+        self,
+        answer: str,
+        sources: list[dict],
+    ) -> dict:
 
+        if not self.config.validate_grounding:
+            return {}
+
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            answer.strip(),
+        )
+
+        sentences = [
+            sentence.strip()
+            for sentence in sentences
+            if sentence.strip()
+        ]
+
+        sentence_results = []
+
+        grounded = 0
+        partial = 0
+        unsupported = 0
+
+        for sentence in sentences:
+
+            if not re.search(
+                r"[A-Za-z]",
+                sentence,
+            ):
+                continue
+
+            citations = re.findall(
+                r"\[\d+\]",
+                sentence,
+            )
+
+            coverage = (
+                len(citations)
+                / max(
+                    1,
+                    len(sources),
+                )
+            )
+
+            coverage = min(
+                coverage,
+                1.0,
+            )
+
+            if (
+                coverage
+                >= self.config.grounding_threshold
+            ):
+                status = "grounded"
+                grounded += 1
+
+            elif (
+                coverage
+                >= self.config.partial_grounding_threshold
+            ):
+                status = "partially_grounded"
+                partial += 1
+
+            else:
+                status = "unsupported"
+                unsupported += 1
+
+            sentence_results.append(
+                {
+                    "sentence": sentence,
+                    "coverage": round(
+                        coverage,
+                        2,
+                    ),
+                    "status": status,
+                }
+            )
+
+        return {
+            "grounded_sentences": grounded,
+            "partially_grounded_sentences": partial,
+            "unsupported_sentences": unsupported,
+            "sentence_grounding": sentence_results,
+        }    
+        
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
@@ -199,6 +287,11 @@ class CitationProcessor:
             answer,
             citations,
         )
+        
+        grounding = self._grounding_validation(
+            answer,
+            sources,
+        )
 
         return {
 
@@ -207,6 +300,8 @@ class CitationProcessor:
             "citations": citations,
 
             "coverage": coverage,
+            
+            "grounding": grounding,
 
             "source_mapping": source_mapping,
         }
