@@ -350,9 +350,15 @@ class RAGService:
         Build retrieval diagnostics after ranking and
         context compression.
         """
+        
+        confidence = self._retrieval_confidence(
+            retrieval,
+        )
 
         return {
             **pipeline,
+            
+            "confidence": confidence,
 
             "requested_k": requested_k,
 
@@ -377,6 +383,77 @@ class RAGService:
                     retrieval,
                 )
             ],
+        }
+        
+    def _retrieval_confidence(
+        self,
+        retrieval: list[dict],
+    ) -> dict:
+        """
+        Compute confidence metrics for retrieved
+        documents based on combined scores.
+        """
+
+        if not retrieval:
+            return {
+                "average_similarity": 0.0,
+                "minimum_similarity": 0.0,
+                "maximum_similarity": 0.0,
+                "score_variance": 0.0,
+                "retrieval_confidence": "None",
+            }
+
+        scores = [
+            item["combined_score"]
+            for item in retrieval
+        ]
+
+        average = sum(scores) / len(scores)
+
+        minimum = min(scores)
+
+        maximum = max(scores)
+
+        variance = (
+            sum(
+                (score - average) ** 2
+                for score in scores
+            )
+            / len(scores)
+        )
+
+        if average >= 0.75:
+            confidence = "High"
+
+        elif average >= 0.50:
+            confidence = "Medium"
+
+        else:
+            confidence = "Low"
+
+        return {
+
+            "average_similarity": round(
+                average,
+                3,
+            ),
+
+            "minimum_similarity": round(
+                minimum,
+                3,
+            ),
+
+            "maximum_similarity": round(
+                maximum,
+                3,
+            ),
+
+            "score_variance": round(
+                variance,
+                4,
+            ),
+
+            "retrieval_confidence": confidence,
         }
         
     def _build_context(
