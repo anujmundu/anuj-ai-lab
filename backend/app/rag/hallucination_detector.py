@@ -168,6 +168,118 @@ class HallucinationDetector:
         )
 
         return len(supported) / len(answer_tokens)
+    
+    def _split_sentences(
+        self,
+        text: str,
+    ) -> list[str]:
+        """
+        Split generated text into sentences for
+        sentence-level grounding analysis.
+        """
+
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            text.strip(),
+        )
+
+        return [
+            sentence.strip()
+            for sentence in sentences
+            if (
+                sentence.strip()
+                and not re.fullmatch(
+                    r"\[\d+\]",
+                    sentence.strip(),
+                )
+            )
+        ]
+
+    def _analyze_sentence(
+        self,
+        sentence: str,
+        context_tokens: set[str],
+    ) -> dict:
+
+        sentence_tokens = self._tokenize(
+            sentence,
+        )
+
+        if not sentence_tokens:
+
+            return {
+                "sentence": sentence,
+                "coverage": 0.0,
+                "support": "unsupported",
+            }
+
+        supported = (
+            sentence_tokens
+            & context_tokens
+        )
+
+        coverage = (
+            len(supported)
+            / len(sentence_tokens)
+        )
+
+        if (
+            coverage
+            >= self.config.supported_sentence_threshold
+        ):
+
+            support = "supported"
+
+        elif (
+            coverage
+            >= self.config.partial_sentence_threshold
+        ):
+
+            support = "partial"
+
+        else:
+
+            support = "unsupported"
+
+        return {
+            "sentence": sentence,
+            "coverage": float(
+                round(
+                    coverage,
+                    2,
+                )
+            ),
+            "support": support,
+        }
+        
+    def _sentence_statistics(
+        self,
+        analyses: list[dict],
+    ) -> dict:
+
+        supported = sum(
+            1
+            for item in analyses
+            if item["support"] == "supported"
+        )
+
+        partial = sum(
+            1
+            for item in analyses
+            if item["support"] == "partial"
+        )
+
+        unsupported = sum(
+            1
+            for item in analyses
+            if item["support"] == "unsupported"
+        )
+
+        return {
+            "supported_sentences": supported,
+            "partially_supported_sentences": partial,
+            "unsupported_sentences": unsupported,
+        }
 
     def _unsupported_terms(
         self,
@@ -270,6 +382,36 @@ class HallucinationDetector:
             - len(unsupported)
         )
         
+        sentence_analysis = []
+
+        sentence_statistics = {
+            "supported_sentences": 0,
+            "partially_supported_sentences": 0,
+            "unsupported_sentences": 0,
+        }
+
+        if self.config.sentence_analysis:
+
+            sentences = self._split_sentences(
+                answer,
+            )
+
+            sentence_analysis = [
+
+                self._analyze_sentence(
+                    sentence,
+                    context_tokens,
+                )
+
+                for sentence in sentences
+            ]
+
+            sentence_statistics = (
+                self._sentence_statistics(
+                    sentence_analysis,
+                )
+            )
+        
         coverage = (
             supported / len(answer_tokens)
             if answer_tokens
@@ -309,6 +451,28 @@ class HallucinationDetector:
             ),
 
             "unsupported_term_list": unsupported,
+            
+            "supported_sentences": (
+                sentence_statistics[
+                    "supported_sentences"
+                ]
+            ),
+
+            "partially_supported_sentences": (
+                sentence_statistics[
+                    "partially_supported_sentences"
+                ]
+            ),
+
+            "unsupported_sentences": (
+                sentence_statistics[
+                    "unsupported_sentences"
+                ]
+            ),
+
+            "sentence_analysis": (
+                sentence_analysis
+            ),
 
             "is_potential_hallucination": (
                 risk >= self.config.risk_threshold

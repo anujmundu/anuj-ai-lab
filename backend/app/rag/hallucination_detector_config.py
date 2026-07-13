@@ -37,3 +37,13 @@ class HallucinationDetectorConfig:
     ignore_case: bool = True
     
     minimum_token_length: int = 3
+    
+    # --------------------------------------------------
+    # Sentence Analysis
+    # --------------------------------------------------
+
+    sentence_analysis: bool = True
+
+    supported_sentence_threshold: float = 0.75
+
+    partial_sentence_threshold: float = 0.40
