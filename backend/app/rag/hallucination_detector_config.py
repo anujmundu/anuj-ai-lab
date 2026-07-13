@@ -35,3 +35,5 @@ class HallucinationDetectorConfig:
     normalize_text: bool = True
 
     ignore_case: bool = True
+    
+    minimum_token_length: int = 3

@@ -120,7 +120,8 @@ class HallucinationDetector:
             token
             for token in tokens
             if (
-                len(token) > 1
+                len(token)
+                >= self.config.minimum_token_length
                 and token not in STOPWORDS
             )
         }
@@ -159,11 +160,14 @@ class HallucinationDetector:
             answer_tokens
             & context_tokens
         )
-
-        return (
-            len(supported)
-            / len(answer_tokens)
+        
+        coverage = (
+            len(supported) / len(answer_tokens)
+            if answer_tokens
+            else 0.0
         )
+
+        return len(supported) / len(answer_tokens)
 
     def _unsupported_terms(
         self,
@@ -265,21 +269,49 @@ class HallucinationDetector:
             len(answer_tokens)
             - len(unsupported)
         )
+        
+        coverage = (
+            supported / len(answer_tokens)
+            if answer_tokens
+            else 0.0
+        )
 
         return {
             "hallucination_risk": risk,
+
+            "coverage": round(
+                coverage,
+                2,
+            ),
+
             "context_overlap": round(
                 overlap,
-                2
+                2,
             ),
+
+            "normalized_overlap": round(
+                overlap,
+                2,
+            ),
+
             "supported_terms": supported,
+
             "unsupported_terms": len(
                 unsupported
             ),
+
+            "analyzed_answer_tokens": len(
+                answer_tokens
+            ),
+
+            "analyzed_context_tokens": len(
+                context_tokens
+            ),
+
             "unsupported_term_list": unsupported,
+
             "is_potential_hallucination": (
-                risk
-                >= self.config.risk_threshold
+                risk >= self.config.risk_threshold
             ),
         }
 
