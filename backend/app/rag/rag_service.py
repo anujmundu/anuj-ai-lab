@@ -8,6 +8,7 @@ from app.rag.context_builder import context_builder
 from app.rag.context_compressor import context_compressor
 from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
+from app.rag.retrieval_explainer import (retrieval_explainer,)
 from app.rag.prompt_builder import prompt_builder
 from app.rag.prompt_quality import prompt_quality
 from app.rag.ranker import ranker
@@ -409,6 +410,12 @@ class RAGService:
 
                     "semantic_rank": scores["semantic_rank"],
                     "keyword_rank": scores["keyword_rank"],
+
+                    "selected_because": (
+                        retrieval_explainer.explain(
+                            scores,
+                        )
+                    ),
                 }
                 for metadata, scores in zip(
                     metadatas,
