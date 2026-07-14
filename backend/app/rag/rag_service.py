@@ -8,6 +8,7 @@ from app.rag.context_compressor import context_compressor
 from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
+from app.rag.prompt_quality import prompt_quality
 from app.rag.ranker import ranker
 from app.rag.retrieval_quality import retrieval_quality
 from app.rag.answer_consistency_checker import (answer_consistency_checker,)
@@ -151,6 +152,15 @@ class RAGService:
         conversation_tokens = token_estimator.estimate(
             conversation,
         )
+        
+        prompt_quality_result = (
+            prompt_quality.analyze(
+                template_tokens=template_tokens,
+                context_tokens=context_tokens,
+                memory_tokens=memory_tokens,
+                question_tokens=question_tokens,
+            )
+        )
 
         self._last_request = {
 
@@ -243,6 +253,8 @@ class RAGService:
                     
                     "conversation_tokens": conversation_tokens,
                 },
+                
+                "quality": prompt_quality_result,
             },
 
             "response": {
