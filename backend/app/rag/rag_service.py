@@ -9,6 +9,7 @@ from app.rag.hallucination_detector import hallucination_detector
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.prompt_builder import prompt_builder
 from app.rag.ranker import ranker
+from app.rag.retrieval_quality import retrieval_quality
 from app.rag.answer_consistency_checker import (answer_consistency_checker,)
 from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
@@ -360,11 +361,18 @@ class RAGService:
         confidence = self._retrieval_confidence(
             retrieval,
         )
+        
+        quality = retrieval_quality.evaluate(
+            retrieval=retrieval,
+            metadatas=metadatas,
+        )
 
         return {
             **pipeline,
             
             "confidence": confidence,
+            
+            "quality": quality,
 
             "requested_k": requested_k,
 
