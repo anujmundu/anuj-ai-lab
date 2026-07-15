@@ -3,6 +3,7 @@ import time
 from app.rag.answer_processor import answer_processor
 from app.rag.answer_quality import answer_quality
 from app.rag.pipeline_health import pipeline_health
+from app.rag.rag_scorecard import rag_scorecard
 from app.rag.citation_processor import citation_processor
 from app.rag.citation_inserter import citation_inserter
 from app.rag.context_builder import context_builder
@@ -115,6 +116,7 @@ class RAGService:
         consistency_result: dict | None = None,
         answer_quality_result: dict | None = None,
         pipeline_health_result: dict | None = None,
+        scorecard_result: dict | None = None,
         citation_result: dict | None = None,
     ) -> None:
         
@@ -287,6 +289,10 @@ class RAGService:
             
             "pipeline_health": (
                 pipeline_health_result
+            ),
+            
+            "scorecard": (
+                scorecard_result
             ),
 
             "citations": (
@@ -796,6 +802,44 @@ class RAGService:
             conversation=conversation,
             memory=memory,
         )
+        
+        template = (
+            prompt
+            .replace(context, "", 1)
+            .replace(memory, "", 1)
+            .replace(question, "", 1)
+        )
+
+        template = template.replace(
+            conversation or "",
+            "",
+            1,
+        )
+
+        template_tokens = token_estimator.estimate(
+            template,
+        )
+
+        context_tokens = token_estimator.estimate(
+            context,
+        )
+
+        memory_tokens = token_estimator.estimate(
+            memory,
+        )
+
+        question_tokens = token_estimator.estimate(
+            question,
+        )
+
+        prompt_quality_result = (
+            prompt_quality.analyze(
+                template_tokens=template_tokens,
+                context_tokens=context_tokens,
+                memory_tokens=memory_tokens,
+                question_tokens=question_tokens,
+            )
+        )
 
         # --------------------------------------------------
         # LLM Generation
@@ -842,6 +886,26 @@ class RAGService:
                 answer_quality=answer_quality_result,
             )
         )
+        
+        scorecard_result = (
+            rag_scorecard.build(
+                retrieval_quality=(
+                    retrieval_diagnostics["quality"]
+                ),
+                prompt_quality=(
+                    prompt_quality_result
+                ),
+                answer_quality=(
+                    answer_quality_result
+                ),
+                hallucination=(
+                    hallucination_result
+                ),
+                citations=(
+                    citation_result
+                ),
+            )
+        )
 
         # --------------------------------------------------
         # Total Time
@@ -868,7 +932,8 @@ class RAGService:
             hallucination_result=hallucination_result,
             consistency_result=consistency_result,
             answer_quality_result=answer_quality_result,
-            pipeline_health_result=(pipeline_health_result),  
+            pipeline_health_result=(pipeline_health_result),
+            scorecard_result=(scorecard_result),  
             citation_result=citation_result,
         )
         
