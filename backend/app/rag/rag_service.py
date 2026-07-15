@@ -2,6 +2,7 @@ import time
 
 from app.rag.answer_processor import answer_processor
 from app.rag.answer_quality import answer_quality
+from app.rag.pipeline_health import pipeline_health
 from app.rag.citation_processor import citation_processor
 from app.rag.citation_inserter import citation_inserter
 from app.rag.context_builder import context_builder
@@ -113,6 +114,7 @@ class RAGService:
         hallucination_result: dict | None = None,
         consistency_result: dict | None = None,
         answer_quality_result: dict | None = None,
+        pipeline_health_result: dict | None = None,
         citation_result: dict | None = None,
     ) -> None:
         
@@ -281,6 +283,10 @@ class RAGService:
             
             "answer_quality": (
                 answer_quality_result
+            ),
+            
+            "pipeline_health": (
+                pipeline_health_result
             ),
 
             "citations": (
@@ -826,6 +832,16 @@ class RAGService:
             context=context,
             sources=sources,
         )
+        
+        pipeline_health_result = (
+            pipeline_health.evaluate(
+                retrieval_quality=(
+                    retrieval_diagnostics["quality"]
+                ),
+                hallucination=hallucination_result,
+                answer_quality=answer_quality_result,
+            )
+        )
 
         # --------------------------------------------------
         # Total Time
@@ -852,6 +868,7 @@ class RAGService:
             hallucination_result=hallucination_result,
             consistency_result=consistency_result,
             answer_quality_result=answer_quality_result,
+            pipeline_health_result=(pipeline_health_result),  
             citation_result=citation_result,
         )
         
