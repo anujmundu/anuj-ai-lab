@@ -614,7 +614,8 @@ class RAGService:
         *,
         raw_answer: str,
         context: str,
-        sources: list[dict],
+        sources: list[dict], 
+        documents: list[str],
     ) -> tuple[
         str,
         float,
@@ -658,6 +659,7 @@ class RAGService:
         citation_result = (
             citation_processor.process(
                 answer=citation_insert_result["answer"],
+                documents=documents,
                 sources=sources,
             )
         )
@@ -874,6 +876,7 @@ class RAGService:
         ) = self._process_answer(
             raw_answer=raw_answer,
             context=context,
+            documents=documents,
             sources=sources,
         )
         
