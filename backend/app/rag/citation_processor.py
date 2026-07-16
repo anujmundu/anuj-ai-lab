@@ -209,9 +209,6 @@ class CitationProcessor:
                 sources=sources,
             )
         )
-        print("\n===== Citation Grounding =====")
-        print(grounding)
-        print("==============================\n")
 
         return {
 
