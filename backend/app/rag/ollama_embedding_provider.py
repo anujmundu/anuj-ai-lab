@@ -53,6 +53,21 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
         Request an embedding from Ollama and validate
         the returned payload.
         """
+        
+        #
+        # Empty or whitespace-only text cannot be embedded.
+        #
+        # Return an empty vector so the caller can decide
+        # how to handle missing semantic information.
+        #
+
+        if not text:
+            return []
+
+        text = text.strip()
+
+        if not text:
+            return []
 
         try:
 
@@ -99,8 +114,8 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
 
         if len(embedding) == 0:
 
-            raise ValueError(
-                "Embedding vector is empty."
+            raise RuntimeError(
+                "Ollama returned an empty embedding for a non-empty input."
             )
 
         for index, value in enumerate(embedding):

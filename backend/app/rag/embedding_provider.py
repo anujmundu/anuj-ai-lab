@@ -91,12 +91,40 @@ class EmbeddingProvider(ABC):
         Convenience helper that embeds two texts and
         computes their cosine similarity.
 
-        The concrete provider is responsible for any
-        caching performed inside embed_text().
+        Returns 0.0 when either text cannot produce a
+        meaningful embedding.
         """
+
+        #
+        # Guard against None
+        #
+
+        text_a = "" if text_a is None else text_a
+        text_b = "" if text_b is None else text_b
+
+        #
+        # Remove surrounding whitespace
+        #
+
+        text_a = text_a.strip()
+        text_b = text_b.strip()
+
+        #
+        # Empty text has no semantic similarity.
+        #
+
+        if not text_a or not text_b:
+            return 0.0
 
         embedding_a = self.embed_text(text_a)
         embedding_b = self.embed_text(text_b)
+
+        #
+        # Defensive check.
+        #
+
+        if not embedding_a or not embedding_b:
+            return 0.0
 
         return self.cosine_similarity(
             embedding_a,
