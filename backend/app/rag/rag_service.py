@@ -13,6 +13,7 @@ from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.retrieval_explainer import (retrieval_explainer,)
 from app.rag.prompt_builder import prompt_builder
 from app.rag.prompt_quality import prompt_quality
+from app.rag.prompt_optimizer import prompt_optimizer
 from app.rag.ranker import ranker
 from app.rag.retrieval_quality import retrieval_quality
 from app.rag.answer_consistency_checker import (answer_consistency_checker,)
@@ -804,14 +805,20 @@ class RAGService:
             conversation=conversation,
             memory=memory,
         )
-        
+
+        # ------------------------------------------
+        # Prompt Optimization
+        # ------------------------------------------
+
+        prompt = prompt_optimizer.optimize(prompt)
+
         template = (
             prompt
             .replace(context, "", 1)
             .replace(memory, "", 1)
             .replace(question, "", 1)
         )
-
+        
         template = template.replace(
             conversation or "",
             "",
