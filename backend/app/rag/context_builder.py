@@ -10,8 +10,9 @@ class ContextBuilder:
     Responsibilities
 
     • Group retrieved chunks by document
-    • Preserve retrieval order by default
+    • Preserve retrieval ranking
     • Produce readable context
+    • Respect context budget
 
     Future responsibilities
 
@@ -23,7 +24,7 @@ class ContextBuilder:
 
     def __init__(
         self,
-        config: ContextBuilderConfig | None = None
+        config: ContextBuilderConfig | None = None,
     ):
 
         self.config = config or ContextBuilderConfig()
@@ -42,7 +43,7 @@ class ContextBuilder:
     def _group_by_document(
         self,
         documents: list[str],
-        metadatas: list[dict]
+        metadatas: list[dict],
     ) -> OrderedDict[str, list[tuple[dict, str]]]:
         """
         Groups retrieved chunks by filename.
@@ -59,29 +60,23 @@ class ContextBuilder:
 
         for metadata, document in zip(
             metadatas,
-            documents
+            documents,
         ):
 
             filename = metadata["filename"]
 
             grouped.setdefault(
                 filename,
-                []
+                [],
             ).append(
                 (
                     metadata,
-                    document
+                    document,
                 )
             )
 
         #
-        # Optional ordering.
-        #
-        # Retrieval order (default)
-        # preserves ranking.
-        #
-        # Document order reconstructs
-        # the original document.
+        # Preserve original document order if requested.
         #
 
         if self.config.chunk_order == "document":
@@ -96,7 +91,7 @@ class ContextBuilder:
 
     def _build_document_header(
         self,
-        filename: str
+        filename: str,
     ) -> list[str]:
 
         if not self.config.include_document_headers:
@@ -108,30 +103,59 @@ class ContextBuilder:
             separator,
             f"Document: {filename}.txt",
             separator,
-            ""
+            "",
         ]
 
     def _build_chunk_header(
         self,
-        metadata: dict
+        metadata: dict,
     ) -> list[str]:
 
         if not self.config.include_chunk_headers:
             return []
 
-        lines: list[str] = []
-
         if self.config.include_chunk_numbers:
 
-            lines.append(
+            title = (
                 f"Chunk {metadata['chunk_number']} / "
                 f"{metadata['total_chunks']}"
             )
 
         else:
 
-            lines.append("Chunk")
+            title = "Chunk"
 
+        return [
+            title,
+            "",
+        ]
+
+    def _build_chunk(
+        self,
+        metadata: dict,
+        document: str,
+    ) -> list[str]:
+        """
+        Builds one formatted retrieved chunk.
+
+        This helper performs formatting only.
+        Budgeting is handled later by build_context().
+        """
+
+        lines: list[str] = []
+
+        lines.extend(
+            self._build_chunk_header(
+                metadata
+            )
+        )
+
+        lines.append(
+            document.strip()
+        )
+
+        lines.append("")
+        lines.append("-" * 50)
         lines.append("")
 
         return lines
@@ -141,25 +165,32 @@ class ContextBuilder:
         grouped: OrderedDict[
             str,
             list[tuple[dict, str]]
-        ]
+        ],
     ):
         """
-        Yields each document section.
+        Yields each grouped document.
 
-        Separating iteration from formatting keeps
-        build_context() small and allows diagnostic
-        tools to reuse the exact production grouping.
+        Separated from formatting so diagnostics
+        and future compression logic can reuse the
+        same traversal.
         """
 
         for filename, chunks in grouped.items():
-
             yield filename, chunks
 
     def _build_document_section(
         self,
         filename: str,
-        chunks: list[tuple[dict, str]]
+        chunks: list[tuple[dict, str]],
     ) -> list[str]:
+        """
+        Builds one formatted document section.
+
+        This method performs formatting only.
+
+        Budgeting is intentionally handled inside
+        build_context().
+        """
 
         lines: list[str] = []
 
@@ -172,24 +203,31 @@ class ContextBuilder:
         for metadata, document in chunks:
 
             lines.extend(
-                self._build_chunk_header(
-                    metadata
+                self._build_chunk(
+                    metadata,
+                    document,
                 )
             )
 
-            lines.append(
-                document.strip()
-            )
-
-            lines.append("")
-            lines.append("-" * 50)
-            lines.append("")
-
         return lines
+
+    def _estimate_section_size(
+        self,
+        lines: list[str],
+    ) -> int:
+        """
+        Estimates the character cost of a formatted
+        section after joining with newline characters.
+        """
+
+        return sum(
+            len(line) + 1
+            for line in lines
+        )
 
     def _truncate_context(
         self,
-        context: str
+        context: str,
     ) -> str:
 
         limit = self.config.max_context_characters
@@ -209,11 +247,15 @@ class ContextBuilder:
     def build_context(
         self,
         documents: list[str],
-        metadatas: list[dict]
+        metadatas: list[dict],
     ) -> str:
 
         if not documents:
             return ""
+
+        #
+        # Simple mode.
+        #
 
         if not self.config.group_by_document:
 
@@ -228,23 +270,140 @@ class ContextBuilder:
 
         grouped = self._group_by_document(
             documents,
-            metadatas
+            metadatas,
+        )
+
+        #
+        # Character budget.
+        #
+        # None means unlimited.
+        #
+
+        remaining_budget = (
+            self.config.max_context_characters
+            if self.config.max_context_characters is not None
+            else float("inf")
         )
 
         lines: list[str] = []
+
+        first_document = True
+
+        #
+        # Chunk-level budgeting.
+        #
+        # We preserve retrieval ranking while still
+        # grouping chunks under their document.
+        #
 
         for filename, chunks in self._iter_document_sections(
             grouped
         ):
 
-            lines.extend(
-                self._build_document_section(
-                    filename,
-                    chunks
-                )
+            document_header = self._build_document_header(
+                filename
             )
 
-        context = "\n".join(lines).strip()
+            header_added = False
+
+            for metadata, document in chunks:
+
+                chunk_lines = self._build_chunk(
+                    metadata,
+                    document,
+                )
+
+                #
+                # Estimate the entire chunk cost.
+                #
+
+                chunk_size = self._estimate_section_size(
+                    chunk_lines
+                )
+
+                #
+                # First chunk of a document also
+                # requires the document header.
+                #
+
+                if not header_added:
+
+                    header_size = self._estimate_section_size(
+                        document_header
+                    )
+
+                    required = (
+                        header_size +
+                        chunk_size
+                    )
+
+                else:
+
+                    required = chunk_size
+
+                #
+                # Budget exhausted.
+                #
+
+                if required > remaining_budget:
+                    break
+
+                #
+                # Add spacing between documents.
+                #
+
+                if (
+                    not first_document
+                    and header_added is False
+                ):
+
+                    lines.append("")
+                    remaining_budget -= 1
+
+                #
+                # Add document header once.
+                #
+
+                if not header_added:
+
+                    lines.extend(
+                        document_header
+                    )
+
+                    remaining_budget -= (
+                        header_size
+                    )
+
+                    header_added = True
+
+                    first_document = False
+
+                #
+                # Add chunk.
+                #
+
+                lines.extend(
+                    chunk_lines
+                )
+
+                remaining_budget -= (
+                    chunk_size
+                )
+
+            #
+            # Global budget exhausted.
+            #
+
+            if remaining_budget <= 0:
+                break
+
+        context = "\n".join(
+            lines
+        ).strip()
+
+        #
+        # Defensive safeguard.
+        #
 
         return self._truncate_context(
             context
