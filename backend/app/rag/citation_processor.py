@@ -92,6 +92,38 @@ class CitationProcessor:
             dict.fromkeys(citations)
         )
         
+    def _normalize_inline_citations(
+        self,
+        answer: str,
+    ) -> str:
+        """
+        Normalize inline citations so they remain attached
+        to the sentence they support.
+
+        Examples
+
+        Sentence.
+        [1]
+
+        →
+
+        Sentence. [1]
+        """
+
+        answer = re.sub(
+            r"\n+\s*(\[\d+\])",
+            r" \1",
+            answer,
+        )
+
+        answer = re.sub(
+            r"\s+",
+            " ",
+            answer,
+        )
+
+        return answer.strip()
+        
     def _coverage_metrics(
         self,
         answer: str,
@@ -101,8 +133,12 @@ class CitationProcessor:
         if not self.config.include_coverage_metrics:
             return {}
 
+        answer = self._normalize_inline_citations(
+            answer,
+        )
+        
         sentences = re.split(
-            r"(?<=[.!?])\s+",
+            r"(?<=[.!?])\s+(?!\[\d+\])",
             answer.strip(),
         )
 
@@ -112,16 +148,15 @@ class CitationProcessor:
             if sentence.strip()
         ]
 
-        # Ignore citation-only fragments like "[1]"
         sentences = [
             sentence
             for sentence in sentences
-            if re.search(
-                r"[A-Za-z]",
-                sentence,
+            if not re.fullmatch(
+                r"(?:\[\d+\]\s*)+",
+                sentence.strip(),
             )
         ]
-
+        
         total_sentences = len(sentences)
 
         cited_sentences = sum(

@@ -73,16 +73,3 @@ class CitationGrounderConfig:
     include_grounding_summary: bool = True
 
     include_confidence_summary: bool = True
-
-    # --------------------------------------------------
-    # Semantic Matcher Weights
-    # --------------------------------------------------
-
-    metric_weights: dict[str, float] = field(
-        default_factory=lambda: {
-            "jaccard": 0.20,
-            "containment": 0.35,
-            "overlap": 0.25,
-            "sequence": 0.20,
-        }
-    )

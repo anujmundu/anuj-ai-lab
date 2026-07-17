@@ -80,6 +80,91 @@ class CitationGrounder:
             )
 
         return cleaned
+    
+    def _serialize_primary_match(
+        self,
+        match: dict,
+    ) -> dict:
+        """
+        Convert the strongest supporting match into a
+        lightweight summary.
+
+        This avoids duplicating the full diagnostic
+        payload already available in the matches list.
+        """
+
+        return {
+
+            "filename":
+                match["source"]["filename"],
+
+            "chunk_id":
+                match["source"]["chunk_id"],
+
+            "chunk_number":
+                match["source"]["chunk_number"],
+
+            "similarity":
+                round(
+                    match["similarity"],
+                    3,
+                ),
+        }
+    
+    def _serialize_match(
+        self,
+        match: dict,
+    ) -> dict:
+        """
+        Convert an internal semantic match into the
+        diagnostic output format.
+
+        Keeping this logic in one place ensures that
+        primary_match and matches always expose the
+        same fields.
+        """
+
+        return {
+
+            "filename":
+                match["source"]["filename"],
+
+            "chunk_id":
+                match["source"]["chunk_id"],
+
+            "chunk_number":
+                match["source"]["chunk_number"],
+
+            "similarity":
+                round(
+                    match["similarity"],
+                    3,
+                ),
+
+            "metrics":
+                {
+                    key: round(value, 3)
+                    for key, value in match["metrics"].items()
+                },
+
+            "confidence":
+                {
+                    "score": round(
+                        match["similarity"],
+                        3,
+                    ),
+                    "label":
+                        self._confidence_label(
+                            match["similarity"],
+                        ),
+                },
+
+            "diagnostics":
+                match["diagnostics"],
+
+            "explanation":
+                match["explanation"],
+        }
 
     # --------------------------------------------------
 
@@ -220,16 +305,12 @@ class CitationGrounder:
                 :
                 self.config.maximum_sources_per_sentence
             ]
+            
+            primary_match = matches[0] if matches else None
 
             if matches:
 
-                confidence = (
-                    sum(
-                        item["similarity"]
-                        for item in matches
-                    )
-                    / len(matches)
-                )
+                confidence = matches[0]["similarity"]
 
             else:
 
@@ -273,44 +354,16 @@ class CitationGrounder:
                         )
                     ),
 
+                    "primary_match": (
+                        self._serialize_primary_match(
+                            primary_match,
+                        )
+                        if primary_match
+                        else None
+                    ),
+
                     "matches": [
-                        {
-
-                            "filename":
-                                match["source"]["filename"],
-
-                            "chunk_id":
-                                match["source"]["chunk_id"],
-
-                            "chunk_number":
-                                match["source"]["chunk_number"],
-
-                            "similarity":
-                                round(
-                                    match["similarity"],
-                                    3,
-                                ),
-
-                            "metrics":
-                                (
-                                    match["metrics"]
-                                    if self.config.include_similarity_breakdown
-                                    else {}
-                                ),
-
-                            "confidence":
-                                (
-                                    match["confidence"]
-                                    if self.config.enable_confidence_scoring
-                                    else {}
-                                ),
-
-                            "diagnostics":
-                                match["diagnostics"],
-
-                            "explanation":
-                                match["explanation"],
-                        }
+                        self._serialize_match(match)
                         for match in matches
                     ],
                 }
