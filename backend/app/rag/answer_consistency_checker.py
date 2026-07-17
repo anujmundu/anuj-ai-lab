@@ -4,6 +4,17 @@ from app.rag.answer_consistency_checker_config import (
     AnswerConsistencyCheckerConfig,
 )
 
+from app.rag.embedding_similarity import (
+    embedding_similarity,
+)
+
+from app.rag.contradiction_detector import (
+    contradiction_detector,
+)
+
+from app.rag.nli_adapter import (
+    nli_adapter,
+)
 
 STOPWORDS = {
     "a",
@@ -118,67 +129,45 @@ class AnswerConsistencyChecker:
                 and token not in STOPWORDS
             )
         }
-
-    def _sentence_similarity(
-        self,
-        sentence_a: str,
-        sentence_b: str,
-    ) -> float:
-
-        tokens_a = self._tokenize(
-            sentence_a
-        )
-
-        tokens_b = self._tokenize(
-            sentence_b
-        )
-
-        if (
-            not tokens_a
-            or not tokens_b
-        ):
-            return 0.0
-
-        overlap = (
-            tokens_a
-            & tokens_b
-        )
-
-        union = (
-            tokens_a
-            | tokens_b
-        )
-
-        return (
-            len(overlap)
-            / len(union)
-        )
-
+        
     def _compare_sentences(
         self,
         sentence_a: str,
         sentence_b: str,
-    ) -> dict | None:
+    ) -> dict:
 
-        similarity = self._sentence_similarity(
-            sentence_a,
-            sentence_b,
+        semantic = (
+            embedding_similarity.compare(
+                text_a=sentence_a,
+                text_b=sentence_b,
+            )
         )
 
-        if (
-            similarity
-            >= self.config.minimum_overlap
-        ):
-            return None
+        contradiction = (
+            contradiction_detector.evaluate(
+                claim=sentence_a,
+                context=sentence_b,
+                similarity=semantic,
+            )
+        )
+
+        nli = (
+            nli_adapter.infer(
+                contradiction=contradiction,
+            )
+        )
 
         return {
+
             "sentence_a": sentence_a,
+
             "sentence_b": sentence_b,
-            "similarity": round(
-                similarity,
-                2,
-            ),
-            "reason": "Low semantic overlap",
+
+            "semantic_similarity": semantic,
+
+            "contradiction": contradiction,
+
+            "nli": nli,
         }
 
     def _analyze_pairs(
@@ -196,14 +185,14 @@ class AnswerConsistencyChecker:
 
                 pair_count += 1
 
-                issue = self._compare_sentences(
+                comparison = self._compare_sentences(
                     sentences[i],
                     sentences[j],
                 )
 
-                if issue is not None:
-
-                    issues.append(issue)
+                issues.append(
+                    comparison,
+                )
 
         return (
             issues,
@@ -258,45 +247,78 @@ class AnswerConsistencyChecker:
             )
         )
 
-        if pair_count == 0:
+        supported_pairs = 0
 
-            score = 1.0
+        neutral_pairs = 0
+
+        contradicted_pairs = 0
+
+        for pair in issues:
+
+            label = pair["nli"]["label"]
+
+            if label == "supported":
+
+                supported_pairs += 1
+
+            elif label in ("neutral", "unrelated"):
+
+                neutral_pairs += 1
+
+            elif label == "contradicted":
+
+                contradicted_pairs += 1
+                
+        if pair_count:
+
+            score = (
+
+                supported_pairs
+
+                + neutral_pairs
+
+            ) / pair_count
 
         else:
 
-            score = (
-                1
-                - (
-                    len(issues)
-                    / pair_count
-                )
-            )
+            score = 1.0
 
         score = round(
             score,
             2,
         )
 
-        if pair_count == 0:
-            score = 1.0
-        else:
-            score = 1 - (len(issues) / pair_count)
-
         if score >= self.config.consistent_threshold:
+
             status = "consistent"
 
         elif score >= self.config.uncertain_threshold:
+
             status = "uncertain"
 
         else:
+
             status = "needs_review"
 
         return {
+
             "status": status,
+
             "total_sentences": len(sentences),
+
             "sentence_pairs": pair_count,
-            "low_overlap_pairs": len(issues),
-            "consistency_score": round(score, 2),
+
+            "supported_pairs": supported_pairs,
+
+            "neutral_pairs": neutral_pairs,
+
+            "contradicted_pairs": contradicted_pairs,
+
+            "consistency_score": round(
+                score,
+                2,
+            ),
+
             "details": issues,
         }
 
