@@ -4,6 +4,8 @@ import unicodedata
 from app.rag.semantic_matcher_config import (
     SemanticMatcherConfig,
 )
+from app.rag.embedding_provider import EmbeddingProvider
+from app.rag.ollama_embedding_provider import OllamaEmbeddingProvider
 
 
 class SemanticMatcher:
@@ -39,8 +41,37 @@ class SemanticMatcher:
             or SemanticMatcherConfig()
         )
         
-        self._validate_weights()
+        # ----------------------------------------------
+        # Optional Embedding Provider
+        # ----------------------------------------------
 
+        self.embedding_provider: EmbeddingProvider | None = None
+
+        if self.config.enable_embeddings:
+
+            provider = (
+                self.config.embedding_provider
+                .strip()
+                .lower()
+            )
+
+            if provider == "ollama":
+
+                self.embedding_provider = (
+                    OllamaEmbeddingProvider(
+                        self.config,
+                    )
+                )
+
+            else:
+
+                raise ValueError(
+                    f"Unsupported embedding provider: "
+                    f"{self.config.embedding_provider}"
+                )
+        
+        self._validate_weights()
+    
     # --------------------------------------------------
     # Configuration
     # --------------------------------------------------
@@ -73,6 +104,24 @@ class SemanticMatcher:
                 "SemanticMatcher similarity weights "
                 "must sum to 1.0."
 
+            )
+            
+    def _embedding_similarity(
+            self,
+            text_a: str,
+            text_b: str,
+        ) -> float:
+            """
+            Compute embedding similarity if an embedding
+            provider is configured.
+            """
+
+            if self.embedding_provider is None:
+                return 0.0
+
+            return self.embedding_provider.similarity(
+                text_a,
+                text_b,
             )
         
     # --------------------------------------------------
@@ -121,6 +170,41 @@ class SemanticMatcher:
             text = text.strip()
 
         return text
+    
+    # --------------------------------------------------
+    # Token normalization
+    # --------------------------------------------------
+
+    def _normalize_token(
+        self,
+        token: str,
+    ) -> str:
+
+        token = token.lower()
+
+        suffixes = (
+            "ations",
+            "ation",
+            "ments",
+            "ment",
+            "ingly",
+            "edly",
+            "ing",
+            "ed",
+            "es",
+            "s",
+        )
+
+        for suffix in suffixes:
+
+            if (
+                len(token) > len(suffix) + 2
+                and token.endswith(suffix)
+            ):
+
+                return token[:-len(suffix)]
+
+        return token
 
     # --------------------------------------------------
     # Tokenization
@@ -146,12 +230,13 @@ class SemanticMatcher:
 
         tokens = [
 
-            token
+            self._normalize_token(token)
 
             for token in tokens
 
             if len(token)
             >= self.config.minimum_token_length
+
         ]
 
         if self.config.remove_stopwords:
@@ -309,6 +394,42 @@ class SemanticMatcher:
             text_a,
             text_b,
         ).ratio()
+        
+    # --------------------------------------------------
+    # Score Calculation
+    # --------------------------------------------------
+
+    def _calculate_lexical_score(
+        self,
+        *,
+        jaccard: float,
+        containment: float,
+        overlap: float,
+        sequence: float,
+    ) -> float:
+        """
+        Combine the lexical similarity metrics into a
+        single weighted score.
+
+        Embedding similarity will later be fused with
+        this lexical score.
+        """
+
+        return (
+
+            jaccard
+            * self.config.jaccard_weight
+
+            + containment
+            * self.config.containment_weight
+
+            + overlap
+            * self.config.overlap_weight
+
+            + sequence
+            * self.config.sequence_weight
+
+        )
 
     def confidence(
         self,
@@ -375,6 +496,9 @@ class SemanticMatcher:
         • Answer quality
         • Claim verification
         """
+        # --------------------------------------------------
+        # Normalization
+        # --------------------------------------------------
 
         normalized_a = self.normalize(
             text_a,
@@ -391,6 +515,10 @@ class SemanticMatcher:
         tokens_b = self.tokenize(
             normalized_b,
         )
+        
+        # --------------------------------------------------
+        # Lexical Similarity
+        # --------------------------------------------------
 
         shared = sorted(
             self.token_overlap(
@@ -418,22 +546,47 @@ class SemanticMatcher:
             normalized_a,
             normalized_b,
         )
+        
+        # --------------------------------------------------
+        # Embedding Similarity
+        # --------------------------------------------------
+
+        embedding_similarity = self._embedding_similarity(
+            normalized_a,
+            normalized_b,
+        )
+        
+        # --------------------------------------------------
+        # Score Fusion
+        # --------------------------------------------------
+
+        lexical_score = self._calculate_lexical_score(
+
+            jaccard=jaccard,
+
+            containment=containment,
+
+            overlap=overlap,
+
+            sequence=sequence,
+
+        )
 
         overall = (
 
-            jaccard
-            * self.config.jaccard_weight
+            self.config.lexical_weight
+            * lexical_score
 
-            + containment
-            * self.config.containment_weight
+            +
 
-            + overlap
-            * self.config.overlap_weight
-
-            + sequence
-            * self.config.sequence_weight
+            self.config.embedding_weight
+            * embedding_similarity
 
         )
+        
+        # --------------------------------------------------
+        # Diagnostics
+        # --------------------------------------------------
 
         confidence = self.confidence(
             overall,
@@ -535,6 +688,16 @@ class SemanticMatcher:
                     3,
                 ),
 
+                "lexical": round(
+                    lexical_score,
+                    3,
+                ),
+
+                "embedding": round(
+                    embedding_similarity,
+                    3,
+                ),
+
                 "overall": round(
                     overall,
                     3,
@@ -544,6 +707,11 @@ class SemanticMatcher:
             "confidence": confidence,
 
             "diagnostics": {
+                
+                "embedding_similarity": round(
+                    embedding_similarity,
+                    3,
+                ),
 
                 "shared_token_count": len(
                     shared,

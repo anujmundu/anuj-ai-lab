@@ -55,20 +55,44 @@ class SemanticMatcherConfig:
     low_similarity: float = 0.40
     
     # --------------------------------------------------
+    # Embedding Similarity (V2)
+    # --------------------------------------------------
+
+    enable_embeddings: bool = True
+
+    embedding_provider: str = "ollama"
+    
+    ollama_base_url: str = "http://localhost:11434"
+
+    embedding_model: str = "nomic-embed-text"
+
+    cache_embeddings: bool = True
+    
+    # --------------------------------------------------
     # Similarity Weights
     # --------------------------------------------------
 
-    jaccard_weight: float = 0.25
+    jaccard_weight = 0.15
 
-    containment_weight: float = 0.25
+    containment_weight = 0.40
 
-    overlap_weight: float = 0.25
+    overlap_weight = 0.35
 
-    sequence_weight: float = 0.25
+    sequence_weight = 0.10
+    
+    # --------------------------------------------------
+    # Hybrid Score Fusion (V2)
+    # --------------------------------------------------
+
+    lexical_weight: float = 0.40
+
+    embedding_weight: float = 0.60
 
     # --------------------------------------------------
     # Diagnostics
     # --------------------------------------------------
+
+    include_embedding_scores: bool = True
 
     include_normalized_text: bool = True
 
