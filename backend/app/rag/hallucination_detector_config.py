@@ -43,6 +43,8 @@ class HallucinationDetectorConfig:
     # --------------------------------------------------
 
     sentence_analysis: bool = True
+    
+    claim_verification: bool = True
 
     supported_sentence_threshold: float = 0.75
 

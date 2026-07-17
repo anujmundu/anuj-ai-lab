@@ -3,6 +3,21 @@ import re
 from app.rag.hallucination_detector_config import (
     HallucinationDetectorConfig,
 )
+from app.rag.hallucination_claim_extractor import (
+    hallucination_claim_extractor,
+)
+
+from app.rag.nli_adapter import (
+    nli_adapter,
+)
+
+from app.rag.embedding_similarity import (
+    embedding_similarity,
+)
+
+from app.rag.contradiction_detector import (
+    contradiction_detector,
+)
 
 STOPWORDS = {
     "a",
@@ -385,10 +400,23 @@ class HallucinationDetector:
         sentence_analysis = []
 
         sentence_statistics = {
+            
             "supported_sentences": 0,
             "partially_supported_sentences": 0,
             "unsupported_sentences": 0,
         }
+        
+        claim_analysis = []
+
+        supported_claims = 0
+        neutral_claims = 0
+        contradicted_claims = 0
+
+        total_claims = 0
+        claim_support = 0.0
+
+        average_similarity = 0.0
+        contradictions_detected = 0
 
         if self.config.sentence_analysis:
 
@@ -411,11 +439,117 @@ class HallucinationDetector:
                     sentence_analysis,
                 )
             )
+            
+        # --------------------------------------------------
+        # Claim Verification
+        # --------------------------------------------------
+        if self.config.claim_verification:
+            
+            claim_result = (
+                hallucination_claim_extractor.extract(
+                    answer,
+                )
+            )
+
+            claims = claim_result.get(
+                "claims",
+                [],
+            )
+
+            claim_analysis = []
+
+            supported_claims = 0
+
+            neutral_claims = 0
+
+            contradicted_claims = 0
+            
+            for claim in claims:
+
+                semantic = (
+                    embedding_similarity.compare(
+                        text_a=claim["normalized"],
+                        text_b=context,
+                    )
+                )
+
+                contradiction = (
+                    contradiction_detector.evaluate(
+                        claim=claim["normalized"],
+                        context=context,
+                        similarity=semantic
+                    )
+                )
+                
+
+                nli = (
+                    nli_adapter.infer(
+                        contradiction=contradiction,
+                    )
+                )
+
+                claim_analysis.append(
+                    {
+                        "claim": claim["claim"],
+
+                        "semantic_similarity": semantic,
+
+                        "contradiction": contradiction,
+
+                        "nli": nli,
+                    }
+                )
+
+                label = nli["label"]
+
+                if label == "supported":
+
+                    supported_claims += 1
+
+                elif label == "neutral":
+
+                    neutral_claims += 1
+
+                else:
+
+                    contradicted_claims += 1
+                    
+            total_claims = len(claim_analysis)
+
+            claim_support = (
+
+                (
+                    supported_claims
+                    + (0.5 * neutral_claims)
+                )
+                / total_claims
+
+                if total_claims
+
+                else 0.0
+
+            )
         
         coverage = (
             supported / len(answer_tokens)
             if answer_tokens
             else 0.0
+        )
+        
+        average_similarity = (
+            sum(
+                item["semantic_similarity"]["similarity"]
+                for item in claim_analysis
+            )
+            / total_claims
+            if total_claims
+            else 0.0
+        )
+
+        contradictions_detected = sum(
+            1
+            for item in claim_analysis
+            if item["contradiction"]["label"] == "contradicted"
         )
 
         return {
@@ -477,6 +611,31 @@ class HallucinationDetector:
             "is_potential_hallucination": (
                 risk >= self.config.risk_threshold
             ),
+            
+            "claims": claim_analysis,
+
+            "claim_statistics": {
+
+                "total_claims": total_claims,
+
+                "supported_claims": supported_claims,
+
+                "neutral_claims": neutral_claims,
+
+                "contradicted_claims": contradicted_claims,
+
+                "claim_support": round(
+                    claim_support,
+                    3,
+                ),
+                
+                "average_semantic_similarity": round(
+                    average_similarity,
+                    3,
+                ),
+
+                "contradictions_detected": contradictions_detected,
+            },
         }
 
 
