@@ -208,15 +208,31 @@ class ResultFusion:
             start=1,
         ):
 
+            rerank_scores = results.get(
+                "rerank_scores",
+                [[]],
+            )[0]
+            
             if source == "semantic":
 
-                semantic_score = (
-                    1.0
-                    /
-                    (
-                        1.0 + value
+                if rerank_scores:
+
+                    semantic_score = rerank_scores[
+                        rank - 1
+                    ]
+
+                else:
+
+                    semantic_score = (
+                        1.0
+                        /
+                        (
+                            1.0 + value
+                        )
                     )
-                )
+
+                keyword_score = 0.0
+                distance = value
 
                 keyword_score = 0.0
 

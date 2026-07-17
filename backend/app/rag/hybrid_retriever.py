@@ -4,6 +4,7 @@ from app.rag.result_fusion import result_fusion
 from app.rag.retrieval_config import RetrievalConfig
 from app.rag.retrieval_filter import retrieval_filter
 from app.rag.retriever import retriever
+from app.rag.semantic_reranker import semantic_reranker
 
 
 class SemanticRetriever(BaseRetriever):
@@ -75,10 +76,26 @@ class HybridRetriever(BaseRetriever):
         keyword_results = None
 
         if self._use_semantic():
+            candidate_k = max(
+                k * semantic_reranker.config.candidate_multiplier,
+                semantic_reranker.config.minimum_candidates,
+            )
+
+            candidate_k = min(
+                candidate_k,
+                semantic_reranker.config.maximum_candidates,
+            )
+
             semantic_results = self.semantic.retrieve(
                 query=query,
-                k=k,
+                k=candidate_k,
             )
+
+            semantic_results = semantic_reranker.rerank(
+                query=query,
+                results=semantic_results,
+            )
+            semantic_results["requested_k"] = k
 
         if self._use_keyword():
             keyword_results = self.keyword.retrieve(
