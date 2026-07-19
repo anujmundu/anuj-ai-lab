@@ -30,5 +30,28 @@ class EvidenceAlignerConfig(BaseModel):
     )
 
     store_all_matches: bool = False
-    
+
     sort_descending: bool = True
+
+    #
+    # Evidence scoring weights
+    #
+
+    lexical_weight: float = Field(
+        default=0.30,
+        ge=0.0,
+        le=1.0,
+    )
+
+    embedding_weight: float = Field(
+        default=0.70,
+        ge=0.0,
+        le=1.0,
+    )
+
+
+#
+# Singleton configuration
+#
+
+evidence_config = EvidenceAlignerConfig()

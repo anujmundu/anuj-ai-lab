@@ -36,8 +36,6 @@ class EvidenceMatch:
 
     score: EvidenceScore
 
-    confidence: float
-
     support: SupportLevel
 
 
@@ -72,3 +70,4 @@ class EvidenceAlignmentResult:
 
     average_similarity: float = 0.0
     average_confidence: float = 0.0
+    
