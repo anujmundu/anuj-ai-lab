@@ -1,6 +1,8 @@
+from ctypes import alignment
 import time
 
 from app.rag.answer_processor import answer_processor
+from app.rag.evidence_aligner import evidence_aligner
 from app.rag.answer_quality import answer_quality
 from app.rag.pipeline_health import pipeline_health
 from app.rag.rag_scorecard import rag_scorecard
@@ -19,6 +21,9 @@ from app.rag.retrieval_quality import retrieval_quality
 from app.rag.answer_consistency_checker import (answer_consistency_checker,)
 from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
+from app.rag.evidence_models import (
+    EvidenceAlignmentResult,
+)
 from sqlmodel import Session
 
 from app.db.database import engine
@@ -528,7 +533,7 @@ class RAGService:
         start = time.perf_counter()
 
         context = context_builder.build_context(
-            documents=documents,
+            alignment=alignment,
             metadatas=metadatas,
         )
 
@@ -615,11 +620,13 @@ class RAGService:
         *,
         raw_answer: str,
         context: str,
-        sources: list[dict], 
+        sources: list[dict],
         documents: list[str],
+        metadatas: list[dict],
     ) -> tuple[
         str,
         float,
+        EvidenceAlignmentResult,
         dict,
         dict,
         dict,
@@ -637,6 +644,14 @@ class RAGService:
             )
         )
 
+        alignment = (
+            evidence_aligner.align(
+                answer=processed_answer["answer"],
+                documents=documents,
+                metadatas=metadatas,
+            )
+        )
+
         citation_insert_result = (
             citation_inserter.insert(
                 answer=processed_answer["answer"],
@@ -650,7 +665,7 @@ class RAGService:
                 context=context,
             )
         )
-        
+
         consistency_result = (
             answer_consistency_checker.detect(
                 answer=citation_insert_result["answer"],
@@ -660,16 +675,16 @@ class RAGService:
         citation_result = (
             citation_processor.process(
                 answer=citation_insert_result["answer"],
-                documents=documents,
                 sources=sources,
+                alignment=alignment,
             )
         )
 
         answer = citation_result["answer"]
-        
+
         answer_quality_result = (
             answer_quality.analyze(
-                answer=citation_result["answer"],
+                answer=answer,
                 prompt=context,
             )
         )
@@ -679,6 +694,7 @@ class RAGService:
         return (
             answer,
             confidence,
+            alignment,
             hallucination_result,
             consistency_result,
             answer_quality_result,
@@ -876,6 +892,7 @@ class RAGService:
         (
             answer,
             confidence,
+            alignment,
             hallucination_result,
             consistency_result,
             answer_quality_result,
@@ -884,6 +901,7 @@ class RAGService:
             raw_answer=raw_answer,
             context=context,
             documents=documents,
+            metadatas=metadatas,
             sources=sources,
         )
         
@@ -894,6 +912,7 @@ class RAGService:
                 ),
                 hallucination=hallucination_result,
                 answer_quality=answer_quality_result,
+                citation_result=citation_result,
             )
         )
         

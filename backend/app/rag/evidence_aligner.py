@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from app.rag.embedding_provider import EmbeddingProvider
 from app.rag.evidence_config import (
     EvidenceAlignerConfig,
     evidence_config,
 )
 from app.rag.evidence_models import (
     EvidenceAlignmentResult,
+    EvidenceMatch,
+    EvidenceScore,
     SentenceEvidence,
+    SupportLevel,
 )
 from app.rag.semantic_matcher import semantic_matcher
 from app.rag.text_utils import split_sentences
@@ -33,81 +35,210 @@ class EvidenceAligner:
 
     def __init__(
         self,
-        embedding_provider: EmbeddingProvider | None = None,
+        matcher=semantic_matcher,
         config: EvidenceAlignerConfig = evidence_config,
-    ):
+    ) -> None:
 
-        self.embedding_provider = (
-            embedding_provider
-            or semantic_matcher.embedding_provider
-        )
-
+        self.matcher = matcher
         self.config = config
 
     def align(
         self,
         answer: str,
-        retrieved_chunks: Sequence,
+        documents: Sequence[str],
+        metadatas: Sequence[dict],
     ) -> EvidenceAlignmentResult:
         """
-        Main entry point.
+        Align every sentence in the generated answer with
+        the retrieved document chunks.
         """
 
-        raise NotImplementedError
+        if len(documents) != len(metadatas):
+            raise ValueError(
+                "documents and metadatas must have the same length."
+            )
+
+        sentences = split_sentences(answer)
+
+        sentence_results = [
+            self._align_sentence(
+                sentence=sentence,
+                documents=documents,
+                metadatas=metadatas,
+            )
+            for sentence in sentences
+            if sentence.strip()
+        ]
+
+        return self._build_result(
+            sentence_results,
+        )
 
     def _align_sentence(
         self,
         sentence: str,
-        retrieved_chunks: Sequence,
+        documents: Sequence[str],
+        metadatas: Sequence[dict],
     ) -> SentenceEvidence:
+        """
+        Align a generated sentence against the retrieved
+        document chunks and return the supporting evidence.
+        """
 
-        raise NotImplementedError
+        matches = [
+            self._score_candidate(
+                sentence=sentence,
+                document=document,
+                metadata=metadata,
+            )
+            for document, metadata in zip(
+                documents,
+                metadatas,
+            )
+        ]
+
+        matches.sort(
+            key=lambda match: match.score.overall,
+            reverse=self.config.sort_descending,
+        )
+
+        if self.config.store_all_matches:
+            selected_matches = matches
+        else:
+            selected_matches = matches[
+                : self.config.max_candidate_matches
+            ]
+
+        best_match = (
+            selected_matches[0]
+            if selected_matches
+            else None
+        )
+
+        confidence = (
+            best_match.score.overall
+            if best_match is not None
+            else 0.0
+        )
+
+        support = (
+            best_match.support
+            if best_match is not None
+            else SupportLevel.UNSUPPORTED
+        )
+
+        return SentenceEvidence(
+            sentence=sentence,
+            matches=selected_matches,
+            confidence=confidence,
+            support=support,
+        )
 
     def _score_candidate(
         self,
         sentence: str,
-        chunk,
-    ):
+        document: str,
+        metadata: dict,
+    ) -> EvidenceMatch:
+        """
+        Score one retrieved document against a generated
+        sentence and return the resulting evidence match.
+        """
 
-        raise NotImplementedError
+        score = self._compute_similarity(
+            sentence=sentence,
+            chunk=document,
+        )
 
-    def _compute_lexical_similarity(
+        support = self._determine_support(
+            score.overall,
+        )
+
+        return EvidenceMatch(
+            text=document,
+
+            filename=metadata["filename"],
+
+            chunk_id=metadata["chunk_id"],
+
+            chunk_number=metadata["chunk_number"],
+
+            total_chunks=metadata["total_chunks"],
+
+            score=score,
+
+            support=support,
+        )
+
+    def _compute_similarity(
         self,
         sentence: str,
-        chunk_text: str,
-    ) -> float:
+        chunk: str,
+    ) -> EvidenceScore:
+        """
+        Compute lexical, embedding and overall similarity
+        using the shared SemanticMatcher.
 
-        raise NotImplementedError
+        EvidenceAligner intentionally delegates all
+        similarity computation to SemanticMatcher so that
+        improvements to the similarity engine
+        automatically benefit evidence alignment.
+        """
 
-    def _compute_embedding_similarity(
-        self,
-        sentence: str,
-        chunk_text: str,
-    ) -> float:
+        comparison = self.matcher.compare(
+            sentence,
+            chunk,
+        )
 
-        raise NotImplementedError
+        metrics = comparison["metrics"]
 
-    def _combine_scores(
-        self,
-        lexical: float,
-        embedding: float,
-    ) -> float:
-
-        raise NotImplementedError
+        return EvidenceScore(
+            overall=metrics["overall"],
+            lexical=metrics["lexical"],
+            embedding=metrics["embedding"],
+        )
 
     def _determine_support(
         self,
         similarity: float,
-    ):
+    ) -> SupportLevel:
+        """
+        Determine the evidence support level based on the
+        overall similarity score.
+        """
 
-        raise NotImplementedError
+        if similarity >= self.config.grounded_threshold:
+            return SupportLevel.GROUNDED
+
+        if similarity >= self.config.partial_threshold:
+            return SupportLevel.PARTIAL
+
+        return SupportLevel.UNSUPPORTED
 
     def _build_result(
         self,
         sentence_results: list[SentenceEvidence],
     ) -> EvidenceAlignmentResult:
+        """
+        Build the final evidence alignment result from the
+        sentence-level evidence.
+        """
 
-        raise NotImplementedError
+        if sentence_results:
+            confidence = (
+                sum(
+                    sentence.confidence
+                    for sentence in sentence_results
+                )
+                / len(sentence_results)
+            )
+        else:
+            confidence = 0.0
+
+        return EvidenceAlignmentResult(
+            sentences=sentence_results,
+            confidence=confidence,
+        )
 
 
 evidence_aligner = EvidenceAligner()

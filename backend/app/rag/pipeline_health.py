@@ -78,6 +78,33 @@ class PipelineHealth:
             return "Fair"
 
         return "Warning"
+    
+    def _grounding_health(
+        self,
+        citation_result: dict,
+    ) -> str:
+        """
+        Evaluate the health of evidence grounding
+        produced by CitationGrounder.
+        """
+
+        grounding = citation_result.get(
+            "grounding",
+            {},
+        )
+
+        status = grounding.get(
+            "overall_status",
+            "Very Low",
+        )
+
+        if status == "High":
+            return "Healthy"
+
+        if status == "Medium":
+            return "Fair"
+
+        return "Warning"
 
     # ------------------------------------------
 
@@ -87,6 +114,7 @@ class PipelineHealth:
         retrieval_quality: dict,
         hallucination: dict,
         answer_quality: dict,
+        citation_result: dict,
     ) -> dict:
 
         if not self.config.enabled:
@@ -107,44 +135,64 @@ class PipelineHealth:
             answer_quality,
         )
 
+        grounding = self._grounding_health(
+            citation_result,
+        )
+
         statuses = [
+
             retrieval,
+
             hallucination_detector,
+
             answer,
+
+            grounding,
         ]
 
         if "Warning" in statuses:
+
             overall = "Warning"
 
         elif "Fair" in statuses:
+
             overall = "Fair"
 
         else:
+
             overall = "Healthy"
 
         return {
 
-            "overall": overall,
+            "overall":
+                overall,
 
-            "retriever": retrieval,
+            "retriever":
+                retrieval,
 
-            "ranker": "Healthy",
+            "ranker":
+                "Healthy",
 
-            "context_builder": "Healthy",
+            "context_builder":
+                "Healthy",
 
-            "prompt_builder": "Healthy",
+            "prompt_builder":
+                "Healthy",
 
-            "generator": "Healthy",
+            "generator":
+                "Healthy",
 
-            "hallucination_detector": (
-                hallucination_detector
-            ),
+            "hallucination_detector":
+                hallucination_detector,
 
-            "citation_grounding": "Healthy",
+            "citation_grounding":
+                grounding,
 
-            "answer_quality": answer,
+            "answer_quality":
+                answer,
 
-            "retrieval_quality": retrieval,
+            "retrieval_quality":
+                retrieval,
         }
 
 

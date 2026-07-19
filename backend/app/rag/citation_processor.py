@@ -1,7 +1,12 @@
 import re
 
 from app.rag.citation_processor_config import CitationProcessorConfig
-from app.rag.citation_grounder import (citation_grounder,)
+from app.rag.citation_grounder import (
+    citation_grounder,
+)
+from app.rag.evidence_models import (
+    EvidenceAlignmentResult,
+)
 
 
 class CitationProcessor:
@@ -207,9 +212,10 @@ class CitationProcessor:
 
     def process(
         self,
+        *,
         answer: str,
-        documents: list[str],
         sources: list[dict],
+        alignment: EvidenceAlignmentResult,
     ) -> dict:
         """
         Build citation diagnostics.
@@ -218,44 +224,50 @@ class CitationProcessor:
         citation_inserter.py.
 
         This component extracts citations from the
-        final answer and maps them back to the
-        retrieved source chunks.
+        final answer, maps them back to the retrieved
+        source chunks, and attaches grounding
+        diagnostics produced by CitationGrounder.
         """
 
         source_mapping = (
             self._build_source_mapping(
-                sources
+                sources,
             )
         )
 
         citations = self._extract_citations(
-            answer
-        )
-        
-        coverage = self._coverage_metrics(
             answer,
-            citations,
         )
-        
+
+        coverage = (
+            self._coverage_metrics(
+                answer,
+                citations,
+            )
+        )
+
         grounding = (
             citation_grounder.ground(
-                answer=answer,
-                documents=documents,
-                sources=sources,
+                alignment=alignment,
             )
         )
 
         return {
 
-            "answer": answer,
+            "answer":
+                answer,
 
-            "citations": citations,
+            "citations":
+                citations,
 
-            "coverage": coverage,
-            
-            "grounding": grounding,
+            "coverage":
+                coverage,
 
-            "source_mapping": source_mapping,
+            "grounding":
+                grounding,
+
+            "source_mapping":
+                source_mapping,
         }
 
 

@@ -1,29 +1,26 @@
-import re
+from ctypes import alignment
 
 from app.rag.citation_grounder_config import (
     CitationGrounderConfig,
 )
-from app.rag.semantic_matcher import (
-    semantic_matcher,
+from app.rag.evidence_models import (
+    EvidenceAlignmentResult,
+    EvidenceMatch,
 )
 
 
 class CitationGrounder:
     """
-    Semantic citation grounding engine.
+    Transforms an EvidenceAlignmentResult into a
+    citation grounding report.
 
-    Responsibilities
+    This class performs no retrieval,
+    sentence segmentation,
+    semantic matching,
+    or evidence alignment.
 
-    • Sentence segmentation
-    • Sentence-to-source semantic matching
-    • Multi-source grounding
-    • Grounding confidence estimation
-    • Grounding diagnostics
-
-    This module performs no retrieval.
-
-    It only evaluates how well retrieved
-    documents support generated sentences.
+    All evidence computation is delegated
+    to EvidenceAligner.
     """
 
     def __init__(
@@ -39,131 +36,101 @@ class CitationGrounder:
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
-
-    def _split_sentences(
-        self,
-        answer: str,
-    ) -> list[str]:
-
-        sentences = re.split(
-            self.config.sentence_split_pattern,
-            answer.strip(),
-        )
-
-        cleaned = []
-
-        for sentence in sentences:
-
-            sentence = sentence.strip()
-
-            if not sentence:
-                continue
-
-            if (
-                self.config.ignore_non_text_sentences
-                and
-                not re.search(
-                    r"[A-Za-z]",
-                    sentence,
-                )
-            ):
-                continue
-
-            if (
-                len(sentence)
-                < self.config.minimum_sentence_length
-            ):
-                continue
-
-            cleaned.append(
-                sentence,
-            )
-
-        return cleaned
     
     def _serialize_primary_match(
         self,
-        match: dict,
+        match: EvidenceMatch,
     ) -> dict:
         """
-        Convert the strongest supporting match into a
+        Convert the strongest supporting evidence into a
         lightweight summary.
-
-        This avoids duplicating the full diagnostic
-        payload already available in the matches list.
         """
 
         return {
 
             "filename":
-                match["source"]["filename"],
+                match.filename,
 
             "chunk_id":
-                match["source"]["chunk_id"],
+                match.chunk_id,
 
             "chunk_number":
-                match["source"]["chunk_number"],
+                match.chunk_number,
 
             "similarity":
                 round(
-                    match["similarity"],
+                    match.score.overall,
                     3,
                 ),
+
+            "support":
+                match.support.value,
         }
     
     def _serialize_match(
         self,
-        match: dict,
+        match: EvidenceMatch,
     ) -> dict:
         """
-        Convert an internal semantic match into the
-        diagnostic output format.
-
-        Keeping this logic in one place ensures that
-        primary_match and matches always expose the
-        same fields.
+        Serialize one evidence match.
         """
 
         return {
 
             "filename":
-                match["source"]["filename"],
+                match.filename,
 
             "chunk_id":
-                match["source"]["chunk_id"],
+                match.chunk_id,
 
             "chunk_number":
-                match["source"]["chunk_number"],
+                match.chunk_number,
 
             "similarity":
                 round(
-                    match["similarity"],
+                    match.score.overall,
                     3,
                 ),
 
             "metrics":
                 {
-                    key: round(value, 3)
-                    for key, value in match["metrics"].items()
+
+                    "overall":
+                        round(
+                            match.score.overall,
+                            3,
+                        ),
+
+                    "lexical":
+                        round(
+                            match.score.lexical,
+                            3,
+                        ),
+
+                    "embedding":
+                        round(
+                            match.score.embedding,
+                            3,
+                        ),
                 },
 
             "confidence":
                 {
-                    "score": round(
-                        match["similarity"],
-                        3,
-                    ),
+
+                    "score":
+                        round(
+                            match.score.overall,
+                            3,
+                        ),
+
                     "label":
                         self._confidence_label(
-                            match["similarity"],
+                            match.score.overall,
                         ),
                 },
 
-            "diagnostics":
-                match["diagnostics"],
-
-            "explanation":
-                match["explanation"],
+            "support":
+                match.support.value,
         }
 
     # --------------------------------------------------
@@ -172,6 +139,14 @@ class CitationGrounder:
         self,
         score: float,
     ) -> str:
+        """
+        Convert a confidence score into a human-readable label.
+        """
+
+        score = max(
+            0.0,
+            min(score, 1.0),
+        )
 
         if score >= self.config.high_confidence:
             return "High"
@@ -185,237 +160,84 @@ class CitationGrounder:
         return "Very Low"
 
     # --------------------------------------------------
-
-    def _grounding_status(
-        self,
-        score: float,
-    ) -> str:
-
-        if (
-            score
-            >= self.config.grounded_threshold
-        ):
-            return "grounded"
-
-        if (
-            score
-            >= self.config.partial_grounding_threshold
-        ):
-            return "partially_grounded"
-
-        return "unsupported"
-
-    # --------------------------------------------------
     # Public API
     # --------------------------------------------------
 
     def ground(
         self,
         *,
-        answer: str,
-        documents: list[str],
-        sources: list[dict],
+        alignment: EvidenceAlignmentResult,
     ) -> dict:
+        
+        
 
         if not self.config.enabled:
-
             return {}
-
-        sentences = self._split_sentences(
-            answer,
-        )
 
         sentence_results = []
 
-        grounded = 0
-        partial = 0
-        unsupported = 0
-
-        confidence_sum = 0.0
-
-        for sentence in sentences:
-
-            matches = []
-
-            for document, source in zip(
-                documents,
-                sources,
-            ):
-
-                similarity = (
-                    semantic_matcher.compare(
-                        sentence,
-                        document,
-                    )
-                )
-
-                score = (
-                    similarity
-                    .get(
-                        "metrics",
-                        {},
-                    )
-                    .get(
-                        "overall",
-                        0.0,
-                    )
-                )
-
-                if (
-                    score
-                    < self.config.minimum_similarity
-                ):
-                    continue
-
-                matches.append(
-                    {
-                        "similarity": score,
-
-                        "metrics": similarity.get(
-                            "metrics",
-                            {},
-                        ),
-
-                        "confidence": similarity.get(
-                            "confidence",
-                            {},
-                        ),
-
-                        "diagnostics": similarity.get(
-                            "diagnostics",
-                            {},
-                        ),
-
-                        "explanation": similarity.get(
-                            "explanation",
-                            [],
-                        ),
-
-                        "source": source,
-                    }
-                )
-
-            matches.sort(
-                key=lambda item:
-                item["similarity"],
-                reverse=True,
-            )
-
-            matches = matches[
-                :
-                self.config.maximum_sources_per_sentence
-            ]
-            
-            primary_match = matches[0] if matches else None
-
-            if matches:
-
-                confidence = matches[0]["similarity"]
-
-            else:
-
-                confidence = 0.0
-
-            status = (
-                self._grounding_status(
-                    confidence,
-                )
-            )
-
-            if status == "grounded":
-
-                grounded += 1
-
-            elif status == "partially_grounded":
-
-                partial += 1
-
-            else:
-
-                unsupported += 1
-
-            confidence_sum += confidence
+        for sentence in alignment.sentences:
 
             sentence_results.append(
                 {
 
-                    "sentence": sentence,
+                    "sentence":
+                        sentence.sentence,
 
-                    "status": status,
+                    "status":
+                        sentence.support.value,
 
-                    "confidence": round(
-                        confidence,
-                        3,
-                    ),
+                    "confidence":
+                        round(
+                            sentence.confidence,
+                            3,
+                        ),
 
-                    "confidence_label": (
+                    "confidence_label":
                         self._confidence_label(
-                            confidence,
-                        )
-                    ),
+                            sentence.confidence,
+                        ),
 
-                    "primary_match": (
-                        self._serialize_primary_match(
-                            primary_match,
-                        )
-                        if primary_match
-                        else None
-                    ),
+                    "primary_match":
+                        (
+                            self._serialize_primary_match(
+                                sentence.best_match,
+                            )
+                            if sentence.best_match
+                            else None
+                        ),
 
-                    "matches": [
-                        self._serialize_match(match)
-                        for match in matches
-                    ],
+                    "matches":
+                        [
+                            self._serialize_match(match)
+                            for match in sentence.candidate_matches
+                        ],
                 }
             )
-
-        total = len(
-            sentence_results,
-        )
-
-        average_confidence = (
-            confidence_sum
-            / total
-            if total
-            else 0.0
-        )
-        
-        grounding_score = (
-            (
-                grounded
-                + (0.5 * partial)
-            )
-            / total
-            if total
-            else 0.0
-        )
 
         return {
 
             "grounded_sentences":
-                grounded,
+                alignment.grounded_count,
 
             "partially_grounded_sentences":
-                partial,
+                alignment.partial_count,
 
             "unsupported_sentences":
-                unsupported,
+                alignment.unsupported_count,
 
             "grounding_score":
-                round(
-                    grounding_score,
-                    3,
-                ),
+                alignment.grounding_score,
 
             "average_confidence":
                 round(
-                    average_confidence,
+                    alignment.average_confidence,
                     3,
                 ),
 
             "overall_status":
                 self._confidence_label(
-                    average_confidence,
+                    alignment.average_confidence,
                 ),
 
             "sentence_grounding":
