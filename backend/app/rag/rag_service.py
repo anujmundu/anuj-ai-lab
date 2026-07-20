@@ -533,7 +533,7 @@ class RAGService:
         start = time.perf_counter()
 
         context = context_builder.build_context(
-            alignment=alignment,
+            documents=documents,
             metadatas=metadatas,
         )
 
@@ -544,7 +544,7 @@ class RAGService:
         return (
             context,
             context_build_seconds,
-        )   
+        )
         
     def _build_prompt(
         self,

@@ -88,6 +88,49 @@ class ContextBuilder:
                 )
 
         return grouped
+    
+    def _deduplicate_chunks(
+        self,
+        documents: list[str],
+        metadatas: list[dict],
+    ) -> tuple[list[str], list[dict]]:
+        """
+        Removes exact duplicate retrieved chunks while
+        preserving retrieval order.
+        """
+
+        seen: set[tuple[str, int]] = set()
+
+        unique_documents: list[str] = []
+        unique_metadatas: list[dict] = []
+
+        for metadata, document in zip(
+            metadatas,
+            documents,
+        ):
+
+            key = (
+                metadata["filename"],
+                metadata["chunk_number"],
+            )
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            unique_documents.append(
+                document,
+            )
+
+            unique_metadatas.append(
+                metadata,
+            )
+
+        return (
+            unique_documents,
+            unique_metadatas,
+        )
 
     def _build_document_header(
         self,
@@ -252,6 +295,13 @@ class ContextBuilder:
 
         if not documents:
             return ""
+        
+        documents, metadatas = (
+            self._deduplicate_chunks(
+                documents,
+                metadatas,
+            )
+        )
 
         #
         # Simple mode.

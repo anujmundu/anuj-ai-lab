@@ -129,7 +129,8 @@ class EvidenceAligner:
 
         return SentenceEvidence(
             sentence=sentence,
-            matches=selected_matches,
+            best_match=best_match,
+            candidate_matches=selected_matches,
             confidence=confidence,
             support=support,
         )
@@ -155,18 +156,11 @@ class EvidenceAligner:
         )
 
         return EvidenceMatch(
-            text=document,
-
             filename=metadata["filename"],
-
             chunk_id=metadata["chunk_id"],
-
             chunk_number=metadata["chunk_number"],
-
             total_chunks=metadata["total_chunks"],
-
             score=score,
-
             support=support,
         )
 
@@ -224,20 +218,42 @@ class EvidenceAligner:
         sentence-level evidence.
         """
 
+        grounded = sum(
+            sentence.support == SupportLevel.GROUNDED
+            for sentence in sentence_results
+        )
+
+        partial = sum(
+            sentence.support == SupportLevel.PARTIAL
+            for sentence in sentence_results
+        )
+
+        unsupported = sum(
+            sentence.support == SupportLevel.UNSUPPORTED
+            for sentence in sentence_results
+        )
+
         if sentence_results:
-            confidence = (
+            average_confidence = (
                 sum(
                     sentence.confidence
                     for sentence in sentence_results
                 )
                 / len(sentence_results)
             )
+
+            average_similarity = average_confidence
         else:
-            confidence = 0.0
+            average_confidence = 0.0
+            average_similarity = 0.0
 
         return EvidenceAlignmentResult(
             sentences=sentence_results,
-            confidence=confidence,
+            grounded_count=grounded,
+            partial_count=partial,
+            unsupported_count=unsupported,
+            average_similarity=average_similarity,
+            average_confidence=average_confidence,
         )
 
 
