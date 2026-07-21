@@ -2,25 +2,32 @@ from app.rag.prompt_quality_config import (
     PromptQualityConfig,
 )
 
+from app.rag.prompt_optimizer_models import (
+    PromptAnalysis,
+    PromptOptimizationResult,
+)
+
+from app.rag.token_budget_models import (
+    TokenBudgetResult,
+)
+
 
 class PromptQuality:
     """
-    Computes diagnostics describing how the prompt
-    is composed.
+    Computes overall prompt quality from the Prompt
+    Intelligence pipeline.
 
     Responsibilities
-
-    • Component ratios
-    • Balance estimation
-    • Largest component
-    • Prompt efficiency
+    ----------------
+    • Summarize PromptAnalysis
+    • Summarize PromptOptimizationResult
+    • Summarize TokenBudgetResult
     """
 
     def __init__(
         self,
         config: PromptQualityConfig | None = None,
     ):
-
         self.config = (
             config
             or PromptQualityConfig()
@@ -29,110 +36,139 @@ class PromptQuality:
     def analyze(
         self,
         *,
-        template_tokens: int,
-        context_tokens: int,
-        memory_tokens: int,
-        question_tokens: int,
+        analysis: PromptAnalysis,
+        optimization: PromptOptimizationResult,
+        budget: TokenBudgetResult,
     ) -> dict:
 
         if not self.config.enabled:
-
             return {}
 
-        total = (
-            template_tokens
-            + context_tokens
-            + memory_tokens
-            + question_tokens
-        )
+        efficiency = analysis.efficiency_score
 
-        if total == 0:
+        if efficiency >= 0.80:
+            efficiency_label = "Excellent"
 
-            return {
-                "context_ratio": 0.0,
-                "instruction_ratio": 0.0,
-                "memory_ratio": 0.0,
-                "question_ratio": 0.0,
-                "balanced": True,
-                "largest_component": "none",
-                "prompt_efficiency": "Unknown",
-            }
+        elif efficiency >= 0.60:
+            efficiency_label = "Good"
 
-        ratios = {
-
-            "instruction": (
-                template_tokens / total
-            ),
-
-            "context": (
-                context_tokens / total
-            ),
-
-            "memory": (
-                memory_tokens / total
-            ),
-
-            "question": (
-                question_tokens / total
-            ),
-        }
-
-        largest = max(
-            ratios,
-            key=ratios.get,
-        )
-
-        values = list(
-            ratios.values()
-        )
-
-        balanced = (
-            max(values)
-            - min(values)
-            <= self.config.balanced_ratio_difference
-        )
-
-        context_ratio = ratios["context"]
-
-        if context_ratio >= 0.50:
-
-            efficiency = "Good"
-
-        elif context_ratio >= 0.30:
-
-            efficiency = "Fair"
+        elif efficiency >= 0.40:
+            efficiency_label = "Fair"
 
         else:
-
-            efficiency = "Poor"
+            efficiency_label = "Poor"
 
         return {
 
-            "context_ratio": round(
-                ratios["context"],
+            # -----------------------------
+            # Prompt analysis
+            # -----------------------------
+
+            "total_tokens": analysis.total_tokens,
+
+            "total_characters": analysis.total_characters,
+
+            "instruction_ratio": round(
+                analysis.instruction_ratio,
                 3,
             ),
 
-            "instruction_ratio": round(
-                ratios["instruction"],
+            "context_ratio": round(
+                analysis.context_ratio,
                 3,
             ),
 
             "memory_ratio": round(
-                ratios["memory"],
+                analysis.memory_ratio,
+                3,
+            ),
+
+            "conversation_ratio": round(
+                analysis.conversation_ratio,
                 3,
             ),
 
             "question_ratio": round(
-                ratios["question"],
+                analysis.question_ratio,
                 3,
             ),
 
-            "balanced": balanced,
+            "largest_component": (
+                analysis.largest_component
+            ),
 
-            "largest_component": largest,
+            "balanced": analysis.balanced,
 
-            "prompt_efficiency": efficiency,
+            "efficiency_score": round(
+                analysis.efficiency_score,
+                3,
+            ),
+
+            "redundancy_score": round(
+                analysis.redundancy_score,
+                3,
+            ),
+
+            "prompt_efficiency": (
+                efficiency_label
+            ),
+
+            "recommendations": (
+                analysis.recommendations
+            ),
+
+            # -----------------------------
+            # Optimization
+            # -----------------------------
+
+            "optimization_count": (
+                optimization.optimization_count
+            ),
+
+            "tokens_saved": (
+                optimization.tokens_saved
+            ),
+
+            # -----------------------------
+            # Token budget
+            # -----------------------------
+
+            "context_window": (
+                budget.budget.context_window
+            ),
+
+            "reserved_output_tokens": (
+                budget.budget.reserved_output_tokens
+            ),
+
+            "available_input_tokens": (
+                budget.budget.available_input_tokens
+            ),
+
+            "used_input_tokens": (
+                budget.budget.used_input_tokens
+            ),
+
+            "remaining_input_tokens": (
+                budget.budget.remaining_input_tokens
+            ),
+
+            "budget_utilization": round(
+                budget.budget.utilization,
+                3,
+            ),
+
+            "overflow_detected": (
+                budget.overflow_detected
+            ),
+
+            "overflow_tokens": (
+                budget.total_overflow_tokens
+            ),
+
+            "truncated_components": (
+                budget.truncated_component_count
+            ),
         }
 
 

@@ -1,11 +1,11 @@
-from app.rag.prompt_optimizer import (
-    PromptOptimizer,
+from backend.app.rag.prompt_normalizer import (
+    PromptNormalizer,
     prompt_optimizer,
 )
-from app.rag.prompt_optimizer_config import PromptOptimizerConfig
+from backend.app.rag.prompt_normalizer_config import PromptOptimizerConfig
 
 
-def test_prompt_optimizer_normalizes_prompt():
+def test_prompt_normalizer_normalizes_prompt():
     prompt = "Line 1    \n\n\n\nLine 2      \n"
 
     optimized = prompt_optimizer.optimize(prompt)
@@ -13,9 +13,9 @@ def test_prompt_optimizer_normalizes_prompt():
     assert optimized == "Line 1\n\nLine 2"
 
 
-def test_prompt_optimizer_trims_at_newline():
-    optimizer = PromptOptimizer(
-        PromptOptimizerConfig(
+def test_prompt_normalizer_trims_at_newline():
+    optimizer = PromptNormalizer(
+        PromptNormalizerConfig(
             max_prompt_characters=15,
         )
     )

@@ -1,21 +1,29 @@
-import re
+from __future__ import annotations
 
+from copy import deepcopy
+
+from app.rag.prompt_analyzer import prompt_analyzer
 from app.rag.prompt_optimizer_config import PromptOptimizerConfig
+from app.rag.prompt_optimizer_models import (
+    PromptAnalysis,
+    PromptComponent,
+    PromptOptimization,
+    PromptOptimizationResult,
+)
 
 
 class PromptOptimizer:
     """
-    Performs lightweight prompt normalization before
-    sending prompts to the language model.
+    Performs deterministic optimization on PromptComponents.
 
     Responsibilities
     ----------------
-    - Normalize blank lines
-    - Remove trailing whitespace
-    - Optionally collapse repeated spaces
-    - Enforce maximum prompt size
+    - Remove duplicate components
+    - Remove empty components
+    - Sort components by priority
+    - Produce before/after analysis
 
-    This class intentionally performs NO diagnostics.
+    This optimizer NEVER rewrites prompt content.
     """
 
     def __init__(
@@ -26,103 +34,219 @@ class PromptOptimizer:
 
     def optimize(
         self,
-        prompt: str,
-    ) -> str:
+        components: list[PromptComponent],
+    ) -> PromptOptimizationResult:
         """
-        Optimize a prompt before sending it to the LLM.
+        Optimize prompt components.
+
+        Parameters
+        ----------
+        components
+            Prompt components produced by PromptBuilder.
+
+        Returns
+        -------
+        PromptOptimizationResult
         """
+
+        original_components = deepcopy(components)
+
+        analysis_before = prompt_analyzer.analyze(
+            original_components,
+        )
 
         if not self.config.enable_optimization:
-            return prompt
 
-        optimized = prompt
+            return PromptOptimizationResult(
+                original_components=original_components,
+                optimized_components=deepcopy(original_components),
+                analysis_before=analysis_before,
+                analysis_after=analysis_before,
+                optimizations=[],
+                tokens_saved=0,
+            )
 
-        if self.config.remove_trailing_whitespace:
-            optimized = self._remove_trailing_whitespace(
+        optimized = deepcopy(original_components)
+
+        optimizations: list[PromptOptimization] = []
+
+        if self.config.remove_duplicate_components:
+            optimized, optimization = self._remove_duplicate_components(
                 optimized,
             )
 
-        if self.config.normalize_blank_lines:
-            optimized = self._normalize_blank_lines(
+            if optimization:
+                optimizations.append(
+                    optimization,
+                )
+
+        if self.config.remove_empty_components:
+            optimized, optimization = self._remove_empty_components(
                 optimized,
             )
 
-        if self.config.collapse_multiple_spaces:
-            optimized = self._collapse_multiple_spaces(
+            if optimization:
+                optimizations.append(
+                    optimization,
+                )
+
+        if self.config.sort_by_priority:
+            optimized, optimization = self._sort_components(
                 optimized,
             )
 
-        optimized = self._trim_prompt(
+            if optimization:
+                optimizations.append(
+                    optimization,
+                )
+
+        analysis_after = prompt_analyzer.analyze(
             optimized,
         )
 
-        return optimized
-
-    def _remove_trailing_whitespace(
-        self,
-        prompt: str,
-    ) -> str:
-        """
-        Remove trailing whitespace from every line.
-        """
-
-        return "\n".join(
-            line.rstrip()
-            for line in prompt.splitlines()
+        tokens_saved = max(
+            0,
+            analysis_before.total_tokens
+            - analysis_after.total_tokens,
         )
 
-    def _normalize_blank_lines(
-        self,
-        prompt: str,
-    ) -> str:
-        """
-        Collapse 3+ blank lines into exactly 2.
-        """
-
-        return re.sub(
-            r"\n{3,}",
-            "\n\n",
-            prompt,
+        return PromptOptimizationResult(
+            original_components=original_components,
+            optimized_components=optimized,
+            analysis_before=analysis_before,
+            analysis_after=analysis_after,
+            optimizations=optimizations,
+            tokens_saved=tokens_saved,
         )
 
-    def _collapse_multiple_spaces(
+    def _remove_duplicate_components(
         self,
-        prompt: str,
-    ) -> str:
+        components: list[PromptComponent],
+    ) -> tuple[
+        list[PromptComponent],
+        PromptOptimization | None,
+    ]:
         """
-        Collapse repeated spaces into a single space.
+        Remove duplicated prompt components.
         """
 
-        return re.sub(
-            r"[ ]{2,}",
-            " ",
-            prompt,
+        seen: set[
+            tuple[str, str]
+        ] = set()
+
+        unique_components: list[
+            PromptComponent
+        ] = []
+
+        removed = 0
+
+        for component in components:
+
+            key = (
+                component.component_type.value,
+                component.text.strip(),
+            )
+
+            if key in seen:
+
+                removed += 1
+                continue
+
+            seen.add(key)
+
+            unique_components.append(
+                component,
+            )
+
+        if removed == 0:
+            return unique_components, None
+
+        return (
+            unique_components,
+            PromptOptimization(
+                rule_name="remove_duplicate_components",
+                description=(
+                    f"Removed {removed} duplicate prompt "
+                    "component(s)."
+                ),
+            ),
         )
 
-    def _trim_prompt(
+    def _remove_empty_components(
         self,
-        prompt: str,
-    ) -> str:
+        components: list[PromptComponent],
+    ) -> tuple[
+        list[PromptComponent],
+        PromptOptimization | None,
+    ]:
         """
-        Trim the prompt to the configured maximum size.
-
-        Prefer trimming at the last newline so we avoid
-        cutting a line in half whenever possible.
+        Remove empty prompt components.
         """
 
-        limit = self.config.max_prompt_characters
+        filtered: list[
+            PromptComponent
+        ] = []
 
-        if len(prompt) <= limit:
-            return prompt
+        removed = 0
 
-        trimmed = prompt[:limit]
+        minimum = (
+            self.config.minimum_component_characters
+        )
 
-        last_newline = trimmed.rfind("\n")
+        for component in components:
 
-        if last_newline > 0:
-            return trimmed[:last_newline]
+            if (
+                self.config.preserve_required_components
+                and component.required
+            ):
+                filtered.append(component)
+                continue
 
-        return trimmed
+            if len(component.text.strip()) < minimum:
+                removed += 1
+                continue
+
+            filtered.append(component)
+
+        if removed == 0:
+            return filtered, None
+
+        return (
+            filtered,
+            PromptOptimization(
+                rule_name="remove_empty_components",
+                description=(
+                    f"Removed {removed} empty prompt "
+                    "component(s)."
+                ),
+            ),
+        )
+
+    def _sort_components(
+        self,
+        components: list[PromptComponent],
+    ) -> tuple[
+        list[PromptComponent],
+        PromptOptimization | None,
+    ]:
+        """
+        Sort prompt components by priority.
+        """
+
+        sorted_components = sorted(
+            components,
+            key=lambda component: component.priority,
+        )
+
+        return (
+            sorted_components,
+            PromptOptimization(
+                rule_name="sort_by_priority",
+                description=(
+                    "Sorted prompt components by priority."
+                ),
+            ),
+        )
 
 
 prompt_optimizer = PromptOptimizer()

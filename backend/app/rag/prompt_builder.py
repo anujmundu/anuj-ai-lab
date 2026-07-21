@@ -1,5 +1,8 @@
 from app.rag.prompt_builder_config import PromptBuilderConfig
 
+from app.rag.prompt_optimizer_models import PromptComponent
+from app.rag.enums import PromptComponentType
+
 
 class PromptBuilder:
     """
@@ -154,40 +157,82 @@ class PromptBuilder:
     # Prompt Assembly
     # --------------------------------------------------
 
-    def _build_sections(
+    def _build_components(
         self,
         *,
         question: str,
         context: str,
         conversation: str | None,
         memory: str | None,
-    ) -> list[str]:
+    ) -> list[PromptComponent]:
         """
-        Assemble all prompt sections.
+        Assemble prompt components.
 
-        New sections (memory, tools, citations,
-        examples, etc.) can be added here without
-        affecting the public API.
+        Each logical section of the prompt becomes a
+        PromptComponent that can later be analyzed,
+        optimized, budgeted and rendered.
         """
 
-        return [
-            self._role_section(),
-            self._task_section(),
-            self._rules_section(),
-            self._conversation_section(
-                conversation,
+        components = [
+            PromptComponent(
+                component_type=PromptComponentType.SYSTEM,
+                text=self._role_section(),
+                priority=0,
+                required=True,
             ),
-            self._memory_section(
-                memory,
+            PromptComponent(
+                component_type=PromptComponentType.SYSTEM,
+                text=self._task_section(),
+                priority=1,
+                required=True,
             ),
-            self._context_section(
-                context,
+            PromptComponent(
+                component_type=PromptComponentType.SYSTEM,
+                text=self._rules_section(),
+                priority=2,
+                required=True,
             ),
-            self._question_section(
-                question,
+            PromptComponent(
+                component_type=PromptComponentType.CONVERSATION,
+                text=self._conversation_section(
+                    conversation,
+                ),
+                priority=3,
+                required=False,
             ),
-            self._answer_section(),
+            PromptComponent(
+                component_type=PromptComponentType.MEMORY,
+                text=self._memory_section(
+                    memory,
+                ),
+                priority=4,
+                required=False,
+            ),
+            PromptComponent(
+                component_type=PromptComponentType.CONTEXT,
+                text=self._context_section(
+                    context,
+                ),
+                priority=5,
+                required=True,
+            ),
+            PromptComponent(
+                component_type=PromptComponentType.QUESTION,
+                text=self._question_section(
+                    question,
+                ),
+                priority=6,
+                required=True,
+            ),
+            PromptComponent(
+                component_type=PromptComponentType.SYSTEM,
+                text=self._answer_section(),
+                priority=7,
+                required=True,
+            ),
         ]
+
+        return components
 
     # --------------------------------------------------
     # Public API
@@ -200,35 +245,20 @@ class PromptBuilder:
         context: str,
         conversation: str | None = None,
         memory: str | None = None,
-    ) -> str:
+    ) -> list[PromptComponent]:
         """
-        Build the final prompt.
+        Build structured prompt components.
 
-        Parameters
-        ----------
-        question
-            User question.
-
-        context
-            Retrieved document context.
-
-        conversation
-            Recent conversation history.
-
-        memory
-            Long-term persistent memory.
+        Rendering into the final prompt string is
+        handled by PromptRenderer.
         """
 
-        sections = self._build_sections(
+        return self._build_components(
             question=question,
             context=context,
             conversation=conversation,
             memory=memory,
         )
-
-        return "\n\n".join(
-            sections
-        ).strip()
 
 
 prompt_builder = PromptBuilder()
