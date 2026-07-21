@@ -15,7 +15,12 @@ from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.retrieval_explainer import (retrieval_explainer,)
 from app.rag.prompt_builder import prompt_builder
 from app.rag.prompt_quality import prompt_quality
+from app.rag.prompt_normalizer import prompt_normalizer
+from app.rag.prompt_analyzer import prompt_analyzer
 from app.rag.prompt_optimizer import prompt_optimizer
+from app.rag.prompt_pipeline_models import PromptPipelineResult
+from app.rag.token_budget_manager import token_budget_manager
+from app.rag.prompt_renderer import prompt_renderer
 from app.rag.ranker import ranker
 from app.rag.retrieval_quality import retrieval_quality
 from app.rag.answer_consistency_checker import (answer_consistency_checker,)
@@ -112,6 +117,7 @@ class RAGService:
         prompt_build_seconds: float,
         generation_seconds: float,
         total_seconds: float,
+        prompt_pipeline: PromptPipelineResult,
         prompt: str,
         context: str,
         memory: str,
@@ -164,15 +170,6 @@ class RAGService:
 
         conversation_tokens = token_estimator.estimate(
             conversation,
-        )
-        
-        prompt_quality_result = (
-            prompt_quality.analyze(
-                template_tokens=template_tokens,
-                context_tokens=context_tokens,
-                memory_tokens=memory_tokens,
-                question_tokens=question_tokens,
-            )
         )
 
         self._last_request = {
@@ -267,7 +264,7 @@ class RAGService:
                     "conversation_tokens": conversation_tokens,
                 },
                 
-                "quality": prompt_quality_result,
+                "quality": prompt_pipeline.quality,
             },
 
             "response": {
@@ -518,7 +515,7 @@ class RAGService:
         *,
         documents: list[str],
         metadatas: list[dict],
-    ) -> tuple[str, float]:
+    ) -> tuple[PromptPipelineResult, float]:
         """
         Build structured context from retrieved documents.
 
@@ -553,25 +550,59 @@ class RAGService:
         context: str,
         conversation: str | None,
         memory: str,
-    ) -> tuple[str, float]:
+    ) -> tuple[PromptPipelineResult, float]:
         """
-        Build the final LLM prompt.
+        Build the final LLM prompt using the complete Prompt
+        Intelligence pipeline.
 
         Returns
         -------
         (
-            prompt,
+            PromptPipelineResult,
             prompt_build_seconds,
         )
         """
 
         start = time.perf_counter()
 
-        prompt = prompt_builder.build_prompt(
+        components = prompt_builder.build_prompt(
             question=question,
             context=context,
             conversation=conversation,
             memory=memory,
+        )
+
+        components = prompt_normalizer.normalize(
+            components,
+        )
+
+        analysis = prompt_analyzer.analyze(
+            components,
+        )
+
+        optimization = prompt_optimizer.optimize(
+            components,
+        )
+
+        budget = token_budget_manager.allocate(
+            optimization.optimized_components,
+        )
+
+        prompt = prompt_renderer.render(
+            budget.components,
+        )
+        quality = prompt_quality.analyze(
+            analysis=analysis,
+            optimization=optimization,
+            budget=budget,
+        )
+
+        prompt_pipeline = PromptPipelineResult(
+            prompt=prompt,
+            analysis=analysis,
+            optimization=optimization,
+            budget=budget,
+            quality=quality,
         )
 
         prompt_build_seconds = self._elapsed(
@@ -579,9 +610,9 @@ class RAGService:
         )
 
         return (
-            prompt,
+            prompt_pipeline,
             prompt_build_seconds,
-        ) 
+        )
     
     def _generate_answer(
         self,
@@ -772,7 +803,7 @@ class RAGService:
             question=question,
             k=k,
         )
-        
+
         (
             documents,
             metadatas,
@@ -780,7 +811,7 @@ class RAGService:
             documents=documents,
             metadatas=metadatas,
         )
-        
+
         retrieval_diagnostics = (
             self._build_retrieval_diagnostics(
                 documents=documents,
@@ -802,7 +833,7 @@ class RAGService:
             documents=documents,
             metadatas=metadatas,
         )
-        
+
         memory = self._prepare_memory(
             question=question,
             conversation=conversation,
@@ -813,7 +844,7 @@ class RAGService:
         # --------------------------------------------------
 
         (
-            prompt,
+            prompt_pipeline,
             prompt_build_seconds,
         ) = self._build_prompt(
             question=question,
@@ -822,49 +853,7 @@ class RAGService:
             memory=memory,
         )
 
-        # ------------------------------------------
-        # Prompt Optimization
-        # ------------------------------------------
-
-        prompt = prompt_optimizer.optimize(prompt)
-
-        template = (
-            prompt
-            .replace(context, "", 1)
-            .replace(memory, "", 1)
-            .replace(question, "", 1)
-        )
-        
-        template = template.replace(
-            conversation or "",
-            "",
-            1,
-        )
-
-        template_tokens = token_estimator.estimate(
-            template,
-        )
-
-        context_tokens = token_estimator.estimate(
-            context,
-        )
-
-        memory_tokens = token_estimator.estimate(
-            memory,
-        )
-
-        question_tokens = token_estimator.estimate(
-            question,
-        )
-
-        prompt_quality_result = (
-            prompt_quality.analyze(
-                template_tokens=template_tokens,
-                context_tokens=context_tokens,
-                memory_tokens=memory_tokens,
-                question_tokens=question_tokens,
-            )
-        )
+        prompt = prompt_pipeline.prompt
 
         # --------------------------------------------------
         # LLM Generation
@@ -904,7 +893,11 @@ class RAGService:
             metadatas=metadatas,
             sources=sources,
         )
-        
+
+        # --------------------------------------------------
+        # Pipeline Health
+        # --------------------------------------------------
+
         pipeline_health_result = (
             pipeline_health.evaluate(
                 retrieval_quality=(
@@ -915,25 +908,17 @@ class RAGService:
                 citation_result=citation_result,
             )
         )
-        
-        scorecard_result = (
-            rag_scorecard.build(
-                retrieval_quality=(
-                    retrieval_diagnostics["quality"]
-                ),
-                prompt_quality=(
-                    prompt_quality_result
-                ),
-                answer_quality=(
-                    answer_quality_result
-                ),
-                hallucination=(
-                    hallucination_result
-                ),
-                citations=(
-                    citation_result
-                ),
-            )
+
+        # --------------------------------------------------
+        # RAG Scorecard
+        # --------------------------------------------------
+
+        scorecard_result = rag_scorecard.build(
+            retrieval_quality=retrieval_diagnostics["quality"],
+            prompt_quality=prompt_pipeline.quality,
+            answer_quality=answer_quality_result,
+            hallucination=hallucination_result,
+            citations=citation_result,
         )
 
         # --------------------------------------------------
@@ -952,6 +937,7 @@ class RAGService:
             prompt_build_seconds=prompt_build_seconds,
             generation_seconds=generation_seconds,
             total_seconds=total_seconds,
+            prompt_pipeline=prompt_pipeline,
             prompt=prompt,
             context=context,
             memory=memory,
@@ -961,11 +947,11 @@ class RAGService:
             hallucination_result=hallucination_result,
             consistency_result=consistency_result,
             answer_quality_result=answer_quality_result,
-            pipeline_health_result=(pipeline_health_result),
-            scorecard_result=(scorecard_result),  
+            pipeline_health_result=pipeline_health_result,
+            scorecard_result=scorecard_result,
             citation_result=citation_result,
         )
-        
+
         self._store_memory(
             question,
         )

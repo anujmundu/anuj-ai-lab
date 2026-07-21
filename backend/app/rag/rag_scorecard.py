@@ -73,7 +73,6 @@ class RAGScorecard:
     ) -> dict:
 
         if not self.config.enabled:
-
             return {}
 
         retrieval = self._clamp(
@@ -148,6 +147,4 @@ class RAGScorecard:
         }
 
 
-rag_scorecard = (
-    RAGScorecard()
-)
+rag_scorecard = RAGScorecard()
