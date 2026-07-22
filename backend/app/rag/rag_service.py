@@ -1,6 +1,9 @@
 from ctypes import alignment
 import time
+from dataclasses import asdict
 
+from app.rag.performance_profiler import PerformanceProfiler
+from app.rag.enums import PerformanceStageName
 from app.rag.answer_processor import answer_processor
 from app.rag.evidence_aligner import evidence_aligner
 from app.rag.answer_quality import answer_quality
@@ -19,6 +22,7 @@ from app.rag.prompt_normalizer import prompt_normalizer
 from app.rag.prompt_analyzer import prompt_analyzer
 from app.rag.prompt_optimizer import prompt_optimizer
 from app.rag.prompt_pipeline_models import PromptPipelineResult
+from app.rag.performance_models import PerformanceProfilingResult
 from app.rag.token_budget_manager import token_budget_manager
 from app.rag.prompt_renderer import prompt_renderer
 from app.rag.ranker import ranker
@@ -130,6 +134,7 @@ class RAGService:
         pipeline_health_result: dict | None = None,
         scorecard_result: dict | None = None,
         citation_result: dict | None = None,
+        performance: PerformanceProfilingResult,
     ) -> None:
         
         
@@ -301,6 +306,8 @@ class RAGService:
             "citations": (
                 citation_result
             ),
+            
+            "performance": asdict(performance),
         }
         
 
@@ -788,21 +795,26 @@ class RAGService:
     ) -> dict:
 
         total_start = time.perf_counter()
+        
+        profiler = PerformanceProfiler()
 
         # --------------------------------------------------
         # Retrieval + Ranking
         # --------------------------------------------------
 
-        (
-            documents,
-            metadatas,
-            retrieval,
-            pipeline,
-            retrieval_seconds,
-        ) = self._retrieve_documents(
-            question=question,
-            k=k,
-        )
+        with profiler.measure(
+            PerformanceStageName.RETRIEVAL
+        ):
+            (
+                documents,
+                metadatas,
+                retrieval,
+                pipeline,
+                retrieval_seconds,
+            ) = self._retrieve_documents(
+                question=question,
+                k=k,
+            )
 
         (
             documents,
@@ -826,13 +838,16 @@ class RAGService:
         # Context Builder
         # --------------------------------------------------
 
-        (
-            context,
-            context_build_seconds,
-        ) = self._build_context(
-            documents=documents,
-            metadatas=metadatas,
-        )
+        with profiler.measure(
+            PerformanceStageName.CONTEXT_BUILDER
+        ):
+            (
+                context,
+                context_build_seconds,
+            ) = self._build_context(
+                documents=documents,
+                metadatas=metadatas,
+            )
 
         memory = self._prepare_memory(
             question=question,
@@ -843,15 +858,18 @@ class RAGService:
         # Prompt Builder
         # --------------------------------------------------
 
-        (
-            prompt_pipeline,
-            prompt_build_seconds,
-        ) = self._build_prompt(
-            question=question,
-            context=context,
-            conversation=conversation,
-            memory=memory,
-        )
+        with profiler.measure(
+            PerformanceStageName.PROMPT_BUILDER
+        ):
+            (
+                prompt_pipeline,
+                prompt_build_seconds,
+            ) = self._build_prompt(
+                question=question,
+                context=context,
+                conversation=conversation,
+                memory=memory,
+            )
 
         prompt = prompt_pipeline.prompt
 
@@ -859,12 +877,15 @@ class RAGService:
         # LLM Generation
         # --------------------------------------------------
 
-        (
-            raw_answer,
-            generation_seconds,
-        ) = self._generate_answer(
-            prompt=prompt,
-        )
+        with profiler.measure(
+            PerformanceStageName.LLM_GENERATION
+        ):
+            (
+                raw_answer,
+                generation_seconds,
+            ) = self._generate_answer(
+                prompt=prompt,
+            )
 
         # --------------------------------------------------
         # Sources
@@ -878,21 +899,24 @@ class RAGService:
         # Answer Processing
         # --------------------------------------------------
 
-        (
-            answer,
-            confidence,
-            alignment,
-            hallucination_result,
-            consistency_result,
-            answer_quality_result,
-            citation_result,
-        ) = self._process_answer(
-            raw_answer=raw_answer,
-            context=context,
-            documents=documents,
-            metadatas=metadatas,
-            sources=sources,
-        )
+        with profiler.measure(
+            PerformanceStageName.POST_PROCESSING
+        ):
+            (
+                answer,
+                confidence,
+                alignment,
+                hallucination_result,
+                consistency_result,
+                answer_quality_result,
+                citation_result,
+            ) = self._process_answer(
+                raw_answer=raw_answer,
+                context=context,
+                documents=documents,
+                metadatas=metadatas,
+                sources=sources,
+            )
 
         # --------------------------------------------------
         # Pipeline Health
@@ -928,6 +952,8 @@ class RAGService:
         total_seconds = self._elapsed(
             total_start,
         )
+        
+        performance = profiler.build_result()
 
         self._update_request_diagnostics(
             question=question,
@@ -950,6 +976,7 @@ class RAGService:
             pipeline_health_result=pipeline_health_result,
             scorecard_result=scorecard_result,
             citation_result=citation_result,
+            performance=performance,
         )
 
         self._store_memory(
