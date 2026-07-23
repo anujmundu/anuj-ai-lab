@@ -1,6 +1,7 @@
 from ctypes import alignment
 import time
 from dataclasses import asdict
+from contextlib import nullcontext
 
 from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.enums import PerformanceStageName
@@ -331,6 +332,7 @@ class RAGService:
         *,
         question: str,
         k: int,
+        profiler: PerformanceProfiler | None = None,
     ) -> tuple[
         list[str],
         list[dict],
@@ -351,11 +353,18 @@ class RAGService:
         )
         """
 
+        measure = (
+            profiler.measure
+            if profiler is not None
+            else lambda *_: nullcontext()
+        )
+
         start = time.perf_counter()
 
         results = hybrid_retriever.retrieve(
             query=question,
             k=k,
+            profiler=profiler,
         )
 
         results = ranker.filter_results(
@@ -814,6 +823,7 @@ class RAGService:
             ) = self._retrieve_documents(
                 question=question,
                 k=k,
+                profiler=profiler,
             )
 
         (
