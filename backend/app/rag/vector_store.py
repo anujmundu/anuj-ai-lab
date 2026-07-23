@@ -1,5 +1,8 @@
 import chromadb
+from contextlib import nullcontext
 
+from app.rag.enums import PerformanceStageName
+from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.bm25_index import bm25_index
 from app.rag.embedding_service import embedding_service
 
@@ -58,16 +61,37 @@ class VectorStore:
         self,
         query: str,
         k: int = 3,
+        profiler: PerformanceProfiler | None = None,
     ):
-
-        embedding = embedding_service.embed(
-            query,
+        
+        measure = (
+            profiler.measure
+            if profiler is not None
+            else lambda *_: nullcontext()
         )
 
-        return self.collection.query(
+        with measure(
+            PerformanceStageName.QUERY_EMBEDDING
+        ):
+            embedding = embedding_service.embed(
+                query,
+            )
+
+        with measure(
+            PerformanceStageName.VECTOR_SEARCH
+        ):
+            results = self.collection.query(
             query_embeddings=[embedding],
             n_results=k,
+            include=[
+                "documents",
+                "metadatas",
+                "distances",
+                "embeddings",
+            ],
         )
+
+        return results
 
     # --------------------------------------------------
     # Retrieval

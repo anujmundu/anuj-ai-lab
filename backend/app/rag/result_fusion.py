@@ -148,6 +148,10 @@ class ResultFusion:
                 item[1]["distance"]
                 for item in items
             ]],
+            "embeddings": [[
+                item[1]["embedding"]
+                for item in items
+            ]],
             "retrieval": [[
                 {
                     "semantic_score": item[1]["semantic_score"],
@@ -190,12 +194,18 @@ class ResultFusion:
             "distances",
             [[]],
         )[0]
+        
+        embeddings = results.get(
+            "embeddings",
+            [[]],
+        )[0]
 
         for rank, (
             doc_id,
             document,
             metadata,
-            value
+            value,
+            embedding,
         ) in enumerate(
 
             zip(
@@ -203,6 +213,7 @@ class ResultFusion:
                 documents,
                 metadatas,
                 distances,
+                embeddings if embeddings else [None] * len(ids),
             ),
 
             start=1,
@@ -272,6 +283,7 @@ class ResultFusion:
                 merged[doc_id] = {
                     "document": document,
                     "metadata": metadata,
+                    "embedding": embedding,
                     "distance": distance,
                     "semantic_score": semantic_score,
                     "keyword_score": keyword_score,

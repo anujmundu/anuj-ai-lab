@@ -1,3 +1,7 @@
+from contextlib import nullcontext
+
+from app.rag.enums import PerformanceStageName
+from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.base_retriever import BaseRetriever
 from app.rag.keyword_retriever import keyword_retriever
 from app.rag.result_fusion import result_fusion
@@ -16,10 +20,12 @@ class SemanticRetriever(BaseRetriever):
         self,
         query: str,
         k: int = 3,
+        profiler: PerformanceProfiler | None = None,
     ):
         return retriever.retrieve(
             query=query,
             k=k,
+            profiler=profiler,
         )
 
 
@@ -68,9 +74,16 @@ class HybridRetriever(BaseRetriever):
         self,
         query: str,
         k: int | None = None,
+        profiler: PerformanceProfiler | None = None,
     ) -> dict:
 
         k = k or self.config.top_k
+        
+        measure = (
+            profiler.measure
+            if profiler is not None
+            else lambda *_: nullcontext()
+        )
 
         semantic_results = None
         keyword_results = None
@@ -86,33 +99,50 @@ class HybridRetriever(BaseRetriever):
                 semantic_reranker.config.maximum_candidates,
             )
 
-            semantic_results = self.semantic.retrieve(
-                query=query,
-                k=candidate_k,
-            )
+            with measure(
+                PerformanceStageName.SEMANTIC_RETRIEVAL
+            ):
+                semantic_results = self.semantic.retrieve(
+                    query=query,
+                    k=candidate_k,
+                    profiler=profiler,
+                )
 
-            semantic_results = semantic_reranker.rerank(
-                query=query,
-                results=semantic_results,
-            )
+            with measure(
+                PerformanceStageName.SEMANTIC_RERANKER
+            ):
+                semantic_results = semantic_reranker.rerank(
+                    query=query,
+                    results=semantic_results,
+                )
+    
             semantic_results["requested_k"] = k
 
         if self._use_keyword():
-            keyword_results = self.keyword.retrieve(
-                query=query,
+            with measure(
+                PerformanceStageName.BM25_SEARCH
+            ):
+                keyword_results = self.keyword.retrieve(
+                    query=query,
+                    k=k,
+                )
+
+        with measure(
+            PerformanceStageName.RANK_FUSION
+        ):
+            fused_results = result_fusion.combine(
+                semantic=semantic_results,
+                keyword=keyword_results,
                 k=k,
             )
 
-        fused_results = result_fusion.combine(
-            semantic=semantic_results,
-            keyword=keyword_results,
-            k=k,
-        )
-
-        filtered_results = retrieval_filter.apply(
-            results=fused_results,
-            k=k,
-        )
+        with measure(
+            PerformanceStageName.RETRIEVAL_FILTERING
+        ):
+            filtered_results = retrieval_filter.apply(
+                results=fused_results,
+                k=k,
+            )
 
         filtered_results["pipeline"] = {
             "strategy": self.strategy,
@@ -133,7 +163,7 @@ class HybridRetriever(BaseRetriever):
                 filtered_results["ids"][0]
             ),
         }
-
+        print(filtered_results.keys())
         return filtered_results
 
 

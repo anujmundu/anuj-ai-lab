@@ -59,31 +59,68 @@ class SemanticReranker:
         documents = new_results.get("documents", [[]])[0]
         metadatas = new_results.get("metadatas", [[]])[0]
         distances = new_results.get("distances", [[]])[0]
+        
+        embeddings = new_results.get("embeddings", [[]])[0]
+
+        provider = semantic_matcher.embedding_provider
+
+        query_embedding = None
+
+        if (
+            provider is not None
+            and embeddings is not None
+            and len(embeddings) > 0
+        ):
+            query_embedding = provider.embed_text(query)
 
         candidates = []
+        print(
+            type(embeddings),
+            len(embeddings),
+            type(embeddings[0]),
+        )
 
         for index, (
             _,
             document,
             _,
             distance,
+            document_embedding,
         ) in enumerate(
             zip(
                 ids,
                 documents,
                 metadatas,
                 distances,
+                embeddings
+                if (
+                    embeddings is not None
+                    and len(embeddings) > 0
+                )
+                else [None] * len(ids),
             )
         ):
 
-            comparison = semantic_matcher.compare(
-                query,
-                document,
-            )
+            if (
+                query_embedding is not None
+                and document_embedding is not None
+            ):
 
-            semantic_similarity = (
-                comparison["metrics"]["overall"]
-            )
+                semantic_similarity = provider.cosine_similarity(
+                    query_embedding,
+                    document_embedding,
+                )
+
+            else:
+
+                comparison = semantic_matcher.compare(
+                    query,
+                    document,
+                )
+
+                semantic_similarity = (
+                    comparison["metrics"]["overall"]
+                )
 
             chroma_similarity = (
                 1.0
@@ -141,6 +178,15 @@ class SemanticReranker:
             for i in order
         ]
         
+        if "embeddings" in new_results:
+
+            embeddings = new_results["embeddings"][0]
+
+            new_results["embeddings"][0] = [
+                embeddings[i]
+                for i in order
+            ]
+        
         new_results["semantic_similarity"] = [[
             candidate.semantic_similarity
             for candidate in candidates
@@ -186,6 +232,7 @@ class SemanticReranker:
             "documents",
             "metadatas",
             "distances",
+            "embeddings",
             "semantic_similarity",
             "chroma_similarity",
             "rerank_scores",

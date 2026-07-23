@@ -171,12 +171,14 @@ class RetrievalFilter:
         metadatas = results.get("metadatas", [[]])[0]
         distances = results.get("distances", [[]])[0]
         retrieval = results.get("retrieval", [[]])[0]
+        embeddings = results.get("embeddings", [[]])[0]
 
         filtered_ids = []
         filtered_documents = []
         filtered_metadatas = []
         filtered_distances = []
         filtered_retrieval = []
+        filtered_embeddings = []
 
         accepted_documents: list[str] = []
 
@@ -189,13 +191,15 @@ class RetrievalFilter:
             document,
             metadata,
             distance,
-            scores
+            embedding,
+            scores,
         ) in zip(
             ids,
             documents,
             metadatas,
             distances,
-            retrieval
+            embeddings if len(embeddings) > 0 else [None] * len(ids),
+            retrieval,
         ):
 
             filename = metadata["filename"]
@@ -295,6 +299,7 @@ class RetrievalFilter:
             filtered_metadatas.append(metadata)
             filtered_distances.append(distance)
             filtered_retrieval.append(scores)
+            filtered_embeddings.append(embedding)
 
             diagnostics.append(
                 {
@@ -315,12 +320,14 @@ class RetrievalFilter:
         filtered_metadatas = filtered_metadatas[:k]
         filtered_distances = filtered_distances[:k]
         filtered_retrieval = filtered_retrieval[:k]
-
+        filtered_embeddings = filtered_embeddings[:k]
+        
         return {
             "ids": [filtered_ids],
             "documents": [filtered_documents],
             "metadatas": [filtered_metadatas],
             "distances": [filtered_distances],
+            "embeddings": [filtered_embeddings],
             "retrieval": [filtered_retrieval],
             "diagnostics": diagnostics
         }

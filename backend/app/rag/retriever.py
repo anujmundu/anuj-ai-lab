@@ -1,4 +1,5 @@
 from app.rag.vector_store import vector_store
+from app.rag.performance_profiler import PerformanceProfiler
 
 
 class Retriever:
@@ -14,11 +15,13 @@ class Retriever:
         self,
         query: str,
         k: int = 3,
+        profiler: PerformanceProfiler | None = None,
     ):
 
         return vector_store.search(
             query=query,
             k=k,
+            profiler=profiler,
         )
 
 
