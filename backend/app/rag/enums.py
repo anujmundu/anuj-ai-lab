@@ -44,6 +44,8 @@ class PerformanceStageName(StrEnum):
     RETRIEVAL = "retrieval"
 
     QUERY_EMBEDDING = "query_embedding"
+    
+    SEMANTIC_RETRIEVAL = "semantic_retrieval"
 
     VECTOR_SEARCH = "vector_search"
 

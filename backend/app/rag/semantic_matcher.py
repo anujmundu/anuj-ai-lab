@@ -5,7 +5,9 @@ from app.rag.semantic_matcher_config import (
     SemanticMatcherConfig,
 )
 from app.rag.embedding_provider import EmbeddingProvider
-from app.rag.ollama_embedding_provider import OllamaEmbeddingProvider
+from app.rag.sentence_transformer_embedding_provider import (
+    SentenceTransformerEmbeddingProvider,
+)
 
 
 class SemanticMatcher:
@@ -55,22 +57,23 @@ class SemanticMatcher:
                 .lower()
             )
 
-            if provider == "ollama":
+            if provider in (
+                "sentence-transformer",
+                "sentence_transformer",
+                "minilm",
+                "all-minilm-l6-v2",
+            ):
 
                 self.embedding_provider = (
-                    OllamaEmbeddingProvider(
-                        self.config,
-                    )
+                    SentenceTransformerEmbeddingProvider()
                 )
 
             else:
 
                 raise ValueError(
-                    f"Unsupported embedding provider: "
+                    "Unsupported embedding provider: "
                     f"{self.config.embedding_provider}"
                 )
-        
-        self._validate_weights()
     
     # --------------------------------------------------
     # Configuration
@@ -123,6 +126,44 @@ class SemanticMatcher:
                 text_a,
                 text_b,
             )
+            
+    @staticmethod
+    def _cosine_similarity(
+        embedding_a: list[float],
+        embedding_b: list[float],
+    ) -> float:
+
+        if (
+            not embedding_a
+            or
+            not embedding_b
+            or
+            len(embedding_a) != len(embedding_b)
+        ):
+            return 0.0
+
+        dot = sum(
+            a * b
+            for a, b in zip(
+                embedding_a,
+                embedding_b,
+            )
+        )
+
+        norm_a = sum(
+            a * a
+            for a in embedding_a
+        ) ** 0.5
+
+        norm_b = sum(
+            b * b
+            for b in embedding_b
+        ) ** 0.5
+
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+
+        return dot / (norm_a * norm_b)
         
     # --------------------------------------------------
     # Normalization

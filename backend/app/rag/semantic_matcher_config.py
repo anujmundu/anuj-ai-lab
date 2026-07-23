@@ -60,11 +60,11 @@ class SemanticMatcherConfig:
 
     enable_embeddings: bool = True
 
-    embedding_provider: str = "ollama"
+    embedding_provider: str = "sentence-transformer"
     
     ollama_base_url: str = "http://localhost:11434"
 
-    embedding_model: str = "nomic-embed-text"
+    embedding_model: str = "all-MiniLM-L6-v2"
 
     cache_embeddings: bool = True
     
