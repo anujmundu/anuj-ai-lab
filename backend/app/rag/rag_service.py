@@ -15,7 +15,9 @@ from app.rag.citation_inserter import citation_inserter
 from app.rag.context_builder import context_builder
 from app.rag.context_compressor import context_compressor
 from app.rag.hallucination_detector import hallucination_detector
-from app.rag.hybrid_retriever import hybrid_retriever
+from app.rag.intelligence.retrieval_intelligence import (
+    retrieval_intelligence,
+)
 from app.rag.retrieval_explainer import (retrieval_explainer,)
 from app.rag.prompt_builder import prompt_builder
 from app.rag.prompt_quality import prompt_quality
@@ -361,7 +363,7 @@ class RAGService:
 
         start = time.perf_counter()
 
-        results = hybrid_retriever.retrieve(
+        results = retrieval_intelligence.retrieve(
             query=question,
             k=k,
             profiler=profiler,
