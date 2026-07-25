@@ -1,9 +1,6 @@
 from app.rag.hybrid_retriever import hybrid_retriever
 from app.rag.intelligence.retrieval_planner import retrieval_planner
 
-from .models import RetrievalRequest
-
-
 class RetrievalIntelligence:
     """
     Entry point for all retrieval operations.
@@ -24,7 +21,7 @@ class RetrievalIntelligence:
         profiler=None,
     ):
 
-        request = RetrievalRequest(
+        strategy = retrieval_planner.plan(
             query=query,
             k=k,
         )
