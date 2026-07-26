@@ -144,8 +144,9 @@ class ContextBuilder:
 
         return [
             separator,
-            f"Document: {filename}.txt",
+            f"SOURCE [{filename}]",
             separator,
+            f"Document : {filename}",
             "",
         ]
 
@@ -157,21 +158,28 @@ class ContextBuilder:
         if not self.config.include_chunk_headers:
             return []
 
-        if self.config.include_chunk_numbers:
+        lines: list[str] = []
 
-            title = (
-                f"Chunk {metadata['chunk_number']} / "
-                f"{metadata['total_chunks']}"
+        if self.config.include_chunk_numbers:
+            lines.extend(
+                [
+                    (
+                        f"Chunk    : "
+                        f"{metadata['chunk_number']} / "
+                        f"{metadata['total_chunks']}"
+                    )
+                ]
             )
 
-        else:
+        lines.extend(
+            [
+                "Content",
+                "-------",
+                "",
+            ]
+        )
 
-            title = "Chunk"
-
-        return [
-            title,
-            "",
-        ]
+        return lines
 
     def _build_chunk(
         self,
@@ -179,10 +187,10 @@ class ContextBuilder:
         document: str,
     ) -> list[str]:
         """
-        Builds one formatted retrieved chunk.
+        Builds one formatted evidence block.
 
-        This helper performs formatting only.
-        Budgeting is handled later by build_context().
+        Formatting only.
+        Budgeting is handled by build_context().
         """
 
         lines: list[str] = []
@@ -197,9 +205,13 @@ class ContextBuilder:
             document.strip()
         )
 
-        lines.append("")
-        lines.append("-" * 50)
-        lines.append("")
+        lines.extend(
+            [
+                "",
+                self._separator(),
+                "",
+            ]
+        )
 
         return lines
 
@@ -295,12 +307,10 @@ class ContextBuilder:
 
         if not documents:
             return ""
-        
-        documents, metadatas = (
-            self._deduplicate_chunks(
-                documents,
-                metadatas,
-            )
+
+        documents, metadatas = self._deduplicate_chunks(
+            documents,
+            metadatas,
         )
 
         #
@@ -318,15 +328,8 @@ class ContextBuilder:
                 context
             )
 
-        grouped = self._group_by_document(
-            documents,
-            metadatas,
-        )
-
         #
-        # Character budget.
-        #
-        # None means unlimited.
+        # Evidence-oriented context.
         #
 
         remaining_budget = (
@@ -337,123 +340,51 @@ class ContextBuilder:
 
         lines: list[str] = []
 
-        first_document = True
+        source_id = 1
 
-        #
-        # Chunk-level budgeting.
-        #
-        # We preserve retrieval ranking while still
-        # grouping chunks under their document.
-        #
-
-        for filename, chunks in self._iter_document_sections(
-            grouped
+        for metadata, document in zip(
+            metadatas,
+            documents,
         ):
 
-            document_header = self._build_document_header(
-                filename
+            separator = self._separator()
+
+            evidence_block = [
+                separator,
+                f"SOURCE [{source_id}]",
+                separator,
+                f"Document : {metadata['filename']}",
+                (
+                    f"Chunk    : "
+                    f"{metadata['chunk_number']} / "
+                    f"{metadata['total_chunks']}"
+                ),
+                "",
+                "Content",
+                "-------",
+                "",
+                document.strip(),
+                "",
+            ]
+
+            block_size = self._estimate_section_size(
+                evidence_block
             )
 
-            header_added = False
-
-            for metadata, document in chunks:
-
-                chunk_lines = self._build_chunk(
-                    metadata,
-                    document,
-                )
-
-                #
-                # Estimate the entire chunk cost.
-                #
-
-                chunk_size = self._estimate_section_size(
-                    chunk_lines
-                )
-
-                #
-                # First chunk of a document also
-                # requires the document header.
-                #
-
-                if not header_added:
-
-                    header_size = self._estimate_section_size(
-                        document_header
-                    )
-
-                    required = (
-                        header_size +
-                        chunk_size
-                    )
-
-                else:
-
-                    required = chunk_size
-
-                #
-                # Budget exhausted.
-                #
-
-                if required > remaining_budget:
-                    break
-
-                #
-                # Add spacing between documents.
-                #
-
-                if (
-                    not first_document
-                    and header_added is False
-                ):
-
-                    lines.append("")
-                    remaining_budget -= 1
-
-                #
-                # Add document header once.
-                #
-
-                if not header_added:
-
-                    lines.extend(
-                        document_header
-                    )
-
-                    remaining_budget -= (
-                        header_size
-                    )
-
-                    header_added = True
-
-                    first_document = False
-
-                #
-                # Add chunk.
-                #
-
-                lines.extend(
-                    chunk_lines
-                )
-
-                remaining_budget -= (
-                    chunk_size
-                )
-
-            #
-            # Global budget exhausted.
-            #
-
-            if remaining_budget <= 0:
+            if block_size > remaining_budget:
                 break
+
+            lines.extend(
+                evidence_block
+            )
+
+            remaining_budget -= block_size
+
+            source_id += 1
 
         context = "\n".join(
             lines
         ).strip()
-
-        #
-        # Defensive safeguard.
-        #
 
         return self._truncate_context(
             context
