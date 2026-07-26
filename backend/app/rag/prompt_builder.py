@@ -56,14 +56,19 @@ class PromptBuilder:
             rules.extend(
                 [
                     "- Use ONLY the MEMORY section and the retrieved CONTEXT section.",
-                    "- Never invent facts.",
+                    "- Never state a fact unless it is supported by the supplied MEMORY or CONTEXT.",
                     "- Never use outside knowledge.",
+                    "- If information is missing, explicitly state that it is unavailable in the supplied context.",
+                    "- Do not infer missing information.",
+                    "- Do not complete incomplete lists.",
+                    "- If multiple retrieved documents disagree, describe the disagreement instead of choosing one.",
+                    "- Every factual statement should be supported by the retrieved context.",
                 ]
             )
 
         if self.config.preserve_terminology:
             rules.append(
-                "- Preserve technical terminology exactly as written."
+                "- Preserve technical terminology exactly as it appears."
             )
 
         rules.extend(
