@@ -5,36 +5,35 @@ from contextlib import nullcontext
 
 from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.enums import PerformanceStageName
-from app.rag.answer_processor import answer_processor
-from app.rag.evidence_aligner import evidence_aligner
-from app.rag.answer_quality import answer_quality
 from app.rag.pipeline_health import pipeline_health
 from app.rag.rag_scorecard import rag_scorecard
-from app.rag.citation_processor import citation_processor
-from app.rag.citation_inserter import citation_inserter
-from app.rag.context_builder import context_builder
-from app.rag.context_compressor import context_compressor
-from app.rag.hallucination_detector import hallucination_detector
 from app.rag.intelligence.retrieval_intelligence import (
     retrieval_intelligence,
 )
 from app.rag.retrieval_explainer import (retrieval_explainer,)
-from app.rag.prompt_builder import prompt_builder
-from app.rag.prompt_quality import prompt_quality
-from app.rag.prompt_normalizer import prompt_normalizer
-from app.rag.prompt_analyzer import prompt_analyzer
-from app.rag.prompt_optimizer import prompt_optimizer
 from app.rag.prompt_pipeline_models import PromptPipelineResult
 from app.rag.performance_models import PerformanceProfilingResult
-from app.rag.token_budget_manager import token_budget_manager
-from app.rag.prompt_renderer import prompt_renderer
 from app.rag.ranker import ranker
 from app.rag.retrieval_quality import retrieval_quality
-from app.rag.answer_consistency_checker import (answer_consistency_checker,)
 from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
 from app.rag.evidence_models import (
     EvidenceAlignmentResult,
+)
+from app.rag.pipelines.retrieval_pipeline import (
+    retrieval_pipeline,
+)
+from app.rag.pipelines.context_pipeline import (
+    context_pipeline,
+)
+from app.rag.pipelines.prompt_pipeline import (
+    prompt_pipeline,
+)
+from app.rag.pipelines.generation_pipeline import (
+    generation_pipeline,
+)
+from app.rag.pipelines.post_processing_pipeline import (
+    post_processing_pipeline,
 )
 from sqlmodel import Session
 
@@ -533,32 +532,16 @@ class RAGService:
         *,
         documents: list[str],
         metadatas: list[dict],
-    ) -> tuple[PromptPipelineResult, float]:
-        """
-        Build structured context from retrieved documents.
+    ):
 
-        Returns
-        -------
-        (
-            context,
-            context_build_seconds,
-        )
-        """
-
-        start = time.perf_counter()
-
-        context = context_builder.build_context(
+        result = context_pipeline.run(
             documents=documents,
             metadatas=metadatas,
         )
 
-        context_build_seconds = self._elapsed(
-            start,
-        )
-
         return (
-            context,
-            context_build_seconds,
+            result.context,
+            result.context_build_seconds,
         )
         
     def _build_prompt(
@@ -568,187 +551,17 @@ class RAGService:
         context: str,
         conversation: str | None,
         memory: str,
-    ) -> tuple[PromptPipelineResult, float]:
-        """
-        Build the final LLM prompt using the complete Prompt
-        Intelligence pipeline.
+    ) -> tuple[
+        PromptPipelineResult,
+        float,
+    ]:
 
-        Returns
-        -------
-        (
-            PromptPipelineResult,
-            prompt_build_seconds,
-        )
-        """
-
-        start = time.perf_counter()
-
-        components = prompt_builder.build_prompt(
+        return prompt_pipeline.run(
             question=question,
             context=context,
             conversation=conversation,
             memory=memory,
         )
-
-        components = prompt_normalizer.normalize(
-            components,
-        )
-
-        analysis = prompt_analyzer.analyze(
-            components,
-        )
-
-        optimization = prompt_optimizer.optimize(
-            components,
-        )
-
-        budget = token_budget_manager.allocate(
-            optimization.optimized_components,
-        )
-
-        prompt = prompt_renderer.render(
-            budget.components,
-        )
-        quality = prompt_quality.analyze(
-            analysis=analysis,
-            optimization=optimization,
-            budget=budget,
-        )
-
-        prompt_pipeline = PromptPipelineResult(
-            prompt=prompt,
-            analysis=analysis,
-            optimization=optimization,
-            budget=budget,
-            quality=quality,
-        )
-
-        prompt_build_seconds = self._elapsed(
-            start,
-        )
-
-        return (
-            prompt_pipeline,
-            prompt_build_seconds,
-        )
-    
-    def _generate_answer(
-        self,
-        *,
-        prompt: str,
-    ) -> tuple[str, float]:
-        """
-        Generate an answer from the language model.
-
-        Returns
-        -------
-        (
-            raw_answer,
-            generation_seconds,
-        )
-        """
-
-        raw_answer = ollama_service.generate(
-            prompt=prompt,
-        )
-
-        generation_seconds = (
-            ollama_service.last_generation.get(
-                "latency_seconds",
-                0.0,
-            )
-        )
-
-        return (
-            raw_answer,
-            generation_seconds,
-        )
-        
-    def _process_answer(
-        self,
-        *,
-        raw_answer: str,
-        context: str,
-        sources: list[dict],
-        documents: list[str],
-        metadatas: list[dict],
-    ) -> tuple[
-        str,
-        float,
-        EvidenceAlignmentResult,
-        dict,
-        dict,
-        dict,
-        dict,
-    ]:
-        """
-        Process the generated answer and run
-        post-generation analysis.
-        """
-
-        processed_answer = (
-            answer_processor.process(
-                answer=raw_answer,
-                context=context,
-            )
-        )
-
-        alignment = (
-            evidence_aligner.align(
-                answer=processed_answer["answer"],
-                documents=documents,
-                metadatas=metadatas,
-            )
-        )
-
-        citation_insert_result = (
-            citation_inserter.insert(
-                answer=processed_answer["answer"],
-                sources=sources,
-            )
-        )
-
-        hallucination_result = (
-            hallucination_detector.detect(
-                answer=citation_insert_result["answer"],
-                context=context,
-            )
-        )
-
-        consistency_result = (
-            answer_consistency_checker.detect(
-                answer=citation_insert_result["answer"],
-            )
-        )
-
-        citation_result = (
-            citation_processor.process(
-                answer=citation_insert_result["answer"],
-                sources=sources,
-                alignment=alignment,
-            )
-        )
-
-        answer = citation_result["answer"]
-
-        answer_quality_result = (
-            answer_quality.analyze(
-                answer=answer,
-                prompt=context,
-            )
-        )
-
-        confidence = processed_answer["confidence"]
-
-        return (
-            answer,
-            confidence,
-            alignment,
-            hallucination_result,
-            consistency_result,
-            answer_quality_result,
-            citation_result,
-        )    
         
     def _prepare_memory(
         self,
@@ -816,35 +629,24 @@ class RAGService:
         with profiler.measure(
             PerformanceStageName.RETRIEVAL
         ):
-            (
-                documents,
-                metadatas,
-                retrieval,
-                pipeline,
-                retrieval_seconds,
-            ) = self._retrieve_documents(
+            retrieval_result = retrieval_pipeline.run(
                 question=question,
                 k=k,
                 profiler=profiler,
+                build_diagnostics=self._build_retrieval_diagnostics,
             )
 
-        (
-            documents,
-            metadatas,
-        ) = context_compressor.compress(
-            documents=documents,
-            metadatas=metadatas,
-        )
+            documents = retrieval_result.documents
 
-        retrieval_diagnostics = (
-            self._build_retrieval_diagnostics(
-                documents=documents,
-                metadatas=metadatas,
-                retrieval=retrieval,
-                pipeline=pipeline,
-                requested_k=k,
-            )
-        )
+            metadatas = retrieval_result.metadatas
+
+            retrieval = retrieval_result.retrieval
+
+            pipeline = retrieval_result.pipeline
+
+            retrieval_seconds = retrieval_result.retrieval_seconds
+
+            retrieval_diagnostics = retrieval_result.diagnostics
 
         # --------------------------------------------------
         # Context Builder
@@ -889,15 +691,20 @@ class RAGService:
         # LLM Generation
         # --------------------------------------------------
 
-        with profiler.measure(
-            PerformanceStageName.LLM_GENERATION
-        ):
-            (
-                raw_answer,
-                generation_seconds,
-            ) = self._generate_answer(
+        generation_result = (
+            generation_pipeline.run(
                 prompt=prompt,
+                profiler=profiler,
             )
+        )
+
+        raw_answer = (
+            generation_result.raw_answer
+        )
+
+        generation_seconds = (
+            generation_result.generation_seconds
+        )
 
         # --------------------------------------------------
         # Sources
@@ -911,24 +718,38 @@ class RAGService:
         # Answer Processing
         # --------------------------------------------------
 
-        with profiler.measure(
-            PerformanceStageName.POST_PROCESSING
-        ):
-            (
-                answer,
-                confidence,
-                alignment,
-                hallucination_result,
-                consistency_result,
-                answer_quality_result,
-                citation_result,
-            ) = self._process_answer(
+        post_processing_result = (
+            post_processing_pipeline.run(
                 raw_answer=raw_answer,
                 context=context,
+                sources=sources,
                 documents=documents,
                 metadatas=metadatas,
-                sources=sources,
+                profiler=profiler,
             )
+        )
+
+        answer = post_processing_result.answer
+
+        confidence = post_processing_result.confidence
+
+        alignment = post_processing_result.alignment
+
+        hallucination_result = (
+            post_processing_result.hallucination
+        )
+
+        consistency_result = (
+            post_processing_result.consistency
+        )
+
+        answer_quality_result = (
+            post_processing_result.answer_quality
+        )
+
+        citation_result = (
+            post_processing_result.citation_result
+        )
 
         # --------------------------------------------------
         # Pipeline Health
