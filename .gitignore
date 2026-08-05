@@ -70,3 +70,6 @@ test_vector_store.py
 backend/uploads/
 
 .obsidian/
+
+__pycache__/
+*.py[cod]
