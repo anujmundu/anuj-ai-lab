@@ -5,8 +5,6 @@ from contextlib import nullcontext
 
 from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.enums import PerformanceStageName
-from app.rag.pipeline_health import pipeline_health
-from app.rag.rag_scorecard import rag_scorecard
 from app.rag.intelligence.retrieval_intelligence import (
     retrieval_intelligence,
 )
@@ -40,6 +38,9 @@ from app.rag.builders.diagnostics_builder import (
 )
 from app.rag.pipelines.memory_pipeline import (
     memory_pipeline,
+)
+from app.rag.pipelines.evaluation_pipeline import (
+    evaluation_pipeline,
 )
 
 
@@ -376,31 +377,32 @@ class RAGService:
             post_processing_result.citation_result
         )
 
-        # --------------------------------------------------
-        # Pipeline Health
-        # --------------------------------------------------
-
-        pipeline_health_result = (
-            pipeline_health.evaluate(
+        evaluation_result = (
+            evaluation_pipeline.run(
                 retrieval_quality=(
                     retrieval_diagnostics["quality"]
                 ),
-                hallucination=hallucination_result,
-                answer_quality=answer_quality_result,
-                citation_result=citation_result,
+                prompt_quality=(
+                    prompt_pipeline.quality
+                ),
+                answer_quality=(
+                    answer_quality_result
+                ),
+                hallucination=(
+                    hallucination_result
+                ),
+                citations=(
+                    citation_result
+                ),
             )
         )
 
-        # --------------------------------------------------
-        # RAG Scorecard
-        # --------------------------------------------------
+        pipeline_health_result = (
+            evaluation_result.pipeline_health
+        )
 
-        scorecard_result = rag_scorecard.build(
-            retrieval_quality=retrieval_diagnostics["quality"],
-            prompt_quality=prompt_pipeline.quality,
-            answer_quality=answer_quality_result,
-            hallucination=hallucination_result,
-            citations=citation_result,
+        scorecard_result = (
+            evaluation_result.scorecard
         )
 
         # --------------------------------------------------
