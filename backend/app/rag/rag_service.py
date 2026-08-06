@@ -38,10 +38,9 @@ from app.rag.pipelines.post_processing_pipeline import (
 from app.rag.builders.diagnostics_builder import (
     diagnostics_builder,
 )
-from sqlmodel import Session
-
-from app.db.database import engine
-from app.memory.manager import MemoryManager
+from app.rag.pipelines.memory_pipeline import (
+    memory_pipeline,
+)
 
 
 class RAGService:
@@ -233,50 +232,6 @@ class RAGService:
             conversation=conversation,
             memory=memory,
         )
-        
-    def _prepare_memory(
-        self,
-        question: str,
-        conversation: str | None,
-    ) -> str:
-        """
-        Prepare persistent memory for prompt construction.
-
-        Conversation support is reserved for future
-        conversation-specific memory retrieval.
-        """
-
-        with Session(engine) as session:
-
-            manager = MemoryManager(
-                session=session,
-            )
-
-            return manager.relevant_context(
-                query=question,
-            )
-            
-    def _store_memory(
-        self,
-        question: str,
-    ) -> None:
-        """
-        Extract and persist useful user memories.
-
-        This currently stores only the user's message.
-        Future versions may also process assistant
-        responses and conversation history.
-        """
-
-        with Session(engine) as session:
-
-            manager = MemoryManager(
-                session=session,
-            )
-
-            manager.process(
-                question,
-            )
 
     # --------------------------------------------------
     # Public API
@@ -333,7 +288,7 @@ class RAGService:
                 metadatas=metadatas,
             )
 
-        memory = self._prepare_memory(
+        memory = memory_pipeline.prepare(
             question=question,
             conversation=conversation,
         )
@@ -484,8 +439,8 @@ class RAGService:
             )
         )
 
-        self._store_memory(
-            question,
+        memory_pipeline.store(
+            question=question,
         )
 
         # --------------------------------------------------
