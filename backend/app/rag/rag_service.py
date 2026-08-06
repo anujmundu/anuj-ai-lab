@@ -1,23 +1,12 @@
-from ctypes import alignment
+
 import time
-from dataclasses import asdict
-from contextlib import nullcontext
 
 from app.rag.performance_profiler import PerformanceProfiler
 from app.rag.enums import PerformanceStageName
-from app.rag.intelligence.retrieval_intelligence import (
-    retrieval_intelligence,
-)
-from app.rag.retrieval_explainer import (retrieval_explainer,)
+
 from app.rag.prompt_pipeline_models import PromptPipelineResult
-from app.rag.performance_models import PerformanceProfilingResult
-from app.rag.ranker import ranker
-from app.rag.retrieval_quality import retrieval_quality
 from app.rag.token_estimator import token_estimator
 from app.services.ollama_service import ollama_service
-from app.rag.evidence_models import (
-    EvidenceAlignmentResult,
-)
 from app.rag.pipelines.retrieval_pipeline import (
     retrieval_pipeline,
 )
@@ -130,73 +119,6 @@ class RAGService:
             }
             for metadata in metadatas
         ]
-    
-    def _retrieve_documents(
-        self,
-        *,
-        question: str,
-        k: int,
-        profiler: PerformanceProfiler | None = None,
-    ) -> tuple[
-        list[str],
-        list[dict],
-        list[dict],
-        dict,
-        float,
-    ]:
-        """
-        Retrieve and rank documents.
-
-        Returns
-        -------
-        (
-            documents,
-            metadatas,
-            retrieval,
-            retrieval_seconds,
-        )
-        """
-
-        measure = (
-            profiler.measure
-            if profiler is not None
-            else lambda *_: nullcontext()
-        )
-
-        start = time.perf_counter()
-
-        results = retrieval_intelligence.retrieve(
-            query=question,
-            k=k,
-            profiler=profiler,
-        )
-
-        results = ranker.filter_results(
-            results,
-        )
-
-        retrieval_seconds = self._elapsed(
-            start,
-        )
-
-        documents = results["documents"][0]
-        
-        metadatas = results["metadatas"][0]
-        
-        retrieval = results["retrieval"][0]
-        
-        pipeline = results.get(
-            "pipeline",
-            {}
-        )
-
-        return (
-            documents,
-            metadatas,
-            retrieval,
-            pipeline,
-            retrieval_seconds,
-        )
         
     def _build_context(
         self,
