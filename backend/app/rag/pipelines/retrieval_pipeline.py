@@ -13,6 +13,9 @@ from app.rag.ranker import ranker
 from app.rag.pipelines.models import (
     RetrievalPipelineResult,
 )
+from app.rag.builders.diagnostics_builder import (
+    diagnostics_builder,
+)
 
 
 class RetrievalPipeline:
@@ -35,7 +38,6 @@ class RetrievalPipeline:
         *,
         question: str,
         k: int,
-        build_diagnostics,
         profiler: PerformanceProfiler | None = None,
     ) -> RetrievalPipelineResult:
 
@@ -70,12 +72,14 @@ class RetrievalPipeline:
             metadatas=metadatas,
         )
 
-        diagnostics = build_diagnostics(
-            documents=documents,
-            metadatas=metadatas,
-            retrieval=retrieval,
-            pipeline=pipeline,
-            requested_k=k,
+        diagnostics = (
+            diagnostics_builder.build_retrieval_diagnostics(
+                documents=documents,
+                metadatas=metadatas,
+                retrieval=retrieval,
+                pipeline=pipeline,
+                requested_k=k,
+            )
         )
 
         retrieval_seconds = (
