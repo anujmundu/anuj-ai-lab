@@ -34,6 +34,9 @@ from app.rag.pipelines.evaluation_pipeline import (
 from app.rag.builders.source_builder import (
     source_builder,
 )
+from app.rag.builders.response_builder import (
+    response_builder,
+)
 
 
 class RAGService:
@@ -359,12 +362,12 @@ class RAGService:
         # API Response
         # --------------------------------------------------
 
-        return {
-            "question": question,
-            "answer": answer,
-            "confidence": confidence,
-            "sources": sources,
-        }
+        return response_builder.build(
+            question=question,
+            answer=answer,
+            confidence=confidence,
+            sources=sources,
+        )
 
 
 rag_service = RAGService()
