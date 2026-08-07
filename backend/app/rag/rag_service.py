@@ -31,6 +31,9 @@ from app.rag.pipelines.memory_pipeline import (
 from app.rag.pipelines.evaluation_pipeline import (
     evaluation_pipeline,
 )
+from app.rag.builders.source_builder import (
+    source_builder,
+)
 
 
 class RAGService:
@@ -104,21 +107,6 @@ class RAGService:
     ) -> float:
 
         return time.perf_counter() - start
-    
-    def _build_sources(
-        self,
-        metadatas: list[dict]
-    ) -> list[dict]:
-
-        return [
-            {
-                "filename": metadata["filename"],
-                "chunk_id": metadata["chunk_id"],
-                "chunk_number": metadata["chunk_number"],
-                "total_chunks": metadata["total_chunks"],
-            }
-            for metadata in metadatas
-        ]
         
     def _build_context(
         self,
@@ -258,7 +246,7 @@ class RAGService:
         # Sources
         # --------------------------------------------------
 
-        sources = self._build_sources(
+        sources = source_builder.build(
             metadatas,
         )
 
