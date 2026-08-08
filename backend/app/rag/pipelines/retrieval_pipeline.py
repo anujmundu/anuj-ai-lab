@@ -16,6 +16,9 @@ from app.rag.pipelines.models import (
 from app.rag.builders.diagnostics_builder import (
     diagnostics_builder,
 )
+from app.rag.query.analyzer import (
+    query_analyzer,
+)
 
 
 class RetrievalPipeline:
@@ -42,6 +45,10 @@ class RetrievalPipeline:
     ) -> RetrievalPipelineResult:
 
         start = time.perf_counter()
+        
+        query_analysis = query_analyzer.analyze(
+            question,
+        )
 
         results = retrieval_intelligence.retrieve(
             query=question,
@@ -79,6 +86,7 @@ class RetrievalPipeline:
                 retrieval=retrieval,
                 pipeline=pipeline,
                 requested_k=k,
+                query_analysis=query_analysis,
             )
         )
 
@@ -93,6 +101,7 @@ class RetrievalPipeline:
             retrieval=retrieval,
             pipeline=pipeline,
             diagnostics=diagnostics,
+            query_analysis=query_analysis,
             retrieval_seconds=retrieval_seconds,
         )
 

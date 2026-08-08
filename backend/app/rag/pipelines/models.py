@@ -2,24 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.rag.query.models import QueryAnalysisResult
 
 @dataclass(slots=True)
 class RetrievalPipelineResult:
-    """
-    Result produced by the retrieval stage.
-
-    This becomes the input for the ContextPipeline.
-    """
 
     documents: list[str]
-
     metadatas: list[dict]
-
-    retrieval: dict
-
+    retrieval: list[dict]
     pipeline: dict
-
     diagnostics: dict
+
+    query_analysis: QueryAnalysisResult
 
     retrieval_seconds: float
 

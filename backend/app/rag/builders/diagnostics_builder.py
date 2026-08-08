@@ -19,6 +19,7 @@ from app.rag.retrieval_explainer import (
 from app.rag.token_estimator import (
     token_estimator,
 )
+from app.rag.query.models import QueryAnalysisResult
 
 class DiagnosticsBuilder:
     """
@@ -28,17 +29,21 @@ class DiagnosticsBuilder:
     
     def build_retrieval_diagnostics(
         self,
+        query_analysis: QueryAnalysisResult,
         **kwargs,
     ):
         return self._build_retrieval_diagnostics(
+            query_analysis=query_analysis,
             **kwargs,
         )
 
     def build_request_diagnostics(
         self,
+        query_analysis: QueryAnalysisResult,
         **kwargs,
     ):
         return self._update_request_diagnostics(
+            query_analysis=query_analysis,
             **kwargs,
         )
 
@@ -118,69 +123,84 @@ class DiagnosticsBuilder:
             }
     
     def _build_retrieval_diagnostics(
-            self,
-            *,
-            documents: list[str],
-            metadatas: list[dict],
-            retrieval: list[dict],
-            pipeline: dict,
-            requested_k: int,
-        ) -> dict:
-            """
-            Build retrieval diagnostics after ranking and
-            context compression.
-            """
-            
-            confidence = self._retrieval_confidence(
-                retrieval,
-            )
-            
-            quality = retrieval_quality.evaluate(
-                retrieval=retrieval,
-                metadatas=metadatas,
-            )
-    
-            return {
-                **pipeline,
-                
-                "confidence": confidence,
-                
-                "quality": quality,
-    
-                "requested_k": requested_k,
-    
-                "retrieved_documents": len(documents),
-    
-                "documents": [
-                    {
-                        "filename": metadata["filename"],
-                        "chunk_id": metadata["chunk_id"],
-                        "chunk_number": metadata["chunk_number"],
-                        "total_chunks": metadata["total_chunks"],
-    
-                        "semantic_score": scores["semantic_score"],
-                        "keyword_score": scores["keyword_score"],
-                        "combined_score": scores["combined_score"],
-    
-                        "semantic_rank": scores["semantic_rank"],
-                        "keyword_rank": scores["keyword_rank"],
-    
-                        "selected_because": (
-                            retrieval_explainer.explain(
-                                scores,
-                            )
-                        ),
-                    }
-                    for metadata, scores in zip(
-                        metadatas,
-                        retrieval,
-                    )
-                ],
-            }
+        self,
+        *,
+        documents: list[str],
+        metadatas: list[dict],
+        retrieval: list[dict],
+        pipeline: dict,
+        requested_k: int,
+        query_analysis: QueryAnalysisResult,
+    ) -> dict:
+        """
+        Build retrieval diagnostics after ranking and
+        context compression.
+        """
+
+        confidence = self._retrieval_confidence(
+            retrieval,
+        )
+
+        quality = retrieval_quality.evaluate(
+            retrieval=retrieval,
+            metadatas=metadatas,
+        )
+
+        return {
+            **pipeline,
+
+            "confidence": confidence,
+
+            "quality": quality,
+
+            "requested_k": requested_k,
+
+            "retrieved_documents": len(documents),
+
+            "documents": [
+                {
+                    "filename": metadata["filename"],
+                    "chunk_id": metadata["chunk_id"],
+                    "chunk_number": metadata["chunk_number"],
+                    "total_chunks": metadata["total_chunks"],
+
+                    "semantic_score": scores["semantic_score"],
+                    "keyword_score": scores["keyword_score"],
+                    "combined_score": scores["combined_score"],
+
+                    "semantic_rank": scores["semantic_rank"],
+                    "keyword_rank": scores["keyword_rank"],
+
+                    "selected_because": (
+                        retrieval_explainer.explain(
+                            scores,
+                        )
+                    ),
+                }
+                for metadata, scores in zip(
+                    metadatas,
+                    retrieval,
+                )
+            ],
+
+            "query": {
+                "text": query_analysis.query,
+                "intent": query_analysis.intent.value,
+                "complexity": query_analysis.complexity.value,
+                "ambiguity": query_analysis.ambiguity.value,
+                "requires_rewrite": (
+                    query_analysis.requires_rewrite
+                ),
+                "requires_multi_query": (
+                    query_analysis.requires_multi_query
+                ),
+            },
+        }
         
     def _update_request_diagnostics(
             self,
             *,
+            query_analysis: QueryAnalysisResult,
             question: str,
             retrieval_seconds: float,
             retrieval_diagnostics: dict,
@@ -247,6 +267,19 @@ class DiagnosticsBuilder:
             return {
     
                 "question": question,
+
+                "query": {
+                    "text": query_analysis.query,
+                    "intent": query_analysis.intent.value,
+                    "complexity": query_analysis.complexity.value,
+                    "ambiguity": query_analysis.ambiguity.value,
+                    "requires_rewrite": (
+                        query_analysis.requires_rewrite
+                    ),
+                    "requires_multi_query": (
+                        query_analysis.requires_multi_query
+                    ),
+                },
     
                 "timings": {
     

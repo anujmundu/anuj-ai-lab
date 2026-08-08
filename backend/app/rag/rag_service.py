@@ -174,6 +174,10 @@ class RAGService:
                 k=k,
                 profiler=profiler,
             )
+            
+            query_analysis = (
+                retrieval_result.query_analysis
+            )
 
             documents = retrieval_result.documents
 
@@ -331,6 +335,7 @@ class RAGService:
         self._last_request = (
             diagnostics_builder.build_request_diagnostics(
                 question=question,
+                query_analysis=query_analysis,
                 retrieval_seconds=retrieval_seconds,
                 retrieval_diagnostics=retrieval_diagnostics,
                 context_build_seconds=context_build_seconds,
