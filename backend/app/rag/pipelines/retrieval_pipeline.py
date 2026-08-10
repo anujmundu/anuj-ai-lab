@@ -19,6 +19,9 @@ from app.rag.builders.diagnostics_builder import (
 from app.rag.query.analyzer import (
     query_analyzer,
 )
+from app.rag.query.k_selector import (
+    adaptive_k_selector,
+)
 
 
 class RetrievalPipeline:
@@ -45,16 +48,38 @@ class RetrievalPipeline:
     ) -> RetrievalPipelineResult:
 
         start = time.perf_counter()
-        
+
+        # --------------------------------------------------
+        # Query Analysis
+        # --------------------------------------------------
+
         query_analysis = query_analyzer.analyze(
             question,
         )
 
+        # --------------------------------------------------
+        # Adaptive Retrieval K
+        # --------------------------------------------------
+
+        effective_k = adaptive_k_selector.select(
+            intent=query_analysis.intent,
+            complexity=query_analysis.complexity,
+            requested_k=k,
+        )
+
+        # --------------------------------------------------
+        # Retrieval
+        # --------------------------------------------------
+
         results = retrieval_intelligence.retrieve(
             query=question,
-            k=k,
+            k=effective_k,
             profiler=profiler,
         )
+
+        # --------------------------------------------------
+        # Ranking / Filtering
+        # --------------------------------------------------
 
         results = ranker.filter_results(
             results,
@@ -71,6 +96,10 @@ class RetrievalPipeline:
             {},
         )
 
+        # --------------------------------------------------
+        # Context Compression
+        # --------------------------------------------------
+
         (
             documents,
             metadatas,
@@ -79,21 +108,33 @@ class RetrievalPipeline:
             metadatas=metadatas,
         )
 
+        # --------------------------------------------------
+        # Retrieval Diagnostics
+        # --------------------------------------------------
+
         diagnostics = (
             diagnostics_builder.build_retrieval_diagnostics(
                 documents=documents,
                 metadatas=metadatas,
                 retrieval=retrieval,
                 pipeline=pipeline,
-                requested_k=k,
+                requested_k=effective_k,
                 query_analysis=query_analysis,
             )
         )
+
+        # --------------------------------------------------
+        # Timing
+        # --------------------------------------------------
 
         retrieval_seconds = (
             time.perf_counter()
             - start
         )
+
+        # --------------------------------------------------
+        # Result
+        # --------------------------------------------------
 
         return RetrievalPipelineResult(
             documents=documents,
@@ -102,8 +143,9 @@ class RetrievalPipeline:
             pipeline=pipeline,
             diagnostics=diagnostics,
             query_analysis=query_analysis,
+            requested_k=k,
+            effective_k=effective_k,
             retrieval_seconds=retrieval_seconds,
         )
-
 
 retrieval_pipeline = RetrievalPipeline()

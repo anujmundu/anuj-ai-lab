@@ -15,6 +15,9 @@ class RetrievalPipelineResult:
 
     query_analysis: QueryAnalysisResult
 
+    requested_k: int
+    effective_k: int
+
     retrieval_seconds: float
 
 
