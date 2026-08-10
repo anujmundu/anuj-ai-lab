@@ -26,11 +26,6 @@ class RetrievalIntelligence:
             k=k,
         )
 
-        strategy = retrieval_planner.plan(
-            query=query,
-            k=k,
-        )
-
         return hybrid_retriever.retrieve(
             query=strategy.query,
             k=strategy.k,
