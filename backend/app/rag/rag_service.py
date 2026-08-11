@@ -110,7 +110,7 @@ class RAGService:
     ) -> float:
 
         return time.perf_counter() - start
-        
+
     def _build_context(
         self,
         *,
@@ -127,7 +127,7 @@ class RAGService:
             result.context,
             result.context_build_seconds,
         )
-        
+
     def _build_prompt(
         self,
         *,
@@ -159,7 +159,7 @@ class RAGService:
     ) -> dict:
 
         total_start = time.perf_counter()
-        
+
         profiler = PerformanceProfiler()
 
         # --------------------------------------------------
@@ -174,7 +174,7 @@ class RAGService:
                 k=k,
                 profiler=profiler,
             )
-            
+
             query_analysis = (
                 retrieval_result.query_analysis
             )
@@ -294,6 +294,10 @@ class RAGService:
             post_processing_result.citation_result
         )
 
+        grounding_result = (
+            post_processing_result.grounding
+        )
+
         evaluation_result = (
             evaluation_pipeline.run(
                 retrieval_quality=(
@@ -329,7 +333,7 @@ class RAGService:
         total_seconds = self._elapsed(
             total_start,
         )
-        
+
         performance = profiler.build_result()
 
         self._last_request = (
@@ -354,6 +358,7 @@ class RAGService:
                 answer_quality_result=answer_quality_result,
                 pipeline_health_result=pipeline_health_result,
                 scorecard_result=scorecard_result,
+                grounding_result=grounding_result,
                 citation_result=citation_result,
                 performance=performance,
             )

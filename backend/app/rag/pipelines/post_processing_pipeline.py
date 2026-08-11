@@ -36,6 +36,9 @@ from app.rag.performance_profiler import (
 from app.rag.enums import (
     PerformanceStageName,
 )
+from app.rag.grounded_answer_filter import (
+    grounded_answer_filter,
+)
 
 @dataclass(slots=True)
 class PostProcessingPipelineResult:
@@ -53,7 +56,9 @@ class PostProcessingPipelineResult:
     answer_quality: dict
 
     citation_result: dict
-    
+
+    grounding: dict
+
 class PostProcessingPipeline:
 
     def run(
@@ -88,7 +93,7 @@ class PostProcessingPipeline:
             documents=documents,
             metadatas=metadatas,
         )
-        
+
     def _process(
         self,
         *,
@@ -104,7 +109,7 @@ class PostProcessingPipeline:
                     context=context,
                 )
             )
-        
+
         alignment = (
             evidence_aligner.align(
                 answer=processed_answer["answer"],
@@ -112,27 +117,27 @@ class PostProcessingPipeline:
                     metadatas=metadatas,
                 )
             )
-        
+
         citation_insert_result = (
             citation_inserter.insert(
                     answer=processed_answer["answer"],
                     sources=sources,
                 )
             )
-        
+
         hallucination_result = (
             hallucination_detector.detect(
                     answer=citation_insert_result["answer"],
                     context=context,
                 )
             )
-        
+
         consistency_result = (
             answer_consistency_checker.detect(
                     answer=citation_insert_result["answer"],
                 )
             )
-        
+
         citation_result = (
             citation_processor.process(
                     answer=citation_insert_result["answer"],
@@ -140,18 +145,28 @@ class PostProcessingPipeline:
                     alignment=alignment,
                 )
             )
-        
+
         answer = citation_result["answer"]
-        
+
+        grounding_result = (
+            grounded_answer_filter.evaluate(
+                answer=answer,
+                alignment=alignment,
+                hallucination=hallucination_result,
+                consistency=consistency_result,
+                citation_result=citation_result,
+            )
+        )
+
         answer_quality_result = (
             answer_quality.analyze(
                     answer=answer,
                     prompt=context,
                 )
             )
-        
+
         confidence = processed_answer["confidence"]
-        
+
         return PostProcessingPipelineResult(
             answer=answer,
             confidence=confidence,
@@ -160,6 +175,7 @@ class PostProcessingPipeline:
             consistency=consistency_result,
             answer_quality=answer_quality_result,
             citation_result=citation_result,
+            grounding=grounding_result,
         )
 
 post_processing_pipeline = PostProcessingPipeline()

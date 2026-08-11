@@ -26,7 +26,7 @@ class DiagnosticsBuilder:
     Builds retrieval diagnostics and request diagnostics
     for the RAG pipeline.
     """
-    
+
     def build_retrieval_diagnostics(
         self,
         *,
@@ -61,7 +61,7 @@ class DiagnosticsBuilder:
     # ----------------------------
     # private implementation below
     # ----------------------------
-    
+
     def _retrieval_confidence(
             self,
             retrieval: list[dict],
@@ -70,7 +70,7 @@ class DiagnosticsBuilder:
             Compute confidence metrics for retrieved
             documents based on combined scores.
             """
-    
+
             if not retrieval:
                 return {
                     "average_similarity": 0.0,
@@ -79,18 +79,18 @@ class DiagnosticsBuilder:
                     "score_variance": 0.0,
                     "retrieval_confidence": "None",
                 }
-    
+
             scores = [
                 item["combined_score"]
                 for item in retrieval
             ]
-    
+
             average = sum(scores) / len(scores)
-    
+
             minimum = min(scores)
-    
+
             maximum = max(scores)
-    
+
             variance = (
                 sum(
                     (score - average) ** 2
@@ -98,41 +98,41 @@ class DiagnosticsBuilder:
                 )
                 / len(scores)
             )
-    
+
             if average >= 0.75:
                 confidence = "High"
-    
+
             elif average >= 0.50:
                 confidence = "Medium"
-    
+
             else:
                 confidence = "Low"
-    
+
             return {
-    
+
                 "average_similarity": round(
                     average,
                     3,
                 ),
-    
+
                 "minimum_similarity": round(
                     minimum,
                     3,
                 ),
-    
+
                 "maximum_similarity": round(
                     maximum,
                     3,
                 ),
-    
+
                 "score_variance": round(
                     variance,
                     4,
                 ),
-    
+
                 "retrieval_confidence": confidence,
             }
-    
+
     def _build_retrieval_diagnostics(
         self,
         *,
@@ -216,7 +216,7 @@ class DiagnosticsBuilder:
                 ),
             },
         }
-        
+
     def _update_request_diagnostics(
             self,
             *,
@@ -241,17 +241,18 @@ class DiagnosticsBuilder:
             pipeline_health_result: dict | None = None,
             scorecard_result: dict | None = None,
             citation_result: dict | None = None,
+            grounding_result: dict | None = None,
             performance: PerformanceProfilingResult,
         ) -> None:
-            
-            
+
+
             template = (
                 prompt
                 .replace(context, "", 1)
                 .replace(memory, "", 1)
                 .replace(question, "", 1)
             )
-    
+
             template = (
                 template.replace(
                     conversation or "",
@@ -259,33 +260,33 @@ class DiagnosticsBuilder:
                     1,
                 )
             )
-    
+
             prompt_tokens = token_estimator.estimate(
                 prompt,
             )
-    
+
             template_tokens = token_estimator.estimate(
                 template,
             )
-    
+
             context_tokens = token_estimator.estimate(
                 context,
             )
-    
+
             memory_tokens = token_estimator.estimate(
                 memory,
             )
-    
+
             question_tokens = token_estimator.estimate(
                 question,
             )
-    
+
             conversation_tokens = token_estimator.estimate(
                 conversation,
             )
-    
+
             return {
-    
+
                 "question": question,
 
                 "query": {
@@ -300,136 +301,140 @@ class DiagnosticsBuilder:
                         query_analysis.requires_multi_query
                     ),
                 },
-    
+
                 "timings": {
-    
+
                     "retrieval_seconds": retrieval_seconds,
-    
+
                     "context_build_seconds": (
                         context_build_seconds
                     ),
-    
+
                     "prompt_build_seconds": (
                         prompt_build_seconds
                     ),
-    
+
                     "generation_seconds": (
                         generation_seconds
                     ),
-    
+
                     "total_seconds": total_seconds,
                 },
-                
+
                 "retrieval": retrieval_diagnostics,
-    
+
                 "prompt": {
-    
+
                     "characters": len(prompt),
-    
+
                     "words": len(
                         prompt.split()
                     ),
-    
+
                     "estimated_tokens": prompt_tokens,
-    
+
                     "composition": {
-    
+
                         "template_characters": (
                             len(prompt)
                             - len(context)
                             - len(memory)
                             - len(question)
                         ),
-    
+
                         "template_words": (
                             len(prompt.split())
                             - len(context.split())
                             - len(memory.split())
                             - len(question.split())
                         ),
-                        
+
                         "template_tokens": template_tokens,
-    
+
                         "context_characters": len(context),
-    
+
                         "context_words": len(
                             context.split()
                         ),
-                        
+
                         "context_tokens": context_tokens,
-    
+
                         "memory_characters": len(memory),
-    
+
                         "memory_words": len(
                             memory.split()
                         ),
-                        
+
                         "memory_tokens": memory_tokens,
-    
+
                         "question_characters": len(question),
-    
+
                         "question_words": len(
                             question.split()
                         ),
-                        
+
                         "question_tokens": question_tokens,
-    
+
                         "conversation_characters": (
                             len(conversation)
                             if conversation
                             else 0
                         ),
-    
+
                         "conversation_words": (
                             len(conversation.split())
                             if conversation
                             else 0
                         ),
-                        
+
                         "conversation_tokens": conversation_tokens,
                     },
-                    
+
                     "quality": prompt_pipeline.quality,
                 },
-    
+
                 "response": {
-    
+
                     "characters": len(answer),
-    
+
                     "words": len(
                         answer.split()
                     ),
                 },
-    
+
                 "confidence": confidence,
-    
+
                 "hallucination": (
                     hallucination_result
                 ),
-                
+
                 "consistency": (
                     consistency_result
                 ),
-                
+
                 "answer_quality": (
                     answer_quality_result
                 ),
-                
+
                 "pipeline_health": (
                     pipeline_health_result
                 ),
-                
+
                 "scorecard": (
                     scorecard_result
                 ),
-    
+
                 "citations": (
                     citation_result
                 ),
-                
+
+                "grounding": (
+                    grounding_result
+                ),
+
                 "performance": asdict(performance),
             }
-    
+
 
 
 diagnostics_builder = DiagnosticsBuilder()
