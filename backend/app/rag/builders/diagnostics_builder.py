@@ -29,12 +29,23 @@ class DiagnosticsBuilder:
     
     def build_retrieval_diagnostics(
         self,
+        *,
         query_analysis: QueryAnalysisResult,
-        **kwargs,
+        requested_k: int,
+        effective_k: int,
+        documents: list[str],
+        metadatas: list[dict],
+        retrieval: list[dict],
+        pipeline: dict,
     ):
         return self._build_retrieval_diagnostics(
+            documents=documents,
+            metadatas=metadatas,
+            retrieval=retrieval,
+            pipeline=pipeline,
+            requested_k=requested_k,
+            effective_k=effective_k,
             query_analysis=query_analysis,
-            **kwargs,
         )
 
     def build_request_diagnostics(
@@ -130,11 +141,18 @@ class DiagnosticsBuilder:
         retrieval: list[dict],
         pipeline: dict,
         requested_k: int,
+        effective_k: int,
         query_analysis: QueryAnalysisResult,
     ) -> dict:
         """
         Build retrieval diagnostics after ranking and
         context compression.
+
+        requested_k represents the caller's requested retrieval
+        depth.
+
+        effective_k represents the retrieval depth selected by
+        the retrieval planner.
         """
 
         confidence = self._retrieval_confidence(
@@ -154,6 +172,8 @@ class DiagnosticsBuilder:
             "quality": quality,
 
             "requested_k": requested_k,
+
+            "effective_k": effective_k,
 
             "retrieved_documents": len(documents),
 

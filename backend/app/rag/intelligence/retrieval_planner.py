@@ -1,4 +1,5 @@
-from .query_analyzer import query_analyzer
+from app.rag.query.models import QueryAnalysisResult
+from app.rag.query.k_selector import adaptive_k_selector
 from .retrieval_strategy import RetrievalStrategy
 
 
@@ -6,8 +7,11 @@ class RetrievalPlanner:
     """
     Chooses the retrieval strategy.
 
-    Initial implementation performs lightweight
-    query analysis and selects an adaptive top-k.
+    The planner receives query analysis produced by the
+    retrieval pipeline and converts that analysis into
+    an execution strategy.
+
+    It does not analyze the query itself.
     """
 
     def plan(
@@ -15,21 +19,21 @@ class RetrievalPlanner:
         *,
         query: str,
         k: int,
+        analysis: QueryAnalysisResult,
     ) -> RetrievalStrategy:
 
-        analysis = query_analyzer.analyze(query)
-
-        if analysis.word_count <= 5:
-            adaptive_k = 3
-        elif analysis.word_count <= 12:
-            adaptive_k = 5
-        else:
-            adaptive_k = 8
+        effective_k = adaptive_k_selector.select(
+            intent=analysis.intent,
+            complexity=analysis.complexity,
+            requested_k=k,
+        )
 
         return RetrievalStrategy(
             query=query,
-            k=adaptive_k,
+            k=effective_k,
             analysis=analysis,
+            rewrite=analysis.requires_rewrite,
+            multi_query=analysis.requires_multi_query,
         )
 
 

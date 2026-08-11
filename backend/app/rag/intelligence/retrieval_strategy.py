@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .models import QueryAnalysis
+from app.rag.query.models import QueryAnalysisResult
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class RetrievalStrategy:
     k: int
 
     # Analysis generated from the original query.
-    analysis: QueryAnalysis
+    analysis: QueryAnalysisResult
 
     # Planner decisions.
     rewrite: bool = False

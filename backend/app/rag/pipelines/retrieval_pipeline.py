@@ -19,9 +19,6 @@ from app.rag.builders.diagnostics_builder import (
 from app.rag.query.analyzer import (
     query_analyzer,
 )
-from app.rag.query.k_selector import (
-    adaptive_k_selector,
-)
 
 
 class RetrievalPipeline:
@@ -58,23 +55,21 @@ class RetrievalPipeline:
         )
 
         # --------------------------------------------------
-        # Adaptive Retrieval K
-        # --------------------------------------------------
-
-        effective_k = adaptive_k_selector.select(
-            intent=query_analysis.intent,
-            complexity=query_analysis.complexity,
-            requested_k=k,
-        )
-
-        # --------------------------------------------------
         # Retrieval
         # --------------------------------------------------
 
         results = retrieval_intelligence.retrieve(
             query=question,
-            k=effective_k,
+            k=k,
+            analysis=query_analysis,
             profiler=profiler,
+        )
+
+        # The retrieval intelligence layer preserves the
+        # planner-selected effective K.
+        effective_k = results.get(
+            "effective_k",
+            k,
         )
 
         # --------------------------------------------------
@@ -118,7 +113,8 @@ class RetrievalPipeline:
                 metadatas=metadatas,
                 retrieval=retrieval,
                 pipeline=pipeline,
-                requested_k=effective_k,
+                requested_k=k,
+                effective_k=effective_k,
                 query_analysis=query_analysis,
             )
         )
