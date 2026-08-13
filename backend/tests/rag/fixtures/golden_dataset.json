@@ -1,0 +1,41 @@
+{
+  "samples": [
+    {
+      "sample_id": "python_001",
+      "question": "What is Python?",
+      "reference_answer": "Python is a programming language.",
+      "relevant_chunks": [
+        {
+          "filename": "The Ultimate Python Handbook",
+          "chunk_id": "The Ultimate Python Handbook_chunk_010",
+          "chunk_number": 10
+        }
+      ],
+      "metadata": {
+        "category": "programming",
+        "difficulty": "easy"
+      }
+    },
+    {
+      "sample_id": "python_002",
+      "question": "What is Python used for?",
+      "reference_answer": "Python is used for many areas including web development, data science, automation, and artificial intelligence.",
+      "relevant_chunks": [
+        {
+          "filename": "The Ultimate Python Handbook",
+          "chunk_id": "The Ultimate Python Handbook_chunk_057",
+          "chunk_number": 57
+        },
+        {
+          "filename": "python_notes",
+          "chunk_id": "python_notes_chunk_002",
+          "chunk_number": 2
+        }
+      ],
+      "metadata": {
+        "category": "programming",
+        "difficulty": "easy"
+      }
+    }
+  ]
+}
