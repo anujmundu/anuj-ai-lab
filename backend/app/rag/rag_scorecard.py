@@ -89,13 +89,16 @@ class RAGScorecard:
             )
         )
 
-        grounding = self._clamp(
-            1.0
-            - hallucination.get(
-                "hallucination_risk",
-                1.0,
-            )
+        hallucination_risk = hallucination.get(
+            "hallucination_risk"
         )
+
+        if hallucination_risk is None:
+            grounding = 50
+        else:
+            grounding = self._clamp(
+                1.0 - hallucination_risk
+            )
 
         citation = self._clamp(
             citations.get(

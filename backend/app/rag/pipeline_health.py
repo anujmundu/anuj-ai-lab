@@ -48,11 +48,22 @@ class PipelineHealth:
         self,
         hallucination: dict,
     ) -> str:
+        """
+        Evaluate hallucination detector health.
+
+        A fallback response intentionally contains no factual
+        claims, so hallucination_risk may be None. In that case,
+        hallucination analysis is not applicable and should not
+        cause the pipeline to fail.
+        """
 
         risk = hallucination.get(
             "hallucination_risk",
             1.0,
         )
+
+        if risk is None:
+            return "Healthy"
 
         if risk <= self.config.hallucination_warning_threshold:
             return "Healthy"
