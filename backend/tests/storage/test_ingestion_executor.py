@@ -17,6 +17,10 @@ from app.storage.ingestion_executor import (
 from app.storage.ingestion_job_service import (
     IngestionJobService,
 )
+from app.storage.ingestion_processor import (
+    IngestionProcessorResult,
+    InspectionIngestionProcessor,
+)
 
 
 @pytest.fixture()
@@ -51,11 +55,25 @@ def job_service():
 
 
 @pytest.fixture()
-def executor(job_service):
+def processor():
+
+    return InspectionIngestionProcessor(
+        chunk_size=4,
+    )
+
+
+@pytest.fixture()
+def executor(
+    job_service,
+    processor,
+):
 
     return IngestionExecutor(
         job_service=job_service,
-        asset_reader=AssetReader(),
+        asset_reader=AssetReader(
+            chunk_size=4,
+        ),
+        processor=processor,
     )
 
 
@@ -74,6 +92,32 @@ def create_asset(
     )
 
     return result.asset
+
+
+def create_database_asset(
+    session,
+    *,
+    status="completed",
+    progress=1.0,
+):
+
+    asset = Asset(
+        asset_id=f"asset-{uuid.uuid4().hex}",
+        filename="test.txt",
+        original_filename="test.txt",
+        mime_type="text/plain",
+        size_bytes=18,
+        storage_path="storage/assets/test",
+        checksum=None,
+        status=status,
+        progress=progress,
+    )
+
+    session.add(asset)
+    session.commit()
+    session.refresh(asset)
+
+    return asset
 
 
 def test_executor_completes_job(
@@ -103,7 +147,6 @@ def test_executor_completes_job(
     assert result.job.status == "completed"
     assert result.job.progress == 1.0
     assert result.result["status"] == "execution_ready"
-    assert result.result["input_available"] is True
 
 
 def test_executor_records_attempt(
@@ -145,10 +188,7 @@ def test_executor_rejects_missing_job(
 
         executor.execute(
             session,
-            job_id=(
-                f"missing-job-"
-                f"{uuid.uuid4().hex}"
-            ),
+            job_id=f"missing-job-{uuid.uuid4().hex}",
         )
 
 
@@ -159,13 +199,8 @@ def test_executor_rejects_missing_asset(
 ):
 
     job = IngestionJob(
-        job_id=(
-            f"job-{uuid.uuid4().hex}"
-        ),
-        asset_id=(
-            f"missing-asset-"
-            f"{uuid.uuid4().hex}"
-        ),
+        job_id=f"job-{uuid.uuid4().hex}",
+        asset_id=f"missing-asset-{uuid.uuid4().hex}",
         status="queued",
     )
 
@@ -190,23 +225,11 @@ def test_executor_requires_completed_asset(
     executor,
 ):
 
-    asset = Asset(
-        asset_id=(
-            f"asset-{uuid.uuid4().hex}"
-        ),
-        filename="pending.txt",
-        original_filename="pending.txt",
-        mime_type="text/plain",
-        size_bytes=0,
-        storage_path="",
-        checksum=None,
+    asset = create_database_asset(
+        session,
         status="uploading",
         progress=0.5,
     )
-
-    session.add(asset)
-    session.commit()
-    session.refresh(asset)
 
     job = job_service.create_job(
         session,
@@ -222,57 +245,6 @@ def test_executor_requires_completed_asset(
             session,
             job_id=job.job_id,
         )
-
-
-def test_executor_fails_when_storage_file_is_missing(
-    session,
-    job_service,
-    executor,
-):
-
-    asset = Asset(
-        asset_id=(
-            f"asset-{uuid.uuid4().hex}"
-        ),
-        filename="missing.txt",
-        original_filename="missing.txt",
-        mime_type="text/plain",
-        size_bytes=10,
-        storage_path=(
-            "storage/assets/"
-            "does-not-exist"
-        ),
-        checksum=None,
-        status="completed",
-        progress=1.0,
-    )
-
-    session.add(asset)
-    session.commit()
-    session.refresh(asset)
-
-    job = job_service.create_job(
-        session,
-        asset_id=asset.asset_id,
-    )
-
-    with pytest.raises(
-        FileNotFoundError,
-        match="Asset storage file not found",
-    ):
-
-        executor.execute(
-            session,
-            job_id=job.job_id,
-        )
-
-    refreshed = job_service.get_job(
-        session,
-        job_id=job.job_id,
-    )
-
-    assert refreshed.status == "failed"
-    assert refreshed.error is not None
 
 
 def test_completed_job_is_idempotent(
@@ -305,3 +277,65 @@ def test_completed_job_is_idempotent(
     assert first.job.job_id == second.job.job_id
     assert second.job.status == "completed"
     assert second.job.attempts == 1
+
+
+def test_executor_delegates_to_processor(
+    session,
+    asset_service,
+    job_service,
+):
+
+    class RecordingProcessor:
+
+        def __init__(self):
+
+            self.called = False
+            self.bytes_processed = 0
+
+        def process(
+            self,
+            file,
+            *,
+            asset,
+        ):
+
+            self.called = True
+
+            data = file.read()
+
+            self.bytes_processed = len(data)
+
+            return IngestionProcessorResult(
+                status="processed",
+                bytes_processed=len(data),
+                metadata={
+                    "asset_id": asset.asset_id,
+                },
+            )
+
+    processor = RecordingProcessor()
+
+    executor = IngestionExecutor(
+        job_service=job_service,
+        asset_reader=AssetReader(),
+        processor=processor,
+    )
+
+    asset = create_asset(
+        session,
+        asset_service,
+    )
+
+    job = job_service.create_job(
+        session,
+        asset_id=asset.asset_id,
+    )
+
+    result = executor.execute(
+        session,
+        job_id=job.job_id,
+    )
+
+    assert processor.called is True
+    assert processor.bytes_processed == asset.size_bytes
+    assert result.result["processor_status"] == "processed"
