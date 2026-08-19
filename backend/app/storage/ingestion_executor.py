@@ -6,6 +6,9 @@ from sqlmodel import Session, select
 
 from app.db.ingestion_models import IngestionJob
 from app.db.models import Asset
+from app.storage.asset_reader import (
+    AssetReader,
+)
 from app.storage.ingestion_job_service import (
     IngestionJobService,
 )
@@ -22,20 +25,28 @@ class IngestionExecutor:
     """
     Execution boundary for persistent ingestion jobs.
 
-    This component manages job execution state but does not
-    implement parsing, RAG, embeddings, or queue infrastructure.
+    This component manages job execution state and provides
+    a streaming asset input to future ingestion processors.
 
-    A future worker can call execute() without changing this
-    contract.
+    It does not implement:
+
+        - document parsing
+        - RAG
+        - embeddings
+        - vector storage
+        - queue infrastructure
+        - background workers
     """
 
     def __init__(
         self,
         *,
         job_service: IngestionJobService,
+        asset_reader: AssetReader,
     ) -> None:
 
         self.job_service = job_service
+        self.asset_reader = asset_reader
 
     def _load_job(
         self,
@@ -129,16 +140,24 @@ class IngestionExecutor:
                 progress=0.0,
             )
 
-            # Actual RAG ingestion will be connected
-            # in a later commit.
-            #
-            # This boundary intentionally does not
-            # load the asset into memory.
+            with self.asset_reader.open(
+                asset.storage_path
+            ) as file:
+
+                first_chunk = next(
+                    self.asset_reader.iter_chunks(
+                        file
+                    ),
+                    b"",
+                )
 
             result = {
                 "asset_id": asset.asset_id,
                 "job_id": job.job_id,
                 "status": "execution_ready",
+                "input_available": bool(
+                    first_chunk
+                ),
             }
 
             job = self.job_service.mark_completed(
@@ -165,4 +184,5 @@ class IngestionExecutor:
 
 ingestion_executor = IngestionExecutor(
     job_service=IngestionJobService(),
+    asset_reader=AssetReader(),
 )

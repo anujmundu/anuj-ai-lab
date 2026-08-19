@@ -1,12 +1,16 @@
+import io
 import uuid
 
 import pytest
 
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Session, SQLModel
 
 from app.db.database import engine
 from app.db.ingestion_models import IngestionJob
 from app.db.models import Asset
+from app.storage.asset_reader import AssetReader
+from app.storage.asset_service import AssetService
+from app.storage.asset_storage import AssetStorage
 from app.storage.ingestion_executor import (
     IngestionExecutor,
 )
@@ -25,6 +29,22 @@ def session():
 
 
 @pytest.fixture()
+def storage(tmp_path):
+
+    return AssetStorage(
+        root_dir=tmp_path,
+    )
+
+
+@pytest.fixture()
+def asset_service(storage):
+
+    return AssetService(
+        storage=storage,
+    )
+
+
+@pytest.fixture()
 def job_service():
 
     return IngestionJobService()
@@ -35,42 +55,38 @@ def executor(job_service):
 
     return IngestionExecutor(
         job_service=job_service,
+        asset_reader=AssetReader(),
     )
 
 
 def create_asset(
     session,
-    *,
-    status="completed",
-    progress=1.0,
+    asset_service,
 ):
 
-    asset = Asset(
-        asset_id=f"asset-{uuid.uuid4().hex}",
-        filename="test.txt",
+    result = asset_service.upload(
+        session,
+        io.BytesIO(
+            b"test asset content"
+        ),
         original_filename="test.txt",
         mime_type="text/plain",
-        size_bytes=18,
-        storage_path="storage/assets/test",
-        checksum=None,
-        status=status,
-        progress=progress,
     )
 
-    session.add(asset)
-    session.commit()
-    session.refresh(asset)
-
-    return asset
+    return result.asset
 
 
 def test_executor_completes_job(
     session,
+    asset_service,
     job_service,
     executor,
 ):
 
-    asset = create_asset(session)
+    asset = create_asset(
+        session,
+        asset_service,
+    )
 
     job = job_service.create_job(
         session,
@@ -87,15 +103,20 @@ def test_executor_completes_job(
     assert result.job.status == "completed"
     assert result.job.progress == 1.0
     assert result.result["status"] == "execution_ready"
+    assert result.result["input_available"] is True
 
 
 def test_executor_records_attempt(
     session,
+    asset_service,
     job_service,
     executor,
 ):
 
-    asset = create_asset(session)
+    asset = create_asset(
+        session,
+        asset_service,
+    )
 
     job = job_service.create_job(
         session,
@@ -124,7 +145,10 @@ def test_executor_rejects_missing_job(
 
         executor.execute(
             session,
-            job_id=f"missing-job-{uuid.uuid4().hex}",
+            job_id=(
+                f"missing-job-"
+                f"{uuid.uuid4().hex}"
+            ),
         )
 
 
@@ -135,8 +159,13 @@ def test_executor_rejects_missing_asset(
 ):
 
     job = IngestionJob(
-        job_id=f"job-{uuid.uuid4().hex}",
-        asset_id=f"missing-asset-{uuid.uuid4().hex}",
+        job_id=(
+            f"job-{uuid.uuid4().hex}"
+        ),
+        asset_id=(
+            f"missing-asset-"
+            f"{uuid.uuid4().hex}"
+        ),
         status="queued",
     )
 
@@ -161,11 +190,23 @@ def test_executor_requires_completed_asset(
     executor,
 ):
 
-    asset = create_asset(
-        session,
+    asset = Asset(
+        asset_id=(
+            f"asset-{uuid.uuid4().hex}"
+        ),
+        filename="pending.txt",
+        original_filename="pending.txt",
+        mime_type="text/plain",
+        size_bytes=0,
+        storage_path="",
+        checksum=None,
         status="uploading",
         progress=0.5,
     )
+
+    session.add(asset)
+    session.commit()
+    session.refresh(asset)
 
     job = job_service.create_job(
         session,
@@ -183,13 +224,68 @@ def test_executor_requires_completed_asset(
         )
 
 
-def test_completed_job_is_idempotent(
+def test_executor_fails_when_storage_file_is_missing(
     session,
     job_service,
     executor,
 ):
 
-    asset = create_asset(session)
+    asset = Asset(
+        asset_id=(
+            f"asset-{uuid.uuid4().hex}"
+        ),
+        filename="missing.txt",
+        original_filename="missing.txt",
+        mime_type="text/plain",
+        size_bytes=10,
+        storage_path=(
+            "storage/assets/"
+            "does-not-exist"
+        ),
+        checksum=None,
+        status="completed",
+        progress=1.0,
+    )
+
+    session.add(asset)
+    session.commit()
+    session.refresh(asset)
+
+    job = job_service.create_job(
+        session,
+        asset_id=asset.asset_id,
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="Asset storage file not found",
+    ):
+
+        executor.execute(
+            session,
+            job_id=job.job_id,
+        )
+
+    refreshed = job_service.get_job(
+        session,
+        job_id=job.job_id,
+    )
+
+    assert refreshed.status == "failed"
+    assert refreshed.error is not None
+
+
+def test_completed_job_is_idempotent(
+    session,
+    asset_service,
+    job_service,
+    executor,
+):
+
+    asset = create_asset(
+        session,
+        asset_service,
+    )
 
     job = job_service.create_job(
         session,
