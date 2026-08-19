@@ -1,5 +1,4 @@
 from io import BytesIO
-from pathlib import Path
 
 from fastapi import UploadFile
 from fastapi.testclient import TestClient
