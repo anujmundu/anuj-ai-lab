@@ -12,7 +12,10 @@ from app.storage.ingestion_job_service import (
 )
 from app.storage.ingestion_processor import (
     IngestionProcessor,
-    ingestion_processor,
+)
+
+from app.storage.rag_ingestion_processor import (
+    rag_ingestion_processor,
 )
 
 
@@ -191,5 +194,5 @@ class IngestionExecutor:
 ingestion_executor = IngestionExecutor(
     job_service=IngestionJobService(),
     asset_reader=AssetReader(),
-    processor=ingestion_processor,
+    processor=rag_ingestion_processor,
 )

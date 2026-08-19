@@ -339,3 +339,16 @@ def test_executor_delegates_to_processor(
     assert processor.called is True
     assert processor.bytes_processed == asset.size_bytes
     assert result.result["processor_status"] == "processed"
+
+def test_global_executor_uses_rag_ingestion_processor():
+    from app.storage.ingestion_executor import (
+        ingestion_executor,
+    )
+    from app.storage.rag_ingestion_processor import (
+        RagIngestionProcessor,
+    )
+
+    assert isinstance(
+        ingestion_executor.processor,
+        RagIngestionProcessor,
+    )
