@@ -1,18 +1,32 @@
+from app.rag.intelligence.dynamic_k import (
+    DynamicKSelector,
+)
 from app.rag.query.models import QueryAnalysisResult
-from app.rag.query.k_selector import adaptive_k_selector
+
 from .retrieval_strategy import RetrievalStrategy
 
 
 class RetrievalPlanner:
     """
-    Chooses the retrieval strategy.
+    Chooses the retrieval strategy and retrieval depth.
 
     The planner receives query analysis produced by the
     retrieval pipeline and converts that analysis into
     an execution strategy.
 
-    It does not analyze the query itself.
+    It does not analyze or execute the query itself.
     """
+
+    def __init__(
+        self,
+        *,
+        dynamic_k_selector: DynamicKSelector | None = None,
+    ) -> None:
+
+        self.dynamic_k_selector = (
+            dynamic_k_selector
+            or DynamicKSelector()
+        )
 
     def plan(
         self,
@@ -22,10 +36,13 @@ class RetrievalPlanner:
         analysis: QueryAnalysisResult,
     ) -> RetrievalStrategy:
 
-        effective_k = adaptive_k_selector.select(
-            intent=analysis.intent,
-            complexity=analysis.complexity,
-            requested_k=k,
+        decision = self.dynamic_k_selector.select(
+            analysis=analysis,
+        )
+
+        effective_k = max(
+            1,
+            min(k, decision.k),
         )
 
         return RetrievalStrategy(
