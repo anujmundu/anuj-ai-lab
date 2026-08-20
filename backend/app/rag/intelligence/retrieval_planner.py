@@ -1,32 +1,50 @@
 from app.rag.intelligence.dynamic_k import (
-    DynamicKSelector,
+    dynamic_k_selector,
+)
+from app.rag.intelligence.retrieval_strategy import (
+    RetrievalStrategy,
 )
 from app.rag.query.models import QueryAnalysisResult
-
-from .retrieval_strategy import RetrievalStrategy
 
 
 class RetrievalPlanner:
     """
-    Chooses the retrieval strategy and retrieval depth.
+    Chooses the retrieval strategy.
 
     The planner receives query analysis produced by the
     retrieval pipeline and converts that analysis into
     an execution strategy.
 
-    It does not analyze or execute the query itself.
+    It does not analyze the query itself.
     """
 
-    def __init__(
+    def _should_use_hyde(
         self,
         *,
-        dynamic_k_selector: DynamicKSelector | None = None,
-    ) -> None:
+        analysis: QueryAnalysisResult,
+    ) -> bool:
 
-        self.dynamic_k_selector = (
-            dynamic_k_selector
-            or DynamicKSelector()
+        from app.rag.query.enums import (
+            QueryComplexity,
+            QueryIntent,
         )
+
+        if analysis.requires_multi_query:
+            return False
+
+        if analysis.intent not in {
+            QueryIntent.RESEARCH,
+            QueryIntent.EXPLANATION,
+        }:
+            return False
+
+        if analysis.complexity not in {
+            QueryComplexity.MEDIUM,
+            QueryComplexity.COMPLEX,
+        }:
+            return False
+
+        return True
 
     def plan(
         self,
@@ -36,13 +54,13 @@ class RetrievalPlanner:
         analysis: QueryAnalysisResult,
     ) -> RetrievalStrategy:
 
-        decision = self.dynamic_k_selector.select(
+        dynamic_decision = dynamic_k_selector.select(
             analysis=analysis,
         )
 
-        effective_k = max(
-            1,
-            min(k, decision.k),
+        effective_k = min(
+            max(1, k),
+            dynamic_decision.k,
         )
 
         return RetrievalStrategy(
@@ -51,6 +69,9 @@ class RetrievalPlanner:
             analysis=analysis,
             rewrite=analysis.requires_rewrite,
             multi_query=analysis.requires_multi_query,
+            hyde=self._should_use_hyde(
+                analysis=analysis,
+            ),
         )
 
 
