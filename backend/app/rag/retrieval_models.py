@@ -5,11 +5,19 @@ from dataclasses import dataclass
 class RetrievalMetadata:
     """
     Canonical metadata describing a retrieved document chunk.
+
+    Parent/child identifiers are optional so the existing retrieval
+    pipeline remains backward compatible while supporting future
+    parent-child retrieval.
     """
 
     filename: str = ""
 
     chunk_id: str = ""
+
+    parent_id: str = ""
+
+    child_id: str = ""
 
     chunk_number: int = 0
 
@@ -57,6 +65,14 @@ class RetrievalResult:
     @property
     def chunk_id(self) -> str:
         return self.metadata.chunk_id or self.doc_id
+
+    @property
+    def parent_id(self) -> str:
+        return self.metadata.parent_id
+
+    @property
+    def child_id(self) -> str:
+        return self.metadata.child_id
 
     @property
     def chunk_number(self) -> int:
