@@ -3,6 +3,9 @@ from app.rag.multi_query_retriever import (
     multi_query_retriever,
 )
 from app.rag.query.models import QueryAnalysisResult
+from app.rag.parent_context_resolver import (
+    parent_context_resolver,
+)
 
 
 class RetrievalIntelligence:
@@ -15,6 +18,10 @@ class RetrievalIntelligence:
     The selected retrieval strategy determines whether
     retrieval is performed through the standard HybridRetriever
     or the MultiQueryRetriever.
+
+    After retrieval, parent context is resolved from the
+    retrieved child chunks without modifying the original
+    retrieval results.
     """
 
     def retrieve(
@@ -25,7 +32,6 @@ class RetrievalIntelligence:
         analysis: QueryAnalysisResult,
         profiler=None,
     ):
-
         from app.rag.intelligence.retrieval_planner import (
             retrieval_planner,
         )
@@ -53,6 +59,23 @@ class RetrievalIntelligence:
                 profiler=profiler,
             )
 
+        retrieved_results = results.get(
+            "results",
+            [],
+        )
+
+        if retrieved_results and all(
+            hasattr(result, "parent_id")
+            and hasattr(result, "child_id")
+            for result in retrieved_results
+        ):
+            parent_contexts = parent_context_resolver.resolve(
+                retrieved_results,
+            )
+        else:
+            parent_contexts = ()
+
+        results["parent_contexts"] = parent_contexts
         results["strategy"] = strategy
         results["effective_k"] = strategy.k
 
