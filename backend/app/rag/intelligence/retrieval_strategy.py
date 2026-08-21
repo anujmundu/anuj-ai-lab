@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.rag.query.models import QueryAnalysisResult
 
@@ -10,6 +10,9 @@ class RetrievalStrategy:
 
     The strategy describes HOW retrieval should behave.
     It performs no retrieval work itself.
+
+    Self-query information is carried as structured metadata
+    so downstream components can decide how to apply filters.
     """
 
     query: str
@@ -20,3 +23,9 @@ class RetrievalStrategy:
     expand: bool = False
     multi_query: bool = False
     hyde: bool = False
+
+    self_query: bool = False
+
+    filters: dict[str, str] = field(
+        default_factory=dict,
+    )

@@ -4,6 +4,9 @@ from app.rag.intelligence.dynamic_k import (
 from app.rag.intelligence.retrieval_strategy import (
     RetrievalStrategy,
 )
+from app.rag.intelligence.self_query import (
+    self_query_retriever,
+)
 from app.rag.query.models import QueryAnalysisResult
 
 
@@ -15,7 +18,13 @@ class RetrievalPlanner:
     retrieval pipeline and converts that analysis into
     an execution strategy.
 
-    It does not analyze the query itself.
+    It does not execute retrieval.
+
+    Self-query parsing is performed before the strategy
+    is constructed so the strategy contains both:
+
+        1. the semantic retrieval query
+        2. structured metadata filters
     """
 
     def _should_use_hyde(
@@ -46,6 +55,25 @@ class RetrievalPlanner:
 
         return True
 
+    def _self_query(
+        self,
+        *,
+        query: str,
+    ):
+        """
+        Parse the natural-language query into:
+
+            semantic query
+            metadata filters
+
+        Self-query parsing is deterministic and does not
+        execute retrieval.
+        """
+
+        return self_query_retriever.parse(
+            query,
+        )
+
     def plan(
         self,
         *,
@@ -63,8 +91,22 @@ class RetrievalPlanner:
             dynamic_decision.k,
         )
 
-        return RetrievalStrategy(
+        self_query_result = self._self_query(
             query=query,
+        )
+
+        filters = dict(
+            self_query_result.filters,
+        )
+
+        semantic_query = (
+            self_query_result.query
+            if filters
+            else query
+        )
+
+        return RetrievalStrategy(
+            query=semantic_query,
             k=effective_k,
             analysis=analysis,
             rewrite=analysis.requires_rewrite,
@@ -72,6 +114,8 @@ class RetrievalPlanner:
             hyde=self._should_use_hyde(
                 analysis=analysis,
             ),
+            self_query=bool(filters),
+            filters=filters,
         )
 
 
