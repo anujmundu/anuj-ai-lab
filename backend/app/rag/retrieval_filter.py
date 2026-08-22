@@ -163,7 +163,8 @@ class RetrievalFilter:
     def apply(
         self,
         results: dict,
-        k: int
+        k: int,
+        filters: dict[str, str] | None = None,
     ) -> dict:
 
         ids = results.get("ids", [[]])[0]

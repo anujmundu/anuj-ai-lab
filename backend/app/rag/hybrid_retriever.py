@@ -19,9 +19,10 @@ class SemanticRetriever(BaseRetriever):
     def retrieve(
         self,
         query: str,
-        k: int = 3,
+        k: int | None = None,
         profiler: PerformanceProfiler | None = None,
-    ):
+        filters: dict[str, str] | None = None,
+    ) -> dict:
         return retriever.retrieve(
             query=query,
             k=k,
@@ -75,6 +76,7 @@ class HybridRetriever(BaseRetriever):
         query: str,
         k: int | None = None,
         profiler: PerformanceProfiler | None = None,
+        filters: dict[str, str] | None = None,
     ) -> dict:
 
         k = k or self.config.top_k
@@ -142,6 +144,7 @@ class HybridRetriever(BaseRetriever):
             filtered_results = retrieval_filter.apply(
                 results=fused_results,
                 k=k,
+                filters=filters,
             )
 
         filtered_results["pipeline"] = {
