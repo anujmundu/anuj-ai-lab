@@ -16,15 +16,20 @@ class RetrievalPlanner:
 
     The planner receives query analysis produced by the
     retrieval pipeline and converts that analysis into
-    an execution strategy.
+    an immutable execution strategy.
 
-    It does not execute retrieval.
+    It does not execute retrieval itself.
 
-    Self-query parsing is performed before the strategy
-    is constructed so the strategy contains both:
+    Responsibilities:
 
-        1. the semantic retrieval query
-        2. structured metadata filters
+        1. Determine effective retrieval depth.
+        2. Determine whether HyDE should be used.
+        3. Determine whether multi-query retrieval is required.
+        4. Parse supported metadata constraints from the query.
+        5. Preserve the original query when no metadata
+           constraints are detected.
+        6. Use the normalized semantic query when
+           self-query metadata is extracted.
     """
 
     def _should_use_hyde(
@@ -55,25 +60,6 @@ class RetrievalPlanner:
 
         return True
 
-    def _self_query(
-        self,
-        *,
-        query: str,
-    ):
-        """
-        Parse the natural-language query into:
-
-            semantic query
-            metadata filters
-
-        Self-query parsing is deterministic and does not
-        execute retrieval.
-        """
-
-        return self_query_retriever.parse(
-            query,
-        )
-
     def plan(
         self,
         *,
@@ -91,22 +77,23 @@ class RetrievalPlanner:
             dynamic_decision.k,
         )
 
-        self_query_result = self._self_query(
-            query=query,
+        self_query_result = self_query_retriever.parse(
+            query,
         )
 
         filters = dict(
             self_query_result.filters,
         )
 
-        semantic_query = (
-            self_query_result.query
-            if filters
-            else query
-        )
+        self_query_applied = bool(filters)
+
+        if self_query_applied:
+            planned_query = self_query_result.query
+        else:
+            planned_query = query
 
         return RetrievalStrategy(
-            query=semantic_query,
+            query=planned_query,
             k=effective_k,
             analysis=analysis,
             rewrite=analysis.requires_rewrite,
@@ -114,7 +101,7 @@ class RetrievalPlanner:
             hyde=self._should_use_hyde(
                 analysis=analysis,
             ),
-            self_query=bool(filters),
+            self_query=self_query_applied,
             filters=filters,
         )
 
