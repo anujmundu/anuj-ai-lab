@@ -206,6 +206,26 @@ class RetrievalFilter:
             filename = metadata["filename"]
 
             # ------------------------------
+            # Metadata Filtering
+            # ------------------------------
+
+            if not self._passes_metadata_filters(
+                metadata,
+                filters,
+            ):
+
+                diagnostics.append(
+                    {
+                        "chunk_id": doc_id,
+                        "filename": filename,
+                        "status": "FILTERED",
+                        "reason": "METADATA_FILTER",
+                    }
+                )
+
+                continue
+
+            # ------------------------------
             # Threshold
             # ------------------------------
 
@@ -322,7 +342,7 @@ class RetrievalFilter:
         filtered_distances = filtered_distances[:k]
         filtered_retrieval = filtered_retrieval[:k]
         filtered_embeddings = filtered_embeddings[:k]
-        
+
         return {
             "ids": [filtered_ids],
             "documents": [filtered_documents],
@@ -332,6 +352,25 @@ class RetrievalFilter:
             "retrieval": [filtered_retrieval],
             "diagnostics": diagnostics
         }
+
+    def _passes_metadata_filters(
+        self,
+        metadata: dict,
+        filters: dict[str, str] | None,
+    ) -> bool:
+        if not filters:
+            return True
+
+        for key, expected_value in filters.items():
+            actual_value = metadata.get(key)
+
+            if actual_value is None:
+                return False
+
+            if str(actual_value).lower() != str(expected_value).lower():
+                return False
+
+        return True
 
 
 retrieval_filter = RetrievalFilter()
