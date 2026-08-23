@@ -152,34 +152,4 @@ def test_existing_strategy_flags_are_preserved():
 
     assert strategy.multi_query is True
 
-    assert strategy.hyde is True
-def test_existing_strategy_flags_are_preserved():
-
-    planner = RetrievalPlanner()
-
-    strategy = planner.plan(
-        query=(
-            "compare retrieval systems "
-            "filename research.pdf"
-        ),
-        k=5,
-        analysis=make_analysis(
-            intent=QueryIntent.COMPARISON,
-            complexity=QueryComplexity.COMPLEX,
-            requires_multi_query=True,
-        ),
-    )
-
-    assert strategy.query == (
-        "compare retrieval systems"
-    )
-
-    assert strategy.filters == {
-        "filename": "research.pdf",
-    }
-
-    assert strategy.self_query is True
-
-    assert strategy.multi_query is True
-
     assert strategy.hyde is False
