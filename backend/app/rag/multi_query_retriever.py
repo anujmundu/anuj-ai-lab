@@ -24,6 +24,7 @@ class MultiQueryRetriever(BaseRetriever):
         k: int,
         analysis: QueryAnalysisResult,
         profiler=None,
+        filters: dict[str, str] | None = None,
     ) -> dict:
 
         queries = query_generator.generate(
@@ -42,6 +43,7 @@ class MultiQueryRetriever(BaseRetriever):
                 query=generated_query,
                 k=k,
                 profiler=profiler,
+                filters=filters,
             )
 
             query_results.append(
@@ -90,6 +92,7 @@ class MultiQueryRetriever(BaseRetriever):
                 document = documents[index]
                 metadata = metadatas[index]
                 distance = distances[index]
+
                 embedding = (
                     embeddings[index]
                     if index < len(embeddings)
