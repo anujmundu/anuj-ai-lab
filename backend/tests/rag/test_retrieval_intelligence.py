@@ -33,6 +33,7 @@ def make_strategy(
     *,
     multi_query: bool,
     k: int,
+    filters=None,
 ) -> RetrievalStrategy:
 
     return RetrievalStrategy(
@@ -44,6 +45,7 @@ def make_strategy(
         rewrite=False,
         expand=False,
         multi_query=multi_query,
+        filters=filters or {},
     )
 
 
@@ -99,8 +101,8 @@ def test_multi_query_true_dispatches_to_multi_query_retriever():
     multi_query.retrieve.assert_called_once_with(
         query="planned query",
         k=8,
-        analysis=analysis,
         profiler=None,
+        analysis=analysis,
     )
 
     hybrid.retrieve.assert_not_called()
@@ -324,3 +326,50 @@ def test_profiler_is_forwarded_to_selected_retriever():
     call = multi_query.retrieve.call_args
 
     assert call.kwargs["profiler"] is profiler
+
+
+def test_non_empty_filters_are_forwarded():
+
+    intelligence = RetrievalIntelligence()
+
+    analysis = make_analysis(
+        requires_multi_query=False,
+    )
+
+    strategy = make_strategy(
+        multi_query=False,
+        k=7,
+        filters={
+            "source": "paper",
+        },
+    )
+
+    with patch(
+        "app.rag.intelligence.retrieval_planner."
+        "retrieval_planner"
+    ) as planner, patch(
+        "app.rag.intelligence.retrieval_intelligence."
+        "hybrid_retriever"
+    ) as hybrid:
+
+        planner.plan.return_value = strategy
+
+        hybrid.retrieve.return_value = {
+            "results": [],
+        }
+
+        intelligence.retrieve(
+            query="original query",
+            k=5,
+            analysis=analysis,
+            profiler=None,
+        )
+
+    hybrid.retrieve.assert_called_once_with(
+        query="planned query",
+        k=7,
+        profiler=None,
+        filters={
+            "source": "paper",
+        },
+    )
