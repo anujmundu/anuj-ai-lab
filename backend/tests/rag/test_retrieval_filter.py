@@ -432,3 +432,200 @@ def test_filter_handles_empty_results():
     assert filtered["retrieval"] == [[]]
     assert filtered["embeddings"] == [[]]
     assert filtered["diagnostics"] == []
+
+def test_filter_applies_metadata_filters():
+
+    retrieval_filter = RetrievalFilter()
+
+    results = make_results(
+        ids=[
+            "chunk-1",
+            "chunk-2",
+        ],
+        documents=[
+            "research document",
+            "other document",
+        ],
+        metadatas=[
+            {
+                "filename": "research.pdf",
+            },
+            {
+                "filename": "other.pdf",
+            },
+        ],
+        distances=[
+            0.1,
+            0.2,
+        ],
+        retrieval=[
+            {
+                "semantic_score": 0.9,
+            },
+            {
+                "semantic_score": 0.8,
+            },
+        ],
+    )
+
+    filtered = retrieval_filter.apply(
+        results,
+        k=5,
+        filters={
+            "filename": "research.pdf",
+        },
+    )
+
+    assert filtered["ids"] == [
+        [
+            "chunk-1",
+        ]
+    ]
+
+    assert (
+        filtered["diagnostics"][0]["status"]
+        == "KEPT"
+    )
+
+    assert (
+        filtered["diagnostics"][1]["status"]
+        == "FILTERED"
+    )
+
+    assert (
+        filtered["diagnostics"][1]["reason"]
+        == "METADATA_FILTER"
+    )
+
+
+def test_filter_metadata_matching_is_case_insensitive():
+
+    retrieval_filter = RetrievalFilter()
+
+    results = make_results(
+        metadatas=[
+            {
+                "filename": "Research.PDF",
+            }
+        ],
+    )
+
+    filtered = retrieval_filter.apply(
+        results,
+        k=5,
+        filters={
+            "filename": "research.pdf",
+        },
+    )
+
+    assert filtered["ids"] == [
+        [
+            "chunk-1",
+        ]
+    ]
+
+
+def test_filter_rejects_missing_metadata_field():
+
+    retrieval_filter = RetrievalFilter()
+
+    results = make_results(
+        metadatas=[
+            {
+                "filename": "research.pdf",
+            }
+        ],
+    )
+
+    filtered = retrieval_filter.apply(
+        results,
+        k=5,
+        filters={
+            "document_type": "pdf",
+        },
+    )
+
+    assert filtered["ids"] == [[]]
+
+    assert (
+        filtered["diagnostics"][0]["status"]
+        == "FILTERED"
+    )
+
+    assert (
+        filtered["diagnostics"][0]["reason"]
+        == "METADATA_FILTER"
+    )
+
+
+def test_filter_supports_multiple_metadata_filters():
+
+    retrieval_filter = RetrievalFilter()
+
+    results = make_results(
+        ids=[
+            "chunk-1",
+            "chunk-2",
+            "chunk-3",
+        ],
+        documents=[
+            "matching document",
+            "wrong filename",
+            "wrong type",
+        ],
+        metadatas=[
+            {
+                "filename": "research.pdf",
+                "document_type": "pdf",
+            },
+            {
+                "filename": "other.pdf",
+                "document_type": "pdf",
+            },
+            {
+                "filename": "research.pdf",
+                "document_type": "txt",
+            },
+        ],
+        distances=[
+            0.1,
+            0.2,
+            0.3,
+        ],
+        retrieval=[
+            {
+                "semantic_score": 0.9,
+            },
+            {
+                "semantic_score": 0.8,
+            },
+            {
+                "semantic_score": 0.7,
+            },
+        ],
+    )
+
+    filtered = retrieval_filter.apply(
+        results,
+        k=5,
+        filters={
+            "filename": "research.pdf",
+            "document_type": "pdf",
+        },
+    )
+
+    assert filtered["ids"] == [
+        [
+            "chunk-1",
+        ]
+    ]
+
+    assert (
+        filtered["diagnostics"][1]["reason"]
+        == "METADATA_FILTER"
+    )
+
+    assert (
+        filtered["diagnostics"][2]["reason"]
+        == "METADATA_FILTER"
+    )
