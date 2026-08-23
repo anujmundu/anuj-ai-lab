@@ -22,6 +22,10 @@ class RetrievalIntelligence:
     After retrieval, parent context is resolved from the
     retrieved child chunks without modifying the original
     retrieval results.
+
+    Metadata filters are forwarded only when the planner
+    actually extracted filters from the query. Empty filters
+    are intentionally omitted from downstream calls.
     """
 
     def retrieve(
@@ -42,21 +46,25 @@ class RetrievalIntelligence:
             analysis=analysis,
         )
 
+        retrieval_kwargs = {
+            "query": strategy.query,
+            "k": strategy.k,
+            "profiler": profiler,
+        }
+
         if strategy.multi_query:
+            retrieval_kwargs["analysis"] = analysis
 
+        if strategy.filters:
+            retrieval_kwargs["filters"] = strategy.filters
+
+        if strategy.multi_query:
             results = multi_query_retriever.retrieve(
-                query=strategy.query,
-                k=strategy.k,
-                analysis=analysis,
-                profiler=profiler,
+                **retrieval_kwargs,
             )
-
         else:
-
             results = hybrid_retriever.retrieve(
-                query=strategy.query,
-                k=strategy.k,
-                profiler=profiler,
+                **retrieval_kwargs,
             )
 
         retrieved_results = results.get(
