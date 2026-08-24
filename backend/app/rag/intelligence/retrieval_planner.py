@@ -1,6 +1,12 @@
 from app.rag.intelligence.dynamic_k import (
     dynamic_k_selector,
 )
+from app.rag.intelligence.adaptive_retrieval import (
+    adaptive_retrieval,
+)
+from app.rag.intelligence.enums import (
+    RetrievalMode,
+)
 from app.rag.intelligence.retrieval_strategy import (
     RetrievalStrategy,
 )
@@ -36,6 +42,7 @@ class RetrievalPlanner:
         self,
         *,
         analysis: QueryAnalysisResult,
+        multi_query: bool,
     ) -> bool:
 
         from app.rag.query.enums import (
@@ -43,7 +50,7 @@ class RetrievalPlanner:
             QueryIntent,
         )
 
-        if analysis.requires_multi_query:
+        if multi_query:
             return False
 
         if analysis.intent not in {
@@ -71,10 +78,19 @@ class RetrievalPlanner:
         dynamic_decision = dynamic_k_selector.select(
             analysis=analysis,
         )
+        
+        adaptive_decision = adaptive_retrieval.decide(
+            analysis=analysis,
+        )
 
         effective_k = min(
             max(1, k),
             dynamic_decision.k,
+        )
+        
+        multi_query = (
+            adaptive_decision.mode
+            == RetrievalMode.MULTI_QUERY
         )
 
         self_query_result = self_query_retriever.parse(
@@ -97,12 +113,15 @@ class RetrievalPlanner:
             k=effective_k,
             analysis=analysis,
             rewrite=analysis.requires_rewrite,
-            multi_query=analysis.requires_multi_query,
+            multi_query=multi_query,
             hyde=self._should_use_hyde(
                 analysis=analysis,
+                multi_query=multi_query,
             ),
             self_query=self_query_applied,
             filters=filters,
+            mode=adaptive_decision.mode,
+            mode_reason=adaptive_decision.reason,
         )
 
 

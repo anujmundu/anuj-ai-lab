@@ -10,6 +10,7 @@ from app.rag.query.enums import (
 from app.rag.query.models import QueryAnalysisResult
 
 
+
 class QueryAnalyzer:
     """
     Deterministic query analyzer.

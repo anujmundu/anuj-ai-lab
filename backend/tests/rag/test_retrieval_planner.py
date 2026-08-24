@@ -7,6 +7,7 @@ from app.rag.query.enums import (
     QueryIntent,
 )
 from app.rag.query.models import QueryAnalysisResult
+from app.rag.intelligence.enums import RetrievalMode
 
 
 def make_analysis(
@@ -283,3 +284,64 @@ def test_strategy_preserves_existing_planner_decisions():
     assert strategy.rewrite is True
     assert strategy.multi_query is False
     assert strategy.hyde is True
+    
+def test_planner_uses_adaptive_retrieval_decision():
+
+    analysis = make_analysis(
+        intent=QueryIntent.RESEARCH,
+        complexity=QueryComplexity.COMPLEX,
+        ambiguity=QueryAmbiguity.MEDIUM,
+        requires_multi_query=True,
+    )
+
+    strategy = retrieval_planner.plan(
+        query="Research retrieval augmented generation",
+        k=5,
+        analysis=analysis,
+    )
+
+    assert strategy.mode == RetrievalMode.MULTI_QUERY
+
+    assert (
+        strategy.mode_reason
+        == "query_analysis_requires_multi_query"
+    )
+
+    assert strategy.multi_query is True
+
+def test_simple_query_gets_standard_adaptive_mode():
+
+    analysis = make_analysis(
+        intent=QueryIntent.DEFINITION,
+        complexity=QueryComplexity.SIMPLE,
+        ambiguity=QueryAmbiguity.LOW,
+    )
+
+    strategy = retrieval_planner.plan(
+        query="What is Python?",
+        k=5,
+        analysis=analysis,
+    )
+
+    assert strategy.mode == RetrievalMode.STANDARD
+    assert strategy.mode_reason == "standard_query"
+    assert strategy.multi_query is False
+
+def test_complex_research_gets_adaptive_multi_query_mode():
+
+    analysis = make_analysis(
+        intent=QueryIntent.RESEARCH,
+        complexity=QueryComplexity.COMPLEX,
+        ambiguity=QueryAmbiguity.MEDIUM,
+        requires_multi_query=False,
+    )
+
+    strategy = retrieval_planner.plan(
+        query="Research advanced retrieval architectures",
+        k=5,
+        analysis=analysis,
+    )
+
+    assert strategy.mode == RetrievalMode.MULTI_QUERY
+    assert strategy.mode_reason == "complex_research_query"
+    assert strategy.multi_query is True
