@@ -3,6 +3,7 @@ from sqlmodel import Session, SQLModel, create_engine
 import app.memory.models
 import app.db.models
 import app.db.ingestion_models
+import app.db.chat_models
 
 
 sqlite_url = "sqlite:///experiments.db"
