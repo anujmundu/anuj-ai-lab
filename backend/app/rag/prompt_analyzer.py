@@ -61,7 +61,7 @@ class PromptAnalyzer:
             balanced = False
             recommendations.append(
                 f"Retrieved context occupies "
-                f"{ratios[PromptComponentType.CONTEXT] * 100:.1f}% "
+                f"{ratios.get(PromptComponentType.CONTEXT, 0.0) * 100:.1f}% "
                 "of the prompt."
             )
 
@@ -71,7 +71,7 @@ class PromptAnalyzer:
         ) < 0.05:
             recommendations.append(
                 f"System instructions occupy only "
-                f"{ratios[PromptComponentType.SYSTEM] * 100:.1f}% "
+                f"{ratios.get(PromptComponentType.SYSTEM, 0.0) * 100:.1f}% "
                 "of the prompt."
             )
 
@@ -81,7 +81,7 @@ class PromptAnalyzer:
         ) < 0.02:
             recommendations.append(
                 f"Question occupies only "
-                f"{ratios[PromptComponentType.QUESTION] * 100:.1f}% "
+                f"{ratios.get(PromptComponentType.QUESTION, 0.0) * 100:.1f}% "
                 "of the prompt."
             )
 
