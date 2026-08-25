@@ -36,11 +36,19 @@ class IngestionService:
         )
 
         # --------------------------------------------------
+        # Knowledge Graph Entity & Relation Indexing
+        # --------------------------------------------------
+        try:
+            from app.rag.graph.graph_retriever import graph_retriever
+            graph_retriever.index_text(text)
+        except Exception:
+            pass
+
+        # --------------------------------------------------
         # Existing chunking behavior.
         #
         # TextChunker remains completely unchanged.
         # --------------------------------------------------
-
         chunks = text_chunker.chunk(
             text,
         )
