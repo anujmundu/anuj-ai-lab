@@ -106,3 +106,61 @@ def test_ingest_route_streams_upload_to_asset_service(
     # The route passes the file stream directly to AssetService.
     assert captured["file"] is not None
     assert hasattr(captured["file"], "read")
+
+
+def test_ingest_route_returns_job_id():
+    response = client.post(
+        "/ingest",
+        files={
+            "file": (
+                "job_test.txt",
+                BytesIO(b"Job tracking test content"),
+                "text/plain",
+            )
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "job_id" in data
+    assert "job_status" in data
+
+    # Verify job lookup endpoint
+    job_id = data["job_id"]
+    job_resp = client.get(f"/ingestion/jobs/{job_id}")
+    assert job_resp.status_code == 200
+    job_data = job_resp.json()
+    assert job_data["job_id"] == job_id
+    assert "status" in job_data
+
+
+def test_list_ingestion_jobs():
+    response = client.get("/ingestion/jobs")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+def test_get_nonexistent_job_returns_404():
+    response = client.get("/ingestion/jobs/nonexistent-job-id-9999")
+    assert response.status_code == 404
+
+
+def test_retry_ingestion_job():
+    # First create a job via upload
+    resp = client.post(
+        "/ingest",
+        files={
+            "file": (
+                "retry_test.txt",
+                BytesIO(b"Content for retry test"),
+                "text/plain",
+            )
+        },
+    )
+    job_id = resp.json()["job_id"]
+
+    retry_resp = client.post(f"/ingestion/jobs/{job_id}/retry")
+    assert retry_resp.status_code == 200
+    retry_data = retry_resp.json()
+    assert retry_data["job_id"] == job_id
+    assert retry_data["status"] == "queued"
