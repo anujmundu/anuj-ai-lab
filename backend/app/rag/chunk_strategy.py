@@ -16,3 +16,7 @@ class ChunkStrategy(str, Enum):
     FIXED = "fixed"
 
     RECURSIVE = "recursive"
+
+    MARKDOWN = "markdown"
+
+    CODE = "code"
