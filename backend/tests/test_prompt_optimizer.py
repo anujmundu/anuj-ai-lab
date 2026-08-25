@@ -1,32 +1,67 @@
-from backend.app.rag.prompt_normalizer import (
+from app.rag.prompt_normalizer import (
     PromptNormalizer,
+    prompt_normalizer,
+)
+from app.rag.prompt_normalizer_config import PromptNormalizerConfig
+from app.rag.prompt_optimizer import (
+    PromptOptimizer,
     prompt_optimizer,
 )
-from backend.app.rag.prompt_normalizer_config import PromptOptimizerConfig
+from app.rag.prompt_optimizer_config import PromptOptimizerConfig
+from app.rag.prompt_optimizer_models import (
+    PromptComponent,
+    PromptComponentType,
+)
 
 
-def test_prompt_normalizer_normalizes_prompt():
-    prompt = "Line 1    \n\n\n\nLine 2      \n"
+def test_prompt_normalizer_normalizes_whitespace():
+    components = [
+        PromptComponent(
+            component_type=PromptComponentType.CONTEXT,
+            text="Line 1    \n\n\n\nLine 2      \n",
+            tokens=10,
+            characters=30,
+            priority=1,
+            required=True,
+        ),
+    ]
 
-    optimized = prompt_optimizer.optimize(prompt)
+    normalized = prompt_normalizer.normalize(components)
 
-    assert optimized == "Line 1\n\nLine 2"
+    assert len(normalized) == 1
+    assert normalized[0].text == "Line 1\n\nLine 2"
 
 
-def test_prompt_normalizer_trims_at_newline():
-    optimizer = PromptNormalizer(
-        PromptNormalizerConfig(
-            max_prompt_characters=15,
-        )
+def test_prompt_optimizer_removes_duplicates():
+    config = PromptOptimizerConfig(
+        enable_optimization=True,
+        remove_duplicate_components=True,
     )
+    optimizer = PromptOptimizer(config)
 
-    prompt = (
-        "Line 1\n"
-        "Line 2\n"
-        "Line 3\n"
-        "Line 4\n"
-    )
+    components = [
+        PromptComponent(
+            component_type=PromptComponentType.CONTEXT,
+            text="Chunk A",
+            tokens=5,
+            characters=7,
+            priority=1,
+            required=True,
+        ),
+        PromptComponent(
+            component_type=PromptComponentType.CONTEXT,
+            text="Chunk A",
+            tokens=5,
+            characters=7,
+            priority=1,
+            required=True,
+        ),
+    ]
 
-    optimized = optimizer.optimize(prompt)
+    result = optimizer.optimize(components)
 
-    assert optimized == "Line 1\nLine 2"
+    assert len(result.optimized_components) == 1
+    assert any(
+        opt.rule_name == "remove_duplicate_components"
+        for opt in result.optimizations
+    )
