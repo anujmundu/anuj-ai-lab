@@ -1,146 +1,79 @@
 from app.rag.chunk_config import ChunkingConfig
+from app.rag.chunk_strategy import ChunkStrategy
 from app.rag.text_chunker import text_chunker
 
-LINE = "=" * 90
-SMALL = "-" * 90
 
-
-def print_chunk_statistics(chunks):
-
-    total_characters = 0
-    total_words = 0
-
-    for index, chunk in enumerate(chunks, start=1):
-
-        characters = len(chunk)
-        words = len(chunk.split())
-
-        total_characters += characters
-        total_words += words
-
-        print(f"\nChunk #{index}")
-        print(SMALL)
-
-        print(f"Characters : {characters}")
-        print(f"Words      : {words}")
-
-        preview = chunk
-
-        if len(preview) > 220:
-            preview = preview[:220] + "..."
-
-        print("\nPreview\n")
-        print(preview)
-
-    print("\nSummary")
-    print(SMALL)
-
-    print(f"Chunks      : {len(chunks)}")
-    print(f"Characters  : {total_characters}")
-    print(f"Words       : {total_words}")
-
-
-# ==========================================================
-# TEST 1
-# Paragraph Preservation
-# ==========================================================
-
-print("\n" + LINE)
-print("TEST 1 - PARAGRAPH PRESERVATION")
-print(LINE)
-
-paragraph_document = """
-Python is a programming language.
-
-FastAPI is a modern API framework.
-
-ChromaDB stores embeddings.
-
-Sentence Transformers generate embeddings.
-
-Retrieval Augmented Generation improves LLM accuracy.
-"""
-
-paragraph_chunks = text_chunker.chunk(
-    text=paragraph_document,
-    config=ChunkingConfig(
-        chunk_size=500,
-        overlap_sentences=1
+def test_sentence_chunking_and_overlap():
+    long_paragraph = (
+        "Python is a programming language. Python was created by Guido. "
+        "FastAPI is a modern API framework. ChromaDB stores vector embeddings. "
+        "Sentence Transformers generate embeddings. RAG improves LLM accuracy."
     )
-)
-
-print_chunk_statistics(paragraph_chunks)
-
-print("\nExpected Result")
-print(SMALL)
-print("✓ Each paragraph should become one chunk.")
-print("✓ No paragraph merging should occur.")
-
-
-# ==========================================================
-# TEST 2
-# Sentence Overlap
-# ==========================================================
-
-print("\n\n" + LINE)
-print("TEST 2 - SENTENCE OVERLAP")
-print(LINE)
-
-long_paragraph = """
-Python is a programming language. Python was created by Guido van Rossum.
-FastAPI is a modern API framework. ChromaDB stores vector embeddings.
-Sentence Transformers generate embeddings. Retrieval Augmented Generation improves LLM accuracy.
-Enterprise AI systems combine retrieval with large language models.
-"""
-
-overlap_chunks = text_chunker.chunk(
-    text=long_paragraph,
-    config=ChunkingConfig(
-        chunk_size=120,
-        overlap_sentences=1
+    chunks = text_chunker.chunk(
+        text=long_paragraph,
+        config=ChunkingConfig(
+            chunk_size=120,
+            overlap_sentences=1,
+            strategy=ChunkStrategy.SENTENCE,
+        ),
     )
-)
+    assert len(chunks) > 1
+    assert all(len(c) > 0 for c in chunks)
 
-print_chunk_statistics(overlap_chunks)
 
-print("\nOverlap Verification")
-print(SMALL)
-
-for index in range(1, len(overlap_chunks)):
-
-    previous = overlap_chunks[index - 1]
-    current = overlap_chunks[index]
-
-    previous_sentences = [
-        sentence.strip()
-        for sentence in previous.split(".")
-        if sentence.strip()
-    ]
-
-    if not previous_sentences:
-        continue
-
-    last_sentence = previous_sentences[-1]
-
-    overlap = last_sentence in current
-
-    status = "PASS" if overlap else "FAIL"
-
-    print(
-        f"Chunk {index} → Chunk {index + 1} : "
-        f"{status}"
+def test_paragraph_chunking():
+    doc = "Paragraph 1 is here.\n\nParagraph 2 is here.\n\nParagraph 3 is here."
+    chunks = text_chunker.chunk(
+        text=doc,
+        config=ChunkingConfig(
+            chunk_size=25,
+            strategy=ChunkStrategy.PARAGRAPH,
+        ),
     )
-
-print("\nExpected Result")
-print(SMALL)
-print("✓ Every overlap check should print PASS.")
+    assert len(chunks) == 3
+    assert "Paragraph 1 is here." in chunks[0]
 
 
-print("\n\n" + LINE)
-print("FINAL RESULT")
-print(LINE)
 
-print("✓ Paragraph preservation verified.")
-print("✓ Sentence overlap verified.")
-print("✓ Chunk statistics generated.")
-print("✓ Ready for ingestion testing.")
+def test_markdown_chunking():
+    doc = "# Introduction\nOverview of RAG.\n\n## Architecture\nDetails about ChromaDB and BM25.\n\n## Evaluation\nRegression gates."
+    chunks = text_chunker.chunk(
+        text=doc,
+        config=ChunkingConfig(
+            chunk_size=100,
+            strategy=ChunkStrategy.MARKDOWN,
+        ),
+    )
+    assert len(chunks) == 3
+    assert "# Introduction" in chunks[0]
+    assert "## Architecture" in chunks[1]
+    assert "## Evaluation" in chunks[2]
+
+
+def test_code_chunking():
+    code = (
+        "def func_one():\n    return 1\n\n"
+        "def func_two():\n    return 2\n\n"
+        "class Service:\n    pass\n"
+    )
+    chunks = text_chunker.chunk(
+        text=code,
+        config=ChunkingConfig(
+            chunk_size=50,
+            strategy=ChunkStrategy.CODE,
+        ),
+    )
+    assert len(chunks) >= 3
+    assert "def func_one():" in chunks[0]
+
+
+def test_fixed_chunking():
+    text = "A" * 200
+    chunks = text_chunker.chunk(
+        text=text,
+        config=ChunkingConfig(
+            chunk_size=50,
+            strategy=ChunkStrategy.FIXED,
+        ),
+    )
+    assert len(chunks) >= 4
