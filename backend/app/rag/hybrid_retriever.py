@@ -77,6 +77,7 @@ class HybridRetriever(BaseRetriever):
         k: int | None = None,
         profiler: PerformanceProfiler | None = None,
         filters: dict[str, str] | None = None,
+        dense_query: str | None = None,
     ) -> dict:
 
         k = k or self.config.top_k
@@ -101,11 +102,13 @@ class HybridRetriever(BaseRetriever):
                 semantic_reranker.config.maximum_candidates,
             )
 
+            semantic_search_query = dense_query or query
+
             with measure(
                 PerformanceStageName.SEMANTIC_RETRIEVAL
             ):
                 semantic_results = self.semantic.retrieve(
-                    query=query,
+                    query=semantic_search_query,
                     k=candidate_k,
                     profiler=profiler,
                 )
@@ -166,7 +169,6 @@ class HybridRetriever(BaseRetriever):
                 filtered_results["ids"][0]
             ),
         }
-        print(filtered_results.keys())
         return filtered_results
 
 

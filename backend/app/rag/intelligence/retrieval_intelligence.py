@@ -62,6 +62,24 @@ class RetrievalIntelligence:
             results = multi_query_retriever.retrieve(
                 **retrieval_kwargs,
             )
+        elif strategy.hyde:
+            from app.rag.intelligence.hyde_retrieval import (
+                hyde_retrieval,
+            )
+            try:
+                hyde_result = hyde_retrieval.generate(
+                    strategy.query,
+                )
+                retrieval_kwargs["dense_query"] = (
+                    hyde_result.hypothetical_document
+                )
+            except Exception:
+                # Graceful fallback to standard hybrid retrieval if LLM call fails
+                pass
+
+            results = hybrid_retriever.retrieve(
+                **retrieval_kwargs,
+            )
         else:
             results = hybrid_retriever.retrieve(
                 **retrieval_kwargs,
