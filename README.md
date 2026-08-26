@@ -16,8 +16,9 @@ Build modern AI systems completely on your own machine—from document ingestion
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Database-orange)
 ![Sentence Transformers](https://img.shields.io/badge/SentenceTransformers-MiniLM-red)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-v2.1.0-success)
+![Version](https://img.shields.io/badge/Version-v2.5.0-success)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![Tests](https://img.shields.io/badge/Tests-341%20Passed%20(100%25)-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/anujmundu/anuj-ai-lab?style=for-the-badge)
@@ -31,14 +32,17 @@ Build modern AI systems completely on your own machine—from document ingestion
 | Category | Details |
 |----------|---------|
 | Language | Python, TypeScript |
-| Backend | FastAPI |
-| Frontend | React 19 |
-| AI Runtime | Ollama |
-| Vector Database | ChromaDB |
-| Current Version | v2.1.0 |
-| Development Stage | Stage 4 – Persistent Memory |
-| Architecture | Modular AI Engineering Platform |
+| Backend | FastAPI, SQLModel / SQLite |
+| Frontend | React 19, Vite 8, TailwindCSS v4 |
+| AI Runtime | Ollama (Qwen, Gemma, Llama) |
+| Vector Database | ChromaDB & BM25 Hybrid Index |
+| Knowledge Graph | In-Memory & Persistent Graph-RAG |
+| Observability | OpenTelemetry-compatible Tracing |
+| Current Version | v2.5.0 |
+| Development Stage | Stage 4 Completed — Persistent Memory, Graph-RAG & Observability |
+| Automated Tests | 341 / 341 Passing (100%) |
 | License | MIT |
+
 
 ---
 
@@ -121,7 +125,7 @@ Every subsystem is designed to be independently maintainable, testable, and exte
 
 ## Current Release
 
-**v2.1.0 — High-Performance RAG Engine**
+**v2.5.0 — Enterprise-Grade Local AI & Graph-RAG Platform**
 
 ---
 
@@ -175,19 +179,29 @@ Every subsystem is designed to be independently maintainable, testable, and exte
 
 ---
 
+✅ Stage 4 — Memory, Graph-RAG & Enterprise Observability
+
+- **Async Background Ingestion Engine**: Background workers with Server-Sent Events (SSE) live progress feed (`/ingestion/jobs/{id}/stream`).
+- **Multi-Session Conversation Memory**: Persistent SQLModel/SQLite chat sessions with multi-turn context formatting.
+- **Structured Multi-Format Document Ingestion**: Markdown tables for CSV/TSV, JSON, Python/JS/TS code, and annotated PDF pages.
+- **Syntax-Aware Structural Chunking**: Specialized strategies (`MARKDOWN`, `CODE`, `PARAGRAPH`, `FIXED`, `SENTENCE`).
+- **Knowledge Graph (Graph-RAG)**: Entity extraction, relational triplet indexing (`is_a`, `stores`, `uses`, `connects_to`), 1-hop & 2-hop subgraph expansion, and multi-hop BFS path traversal.
+- **Enterprise Security Guardrails**: Adversarial prompt injection defense & PII masking (API keys, credit cards, emails, SSNs, phone numbers).
+- **OpenTelemetry Observability**: Distributed trace span export across pipeline stages (`rag.bm25_search`, `rag.semantic_retrieval`, `rag.llm_generation`).
+- **Production Test Suite**: 341/341 tests passing (100%) and 6/6 Golden Benchmark Regression Gates.
+
+---
+
 🚧 Current Focus
 
-## Stage 4 — Memory & Knowledge Systems
+## Stage 5 — Tool Calling & Function Execution
 
 Current development focuses on expanding the platform with:
 
-- Persistent memory
-- Conversation memory
-- Memory retrieval
-- User profiles
-- Knowledge persistence
-
-while continuing to improve RAG quality, retrieval accuracy, diagnostics, and generation performance.
+- Local Python execution environment
+- File system tools
+- Dynamic tool registry
+- Permission-based function calling
 
 ---
 
@@ -197,64 +211,47 @@ while continuing to improve RAG quality, retrieval accuracy, diagnostics, and ge
 
 - Local LLM inference using Ollama
 - FastAPI REST architecture
-- Modern React workspace
-- Modular backend design
-- Production-ready project structure
+- Modern React 19 workspace
+- Persistent chat session management
+- Non-blocking background ingestion with live SSE streams
 
 ---
 
-## Retrieval-Augmented Generation
+## Retrieval-Augmented Generation (RAG)
 
-- Automatic document ingestion
-- Intelligent document chunking
-- ChromaDB vector storage
-- Semantic search
-- Hybrid retrieval pipeline
-- Retrieval filtering
-- Prompt construction
-- Context building
-- Source attribution
+- Hybrid retrieval (ChromaDB Vector + BM25 Sparse Index)
+- Hypothetical Document Embeddings (HyDE)
+- Self-Query metadata filtering
+- Parent-Child hierarchical context retrieval
+- Dense-sparse reciprocal rank fusion & semantic reranking
+- Automated citation grounding & hallucination detection
 
 ---
 
-## High-Performance Retrieval Engine
+## Knowledge Graph (Graph-RAG)
 
-Recent optimizations introduced:
-
-- Pluggable embedding provider architecture
-- SentenceTransformer embedding support
-- Reuse of stored Chroma embeddings
-- Optimized semantic reranking
-- Performance instrumentation
-- Retrieval diagnostics
+- Automated entity and relational triplet extraction (`stores`, `uses`, `is_a`, `connects_to`)
+- Directional adjacency graph indexing
+- 1-hop and 2-hop subgraph neighborhood traversal
+- Multi-hop BFS shortest-path reasoning between entities
+- Graph context fusion in LLM prompt generation
 
 ---
 
-## Diagnostics & Observability
+## Enterprise Guardrails & Observability
 
-- Pipeline timing metrics
-- Retrieval performance analysis
-- Citation mapping
-- Grounding diagnostics
-- Hallucination detection
-- Confidence scoring
-- Prompt statistics
-- Response statistics
-- Pipeline health reporting
+- **Prompt Injection Guard**: Detects and blocks instruction overrides, system prompt exfiltration, and persona jailbreaks.
+- **PII Redaction Sanitizer**: Masks API keys, emails, credit cards, SSNs, and phone numbers.
+- **OpenTelemetry Tracing**: Exports stage-level execution profiles to standardized trace spans.
+- **Pipeline Health Dashboard**: Real-time component latency, confidence scoring, and retrieval scorecards.
 
 ---
 
-## Modern Frontend
+## Multi-Format Document Ingestion
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS v4
-- React Query
-- Zustand
-- Responsive workspace
-- Theme switching
-- Inspector panel
+- Ingest `.txt`, `.md`, `.json`, `.py`, `.js`, `.ts`, `.html`, `.xml`, `.yaml`, `.csv`, `.tsv`, and `.pdf`
+- Automatic Markdown table formatting for tabular data
+- Structural chunking preserving markdown headers and code blocks
 
 ---
 
@@ -267,6 +264,7 @@ The latest optimization cycle dramatically improved retrieval performance.
 | Semantic Reranker | ~50 s | ~0.02 s |
 | Retrieval Pipeline | ~50 s | ~0.25 s |
 | Vector Search | ~0.005 s | ~0.006 s |
+| Graph Subgraph Extraction | — | ~0.002 s |
 
 ### Highlights
 
@@ -275,7 +273,7 @@ The latest optimization cycle dramatically improved retrieval performance.
 - Reused stored Chroma embeddings
 - Eliminated redundant embedding generation
 - Introduced pluggable embedding architecture
-- Added detailed pipeline performance profiling
+- Added detailed pipeline performance profiling and OpenTelemetry tracing
 
 ---
 
@@ -287,10 +285,11 @@ The latest optimization cycle dramatically improved retrieval performance.
 | Stage 2 – Connectors & AI Services | ✅ Complete |
 | Stage 3 – RAG Platform | ✅ Complete |
 | Stage 3.5 – Modern React Workspace | ✅ Complete |
-| Stage 4 – Memory System | 🚧 In Progress |
-| Stage 5 – Tool Calling | ⏳ Planned |
+| Stage 4 – Memory, Graph-RAG & Observability | ✅ Complete |
+| Stage 5 – Tool Calling & Function Execution | 🚧 In Progress |
 | Stage 6 – AI Agents | ⏳ Planned |
 | Stage 7 – Multi-Agent Platform | ⏳ Planned |
+
 
 ---
 
@@ -847,32 +846,49 @@ The backend exposes REST APIs for all major modules.
 
 ---
 
-## Document Management
+## Document Ingestion & Background Processing
 
-| Endpoint | Description |
-|----------|-------------|
-| `/ingest` | Upload documents |
-| `/documents` | List documents |
-| `/documents/{filename}` | Delete a document |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/ingest` | POST | Upload documents for async background ingestion |
+| `/ingestion/jobs/{job_id}/stream` | GET | Real-time Server-Sent Events (SSE) progress stream |
+| `/ingestion/jobs/{job_id}` | GET | Get ingestion job status, progress, and metadata |
+| `/ingestion/jobs` | GET | List all background ingestion jobs |
+| `/ingestion/jobs/{job_id}/retry` | POST | Retry a failed ingestion job |
+| `/documents` | GET | List indexed documents |
+| `/documents/{filename}` | DELETE | Delete an indexed document |
 
 ---
 
-## Retrieval-Augmented Generation
+## Multi-Session Chat & Context Memory
 
-| Endpoint | Description |
-|----------|-------------|
-| `/rag/add` | Add documents to the vector database |
-| `/rag/search` | Semantic search |
-| `/rag/ask` | Ask questions using RAG |
-| `/rag/diagnostics` | Pipeline diagnostics |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/chat/sessions` | POST | Create a new persistent chat session |
+| `/chat/sessions` | GET | List all active chat sessions |
+| `/chat/sessions/{session_id}` | GET | Get chat session details and message history |
+| `/chat/sessions/{session_id}` | DELETE | Delete a chat session and its history |
+| `/chat/sessions/{session_id}/messages` | POST | Send a message to a session, triggering contextual RAG execution |
+
+---
+
+## Retrieval-Augmented Generation & Graph-RAG
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/rag/ask` | POST | Ask questions using hybrid retrieval & graph context |
+| `/rag/search` | POST | Semantic and sparse search over vector store |
+| `/rag/diagnostics` | GET | Pipeline diagnostics and component latencies |
+| `/rag/add` | POST | Add documents directly to vector database |
 
 ---
 
 ## AI Assistant
 
-| Endpoint | Description |
-|----------|-------------|
-| `/assistant` | AI assistant endpoint |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/assistant` | POST | Direct AI assistant endpoint |
+
 
 ---
 
@@ -1195,29 +1211,28 @@ The long-term goal of **Anuj AI Lab** is to evolve from a high-performance local
 
 ---
 
-## 🚧 Stage 4 — Persistent Memory
+## ✅ Stage 4 — Persistent Memory, Graph-RAG & Enterprise Observability
 
-Current development focuses on building a memory layer capable of:
-
-- Persistent conversation memory
-- User profiles
-- Knowledge storage
-- Long-term context
-- Memory visualization
-- Memory retrieval
+- Async background document ingestion engine with real-time SSE progress streaming
+- Persistent SQLModel/SQLite multi-session chat memory and conversation context
+- Structured document ingestion (Markdown tables, JSON, Code, annotated PDF pages)
+- Syntax-aware structural chunking (`MARKDOWN`, `CODE`, `PARAGRAPH`, `FIXED`)
+- Knowledge Graph (Graph-RAG) with entity extraction and multi-hop BFS reasoning
+- Enterprise security guardrails (Prompt injection defense and PII sanitization)
+- OpenTelemetry-compatible distributed trace span exporter
+- 100% automated test suite pass rate (341/341 tests)
 
 ---
 
-## ⏳ Stage 5 — Tool Calling
+## 🚧 Stage 5 — Tool Calling & Function Execution
 
-Planned features include:
+Current development focuses on:
 
-- Local Python execution
+- Local Python execution sandbox
 - File system tools
-- Web search
-- Tool registry
-- Secure tool permissions
-- Function calling
+- Dynamic tool registry
+- Permission-based function calling
+- Web search connector
 
 ---
 
@@ -1228,7 +1243,6 @@ Future work includes:
 - Autonomous planning
 - Multi-step reasoning
 - Goal execution
-- Agent collaboration
 - Dynamic routing
 - Reflection loops
 
@@ -1253,16 +1267,20 @@ Long-term vision:
 |-------|--------|
 | FastAPI Backend | ✅ |
 | React Frontend | ✅ |
-| Document Upload | ✅ |
+| Document Upload & Ingestion | ✅ |
+| Async Streaming Ingestion (SSE) | ✅ |
 | ChromaDB Integration | ✅ |
-| Semantic Retrieval | ✅ |
-| Hybrid Retrieval | ✅ |
+| Semantic & Hybrid Retrieval | ✅ |
+| Multi-Session Chat & Memory | ✅ |
+| Structured & Multi-Modal Ingestion | ✅ |
+| Knowledge Graph (Graph-RAG) | ✅ |
+| Security Guardrails (PII / Injections) | ✅ |
+| OpenTelemetry Trace Observability | ✅ |
 | Citation Generation | ✅ |
 | Diagnostics Dashboard | ✅ |
 | Embedding Provider Architecture | ✅ |
 | Performance Profiling | ✅ |
-| Persistent Memory | 🚧 |
-| Tool Calling | ⏳ |
+| Tool Calling | 🚧 |
 | AI Agents | ⏳ |
 | Multi-Agent System | ⏳ |
 
@@ -1274,21 +1292,18 @@ This repository demonstrates practical AI engineering rather than isolated machi
 
 Major accomplishments include:
 
-- Production-oriented FastAPI backend
-- Modern React + TypeScript frontend
-- Modular Retrieval-Augmented Generation architecture
+- Production-oriented FastAPI backend with SQLModel persistence
+- Modern React 19 + TypeScript + Tailwind CSS v4 frontend
+- Modular Retrieval-Augmented Generation (RAG) architecture
+- Hybrid dense-sparse retrieval (ChromaDB + BM25) with reciprocal rank fusion
+- Knowledge Graph (Graph-RAG) entity extraction & multi-hop traversal
+- Non-blocking background ingestion with live Server-Sent Events (SSE)
+- Adversarial prompt injection defense and PII masking guardrails
+- OpenTelemetry-compatible stage performance trace exporter
 - Local LLM inference using Ollama
-- Chroma vector database integration
-- Hybrid retrieval pipeline
-- Configurable embedding providers
-- Retrieval diagnostics
-- Pipeline observability
-- Source citation generation
-- Grounding analysis
-- Performance instrumentation
-- Modular project architecture
-- Local-first AI deployment
-- Scalable engineering practices
+- Configurable embedding providers (SentenceTransformers, Ollama)
+- Source citation generation & hallucination detection
+- 100% test pass rate across 341 comprehensive automated tests
 
 ---
 
@@ -1299,6 +1314,7 @@ Major accomplishments include:
 | Semantic Reranking | ~20 ms |
 | Retrieval Pipeline | ~250 ms |
 | Vector Search | ~6 ms |
+| Graph Subgraph Extraction | ~2 ms |
 | Local Generation | ~8 s |
 
 Major optimization achievements:
@@ -1308,6 +1324,7 @@ Major optimization achievements:
 - Eliminated redundant embedding computation
 - Reused Chroma embeddings
 - Introduced pluggable embedding provider architecture
+- OpenTelemetry-compatible tracing across all execution stages
 
 ---
 
@@ -1394,8 +1411,9 @@ Every contribution helps improve the project.
 
 ### 🚀 Building Production-Grade Local AI Systems
 
-**Anuj AI Lab • v2.1.0**
+**Anuj AI Lab • v2.5.0**
 
 *Designed, developed, and maintained by Anuj Mundu.*
 
 </div>
+
