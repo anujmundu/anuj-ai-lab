@@ -36,6 +36,10 @@ from app.api.document_routes import router as document_router
 from app.memory.routes import router as persistent_memory_router
 from app.api.chat_routes import router as chat_router
 
+# Stage 6 Autonomous AI Agents
+from app.api.agent_routes import router as agent_router
+
+
 from app.db.database import create_db_and_tables
 from app.rag.vector_store import vector_store
 
@@ -140,11 +144,13 @@ app.include_router(ingestion_router)
 app.include_router(document_router)
 
 # ==========================================
-# Stage 4 Persistent Memory
+# Stage 4 Persistent Memory & Stage 6 Agents
 # ==========================================
 
 app.include_router(persistent_memory_router)
 app.include_router(chat_router)
+app.include_router(agent_router)
+
 
 
 @app.get("/")
