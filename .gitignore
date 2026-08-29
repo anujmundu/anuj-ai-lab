@@ -74,3 +74,10 @@ backend/uploads/
 __pycache__/
 *.py[cod]
 /backend/storage/
+
+# Local Model Weights & Scratch Scripts
+backend/models/
+models/
+backend/scratch/
+scratch/
+
