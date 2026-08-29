@@ -44,6 +44,19 @@ from app.api.memory_consolidation_routes import router as memory_consolidation_r
 from app.api.cache_sharding_routes import router as cache_sharding_router
 from app.api.production_dashboard_routes import router as production_dashboard_router
 
+# Phase 1 Dynamic Model Routing & Voice Services
+from app.api.model_routes import router as model_router
+from app.api.voice_routes import router as voice_router
+
+# Phase 2 Model Context Protocol (MCP) Standard Client
+from app.api.mcp_routes import router as mcp_router
+
+# Phase 3 Advanced Contextual Retrieval
+from app.api.contextual_retrieval_routes import router as contextual_retrieval_router
+
+
+
+
 
 
 
@@ -161,6 +174,13 @@ app.include_router(agent_router)
 app.include_router(memory_consolidation_router)
 app.include_router(cache_sharding_router)
 app.include_router(production_dashboard_router)
+app.include_router(model_router)
+app.include_router(voice_router)
+app.include_router(mcp_router)
+app.include_router(contextual_retrieval_router)
+
+
+
 
 
 
