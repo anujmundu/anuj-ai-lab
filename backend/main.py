@@ -40,8 +40,10 @@ from app.api.chat_routes import router as chat_router
 from app.api.agent_routes import router as agent_router
 from app.api.memory_consolidation_routes import router as memory_consolidation_router
 
-# Stage 9 Enterprise Scalability & Caching
+# Stage 9 Enterprise Scalability & Stage 10 Production Hardening
 from app.api.cache_sharding_routes import router as cache_sharding_router
+from app.api.production_dashboard_routes import router as production_dashboard_router
+
 
 
 
@@ -150,7 +152,7 @@ app.include_router(ingestion_router)
 app.include_router(document_router)
 
 # ==========================================
-# Stage 4 Memory, Stage 6 Agents, Stage 8 Consolidation & Stage 9 Caching/Sharding
+# Stage 4 Memory, Stage 6 Agents, Stage 8 Memory, Stage 9 Caching & Stage 10 Production
 # ==========================================
 
 app.include_router(persistent_memory_router)
@@ -158,6 +160,8 @@ app.include_router(chat_router)
 app.include_router(agent_router)
 app.include_router(memory_consolidation_router)
 app.include_router(cache_sharding_router)
+app.include_router(production_dashboard_router)
+
 
 
 
