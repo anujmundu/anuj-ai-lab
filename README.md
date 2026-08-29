@@ -16,9 +16,9 @@ Build modern AI systems completely on your own machine—from document ingestion
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Database-orange)
 ![Sentence Transformers](https://img.shields.io/badge/SentenceTransformers-MiniLM-red)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-v2.5.0-success)
+![Version](https://img.shields.io/badge/Version-v3.0.0-success)
 ![Status](https://img.shields.io/badge/Status-Active-success)
-![Tests](https://img.shields.io/badge/Tests-341%20Passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-399%20Passed%20(100%25)-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/anujmundu/anuj-ai-lab?style=for-the-badge)
@@ -37,11 +37,16 @@ Build modern AI systems completely on your own machine—from document ingestion
 | AI Runtime | Ollama (Qwen, Gemma, Llama) |
 | Vector Database | ChromaDB & BM25 Hybrid Index |
 | Knowledge Graph | In-Memory & Persistent Graph-RAG |
-| Observability | OpenTelemetry-compatible Tracing |
-| Current Version | v2.5.0 |
-| Development Stage | Stage 4 Completed — Persistent Memory, Graph-RAG & Observability |
-| Automated Tests | 341 / 341 Passing (100%) |
+| Tool Calling | Subprocess Python Sandbox & Safe AST Math |
+| Agentic Framework | ReAct Thought-Action-Observation DAG & Multi-Agent Blackboard |
+| Memory Engine | Episodic-to-Semantic Consolidation & Dynamic Few-Shot Exemplars |
+| Scalability | Semantic Vector Cache & Multi-Tenant Partition Sharding |
+| Observability | OpenTelemetry Tracing & Real-time Telemetry Dashboard |
+| Current Version | v3.0.0 |
+| Development Stage | Stage 10 Completed — Autonomous Agentic RAG Platform (10/10 Stages) |
+| Automated Tests | 399 / 399 Passing (100%) |
 | License | MIT |
+
 
 
 ---
@@ -883,31 +888,61 @@ The backend exposes REST APIs for all major modules.
 
 ---
 
-## AI Assistant
+## Autonomous AI Agents & ReAct Multi-Step Reasoning (Stage 6)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/assistant` | POST | Direct AI assistant endpoint |
-
-
----
-
-## Connectors
-
-| Endpoint | Description |
-|----------|-------------|
-| `/search` | Search connector |
-| `/connector/*` | External connector APIs |
+| `/agents/tasks` | POST | Create and start an autonomous multi-step reasoning task in background worker |
+| `/agents/tasks/{task_id}` | GET | Retrieve task status, plan, thoughts, tool actions, and final result |
+| `/agents/tasks` | GET | List all registered autonomous agent tasks |
+| `/agents/tasks/{task_id}/stream` | GET | Real-time Server-Sent Events (SSE) stream of live agent thoughts & actions |
 
 ---
 
-## Workflow
+## Multi-Agent Collaboration & Interactive HITL (Stage 7)
 
-| Endpoint | Description |
-|----------|-------------|
-| `/workflow/*` | Workflow APIs |
-| `/compare` | Model comparison |
-| `/collaboration` | Multi-agent collaboration |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/collaboration/sessions` | POST | Start a 4-role multi-agent deliberation session (Researcher, Coder, Critic, Orchestrator) |
+| `/collaboration/sessions/{session_id}` | GET | Retrieve session dialogue, shared blackboard state, and final consensus |
+| `/collaboration/sessions` | GET | List all multi-agent collaboration sessions |
+| `/collaboration/sessions/{session_id}/approve` | POST | Submit Human-in-the-Loop (HITL) approval decision for sensitive actions |
+| `/collaboration/sessions/{session_id}/stream` | GET | Real-time Server-Sent Events (SSE) stream of multi-agent dialogue |
+
+---
+
+## Continuous Learning, Memory Consolidation & Evolution (Stage 8)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/memory/consolidate` | POST | Trigger episodic chat history distillation into durable semantic memory |
+| `/memory/feedback` | POST | Submit user vote (+1/-1), rating, and promote high-quality answers to few-shot exemplars |
+| `/memory/feedback/metrics` | GET | Retrieve system-wide user satisfaction metrics |
+| `/memory/exemplars` | GET | List verified few-shot exemplars for dynamic prompt injection |
+| `/rag/graph/optimize` | POST | Deduplicate entity aliases and prune redundant relations in Knowledge Graph |
+
+---
+
+## Enterprise Scalability, Vector Sharding & Caching (Stage 9)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/cache/stats` | GET | Retrieve semantic cache hit rate, entries count, and performance statistics |
+| `/cache/clear` | DELETE | Invalidate all cached entries in the semantic cache |
+| `/shards/list` | GET | List active multi-tenant vector shards and document counts |
+| `/shards/route` | POST | Calculate isolated shard collection name for a tenant and workspace |
+| `/batch/ingest` | POST | High-throughput asynchronous micro-batch vector ingestion pipeline |
+
+---
+
+## Production Health Diagnostics & Telemetry Dashboard (Stage 10)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health/detailed` | GET | Deep health diagnostics & latency measurements for SQLite, ChromaDB, and Cache |
+| `/eval/synthetic/generate` | POST | Generate synthetic ground-truth Q&A evaluation datasets from text chunks |
+| `/telemetry/dashboard` | GET | Consolidated enterprise observability dashboard with real-time system metrics |
+
 
 ---
 
@@ -1224,40 +1259,57 @@ The long-term goal of **Anuj AI Lab** is to evolve from a high-performance local
 
 ---
 
-## 🚧 Stage 5 — Tool Calling & Function Execution
+## ✅ Stage 5 — Tool Calling & Sandboxed Execution Engine
 
-Current development focuses on:
-
-- Local Python execution sandbox
-- File system tools
-- Dynamic tool registry
-- Permission-based function calling
-- Web search connector
-
----
-
-## ⏳ Stage 6 — AI Agents
-
-Future work includes:
-
-- Autonomous planning
-- Multi-step reasoning
-- Goal execution
-- Dynamic routing
-- Reflection loops
+- [`BaseTool`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/base.py) interface & OpenAI/Ollama function calling schema generation
+- Isolated subprocess Python code sandbox ([`LocalCodeExecutor`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/code_executor.py))
+- Safe AST-based mathematical evaluation tool ([`CalculatorTool`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/calculator_tool.py))
+- Workspace file manager ([`FileSystemTool`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/file_system_tool.py))
+- Knowledge Graph relationship query tool ([`KnowledgeGraphQueryTool`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/graph_query_tool.py))
+- ReAct tool call parser and execution orchestrator ([`ToolOrchestrator`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/tools/orchestrator.py))
 
 ---
 
-## ⏳ Stage 7 — Multi-Agent Platform
+## ✅ Stage 6 — Autonomous AI Agents & Multi-Step Reasoning
 
-Long-term vision:
+- Goal decomposition and DAG task planner ([`AgentPlanner`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/agents/planner.py))
+- ReAct execution loop (Thought -> Action -> Observation -> Reflection) ([`AgentExecutor`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/agents/executor.py))
+- Dynamic self-correction & step critique ([`ReflectionEvaluator`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/agents/reflection.py))
+- Task store with real-time SSE progress streaming ([`/agents/tasks/{task_id}/stream`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/api/agent_routes.py))
 
-- Multiple specialized agents
-- Shared memory
-- Workflow orchestration
-- Distributed execution
-- Autonomous collaboration
-- Production deployment
+---
+
+## ✅ Stage 7 — Multi-Agent Collaboration & Orchestration
+
+- Specialized role agents: Researcher, Coder, Critic, Orchestrator ([`roles.py`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/collaboration/roles.py))
+- Shared memory blackboard for inter-agent context sharing ([`AgentBlackboard`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/collaboration/blackboard.py))
+- Multi-round structured consensus engine ([`MultiAgentOrchestrator`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/collaboration/orchestrator.py))
+- Human-in-the-Loop (HITL) interactive safety gate ([`HumanInTheLoopGate`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/collaboration/hitl.py))
+
+---
+
+## ✅ Stage 8 — Continuous Learning & Memory Consolidation
+
+- Offline episodic-to-semantic memory consolidation ([`MemoryConsolidationEngine`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/memory/consolidation.py))
+- Dynamic few-shot exemplar indexer & prompt injection ([`ExemplarStore`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/memory/exemplar_store.py))
+- User feedback (+1/-1 votes, ratings) & exemplar promotion ([`FeedbackService`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/memory/feedback_service.py))
+- Knowledge graph entity deduplication and alias merging ([`GraphOptimizer`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/graph/graph_optimizer.py))
+
+---
+
+## ✅ Stage 9 — Enterprise Scalability, Vector Sharding & Caching
+
+- Cosine-similarity semantic query and embedding cache ([`SemanticCache`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/cache/semantic_cache.py))
+- Multi-tenant vector partitioning and collection sharder ([`VectorSharder`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/sharding/vector_sharder.py))
+- High-throughput asynchronous micro-batch ingestion pipeline ([`BatchIngestionPipeline`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/batch/batch_ingestion_pipeline.py))
+
+---
+
+## ✅ Stage 10 — Production Hardening & Full Telemetry Dashboard
+
+- Deep subsystem health diagnostics (SQLite, ChromaDB, Cache) ([`SystemHealthMonitor`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/production/system_health.py))
+- Automated synthetic evaluation Q&A dataset generator ([`SyntheticEvalGenerator`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/evaluation/synthetic_eval_generator.py))
+- Real-time consolidated telemetry & observability dashboard ([`TelemetryDashboardService`](file:///c:/Users/anujm/Desktop/anuj-ai-lab/backend/app/rag/observability/telemetry_dashboard.py))
 
 ---
 
@@ -1280,9 +1332,13 @@ Long-term vision:
 | Diagnostics Dashboard | ✅ |
 | Embedding Provider Architecture | ✅ |
 | Performance Profiling | ✅ |
-| Tool Calling | 🚧 |
-| AI Agents | ⏳ |
-| Multi-Agent System | ⏳ |
+| Tool Calling & Sandboxed Execution | ✅ |
+| Autonomous AI Agents (ReAct) | ✅ |
+| Multi-Agent Platform & Blackboard | ✅ |
+| Continuous Learning & Consolidation | ✅ |
+| Semantic Caching & Sharding | ✅ |
+| Production Telemetry Dashboard | ✅ |
+
 
 ---
 
@@ -1411,7 +1467,7 @@ Every contribution helps improve the project.
 
 ### 🚀 Building Production-Grade Local AI Systems
 
-**Anuj AI Lab • v2.5.0**
+**Anuj AI Lab • v3.0.0**
 
 *Designed, developed, and maintained by Anuj Mundu.*
 

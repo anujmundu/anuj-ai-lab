@@ -172,5 +172,5 @@ def health():
     return {
         "status": "running",
         "project": "Anuj AI Lab",
-        "version": "1.2.0",
-    }
+        "version": "3.0.0",
+    }
