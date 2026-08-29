@@ -1,83 +1,114 @@
-# databases
-*.db
+# ==========================================
+# Anuj AI Lab - Git Ignore Configuration
+# ==========================================
 
-# Python
+# --- Internal Documentation (Local Knowledge Graph) ---
+docs/
+.obsidian/
+
+# --- Environment & Credentials ---
+.env
+.env.local
+.env.*.local
+*.env
+*.pem
+*.key
+*.cert
+
+# --- SQLite & Databases ---
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+experiments.db
+backend/experiments.db
+
+# --- Vector Database (ChromaDB / Embeddings) ---
+vector_db/
+backend/vector_db/
+chroma_db/
+backend/chroma_db/
+
+# --- Uploaded User Media & Documents ---
+uploads/
+backend/uploads/
+*.pdf
+*.m4a
+*.mp4
+*.mp3
+*.wav
+*.mov
+*.avi
+*.docx
+*.pptx
+
+# --- Persistent Local Memory & State Storage ---
+backend/app/memory/memory_store.json
+backend/data/
+backend/storage/
+storage/
+frontend/chat_history.json
+
+# --- Python Runtime & Bytecode ---
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 
-# Virtual Env
+# --- Python Virtual Environments ---
 venv/
+.venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
 
-# Node
+# --- Node & Frontend Build Artifacts ---
 node_modules/
-
-# Environment
-.env
-
-# Logs
-logs/
-
-# Build
+web/node_modules/
 dist/
+web/dist/
 build/
+.npm/
 
-# IDE
-.vscode/
-.idea/
-
-# pytest
+# --- Testing & Quality Caches ---
 .pytest_cache/
-
-# mypy
+backend/.pytest_cache/
 .mypy_cache/
-
-# coverage
+backend/.mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
-# OS
+# --- IDE & Editor Artifacts ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- System & OS Dumps ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Documentation artifacts
+# --- Logs & Scratch Debugging Scripts ---
+logs/
+backend/logs/
+*.log
+scratch/
+backend/scratch/
 project_tree.txt
 
-# Streamlit chat history
-frontend/chat_history.json
-
-# Persistent memory
-backend/app/memory/memory_store.json
-backend/data/memory.json
-
-# ==========================================
-# RAG / Vector Database
-# ==========================================
-
-backend/vector_db/
-vector_db/
-backend/chroma_db/
-chroma_db/
-
-# Hugging Face cache (optional)
-.huggingface/
-.cache/
-
-# Temporary RAG test files
-test_embedding.py
-test_vector_store.py
-
-# Uploaded documents
-backend/uploads/
-
-.obsidian/
-
-__pycache__/
-*.py[cod]
-/backend/storage/
-
-# Local Model Weights & Scratch Scripts
-backend/models/
+# --- Local ML Model Weights & HuggingFace Caches ---
 models/
-backend/scratch/
-scratch/
-
+backend/models/
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.pth
+.cache/
+.huggingface/
