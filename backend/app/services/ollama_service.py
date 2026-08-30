@@ -152,27 +152,36 @@ class OllamaService:
         import os
         from datetime import datetime, timezone
 
-        # 1. Check for free Cloud LLM API Keys (Groq / OpenRouter)
-        groq_key = os.environ.get("GROQ_API_KEY")
-        if groq_key:
-            try:
-                res = requests.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
-                    json={
-                        "model": "llama-3.3-70b-versatile",
-                        "messages": [{"role": "user", "content": prompt}],
-                        "temperature": 0.7,
-                        "max_tokens": 1024,
-                    },
-                    timeout=5.0
-                )
-                if res.status_code == 200:
-                    return res.json()["choices"][0]["message"]["content"]
-            except Exception:
-                pass
+        # 1. Check for free Cloud LLM API Keys (Groq / OpenRouter / OpenAI)
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except Exception:
+            pass
 
-        openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+        groq_key = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
+        if groq_key:
+            for model_candidate in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
+                try:
+                    res = requests.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+                        json={
+                            "model": model_candidate,
+                            "messages": [{"role": "user", "content": prompt}],
+                            "temperature": 0.7,
+                            "max_tokens": 1024,
+                        },
+                        timeout=15.0
+                    )
+                    if res.status_code == 200:
+                        return res.json()["choices"][0]["message"]["content"]
+                    else:
+                        print(f"[GROQ Error] Model {model_candidate} returned HTTP {res.status_code}: {res.text}")
+                except Exception as e:
+                    print(f"[GROQ Exception] Model {model_candidate} call failed: {e}")
+
+        openrouter_key = (os.environ.get("OPENROUTER_API_KEY") or "").strip().strip('"').strip("'")
         if openrouter_key:
             try:
                 res = requests.post(
@@ -182,12 +191,14 @@ class OllamaService:
                         "model": "meta-llama/llama-3.2-3b-instruct:free",
                         "messages": [{"role": "user", "content": prompt}],
                     },
-                    timeout=5.0
+                    timeout=15.0
                 )
                 if res.status_code == 200:
                     return res.json()["choices"][0]["message"]["content"]
-            except Exception:
-                pass
+                else:
+                    print(f"[OpenRouter Error] HTTP {res.status_code}: {res.text}")
+            except Exception as e:
+                print(f"[OpenRouter Exception] {e}")
 
         # 2. Extract user query and retrieved context accurately
         clean_q = prompt
@@ -406,7 +417,33 @@ class OllamaService:
                 "3. **Citation Provenance**: Automatically attaches exact document name and chunk indices to all generated answers."
             )
 
-        # 11. Conversational Greetings & Help
+        # 11. Core Software Engineering - APIs, REST & Web Services
+        if any(w in q_lower for w in ["what is an api", "what is api", "explain api", "rest api", "fastapi", "endpoints"]):
+            return (
+                "### 🌐 What is an API (Application Programming Interface)?\n\n"
+                "An **API (Application Programming Interface)** is a structured set of rules, protocols, and communication standards that enables distinct software applications to securely exchange data and invoke functionality with one another.\n\n"
+                "#### 🔑 Core Concepts:\n"
+                "1. **Client-Server Architecture**: The client (e.g. your React frontend) issues an HTTP request to an endpoint, and the server (e.g. FastAPI) computes and returns a structured response (usually JSON).\n"
+                "2. **Standard HTTP Verbs**:\n"
+                "   • `GET`: Retrieve existing data (e.g. `/chat/sessions`)\n"
+                "   • `POST`: Create new resources or trigger operations (e.g. `/ingest`, `/chat/sessions/{id}/messages`)\n"
+                "   • `PATCH` / `PUT`: Update existing records (e.g. renaming a conversation)\n"
+                "   • `DELETE`: Remove records (e.g. deleting an indexed document)\n"
+                "3. **RESTful Principles**: Stateless interactions, standard HTTP status codes (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`), and deterministic JSON payloads.\n"
+                "4. **API Security & Contracts**: Validated using strongly typed schemas (Pydantic / OpenAPI) and secured with API keys or JWT tokens."
+            )
+
+        if any(w in q_lower for w in ["python", "fastapi framework", "data science", "machine learning libraries"]):
+            return (
+                "### 🐍 Python in Modern AI & Backend Engineering\n\n"
+                "Python is the industry standard for AI engineering due to its rich ecosystem:\n\n"
+                "• **FastAPI**: Modern, asynchronous web framework built on Starlette and Pydantic offering automatic OpenAPI documentation and high throughput.\n"
+                "• **PyTorch & Hugging Face**: Powers deep learning, tokenization, and transformer inference.\n"
+                "• **NumPy & Pandas**: High-performance vectorized numerical operations and tabular data transformation.\n"
+                "• **ChromaDB & SQLModel**: Persistent embedded vector search and typed relational database mapping."
+            )
+
+        # 12. Conversational Greetings & Help
         if any(w in q_lower for w in ["hello", "hi", "hey", "hellp", "greetings", "good morning", "good evening"]):
             return (
                 "Hello! I am **Anuj AI Lab Assistant (v3.0.0)**.\n\n"
@@ -419,7 +456,7 @@ class OllamaService:
                 "What would you like to explore or build today?"
             )
 
-        # 12. Inquiries & Reasoning ("Why?", "Why not working?", "How to use")
+        # 13. Inquiries & Reasoning ("Why?", "Why not working?", "How to use")
         if any(w in q_lower for w in ["why", "how come", "why not", "how does it work"]):
             return (
                 f"### 💡 Architectural Insight: *\"{clean_q}\"*\n\n"
@@ -429,7 +466,7 @@ class OllamaService:
                 f"3. **Free Cloud LLM Key**: You can also add a free `GROQ_API_KEY` to Render Environment Variables to unlock full **Llama-3.3-70B** inference in the cloud!"
             )
 
-        # 13. Math & Calculations
+        # 14. Math & Calculations
         if any(op in clean_q for op in ["+", "-", "*", "/", "^", "sqrt", "math."]):
             try:
                 from app.tools.calculator_tool import calculator_tool
@@ -440,7 +477,7 @@ class OllamaService:
             except Exception:
                 pass
 
-        # 14. Comprehensive General Topic Response
+        # 15. Comprehensive General Topic Response
         return (
             f"### 🔍 Analysis: *\"{clean_q}\"*\n\n"
             f"Thank you for your question on **{clean_q}**.\n\n"
