@@ -32,6 +32,7 @@ class MemoryVectorStore:
         self.collection = (
             self.client.get_or_create_collection(
                 name="memories",
+                embedding_function=None,
             )
         )
 
@@ -115,6 +116,7 @@ class MemoryVectorStore:
         self.collection = (
             self.client.get_or_create_collection(
                 name="memories",
+                embedding_function=None,
             )
         )
 

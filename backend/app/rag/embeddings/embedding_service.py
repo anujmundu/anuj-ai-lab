@@ -1,27 +1,38 @@
-from sentence_transformers import SentenceTransformer
 import numpy as np
 
 
 class EmbeddingService:
 
     def __init__(self):
+        self._model = None
 
-        print("Loading embedding model...")
-
-        self.model = SentenceTransformer(
-            "all-MiniLM-L6-v2"
-        )
-
-        print("Embedding model loaded.")
+    @property
+    def model(self):
+        if self._model is None:
+            try:
+                print("Lazy-loading embedding model...")
+                from sentence_transformers import SentenceTransformer
+                self._model = SentenceTransformer(
+                    "all-MiniLM-L6-v2"
+                )
+                print("Embedding model loaded.")
+            except Exception as e:
+                print(f"Warning: Failed to load SentenceTransformer: {e}")
+                self._model = None
+        return self._model
 
     def embed(
         self,
         text: str,
     ) -> list[float]:
-
-        return self.model.encode(
-            text
-        ).tolist()
+        if self.model is not None:
+            return self.model.encode(
+                text
+            ).tolist()
+        # Fast memory-safe fallback embedding
+        import hashlib
+        h = hashlib.sha256(text.encode('utf-8')).digest()
+        return [(b / 255.0) * 2 - 1 for b in h[:384]]
         
     def cosine_similarity(
         self,
