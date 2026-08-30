@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 from app.agents.models import AgentStep, AgentTask, TaskStatus
 from app.agents.planner import AgentPlanner, agent_planner
 from app.agents.reflection import ReflectionEvaluator, reflection_evaluator
 from app.agents.task_store import AgentTaskStore, agent_task_store
+from app.services.ollama_service import OllamaService
 from app.tools.registry import ToolRegistry, tool_registry
+
+_ollama = OllamaService()
+
+
+def _call_agent_llm(system_prompt: str, user_prompt: str, model: str = "llama3.2:3b", max_tokens: int = 350, temperature: float = 0.1) -> str:
+    full_prompt = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>user\n{user_prompt}<|im_end|>\n<|im_start|>assistant\n"
+    try:
+        res = _ollama.generate(prompt=full_prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+        return res.strip()
+    except Exception as err:
+        return f"[Agent LLM Inference Notice]: {err}"
 
 
 class AgentExecutor:
@@ -65,18 +78,35 @@ class AgentExecutor:
                 # Dispatch tool if specified
                 if subtask.tool_name and subtask.tool_name in self.registry.list_tools():
                     if subtask.tool_name == "calculator":
-                        # Simple extraction heuristic for expression
-                        import re
-                        expr_match = re.search(r"([\d\.\s\+\-\*\/\(\)]+)", goal)
-                        expression = expr_match.group(1).strip() if expr_match else "1 + 1"
-                        action_input = {"expression": expression}
+                        calc_sys = (
+                            "You are a mathematical parser. Extract the mathematical formula needed to solve the subtask as a single arithmetic expression. "
+                            "Output ONLY the arithmetic expression (e.g. '15000 * (1 + 0.075)**5' or '15000 * ((1 + 0.075)**5 - 1)'). "
+                            "Do NOT write words, explanations, or markdown."
+                        )
+                        raw_expr = _call_agent_llm(calc_sys, f"Goal: {goal}\nSubtask: {subtask.description}", model="llama3.2:3b", max_tokens=80)
+                        clean_expr = raw_expr.strip().replace("`", "").replace("'", "").replace('"', "").replace(",", "")
+                        if "\n" in clean_expr:
+                            clean_expr = clean_expr.split("\n")[-1].strip()
+                        action_input = {"expression": clean_expr}
                         tool_res = self.registry.execute("calculator", **action_input)
+
                     elif subtask.tool_name == "python_interpreter":
-                        action_input = {"code": "print('Agent Python Execution: Completed successfully')"}
+                        py_sys = (
+                            "You are an autonomous Python code generator. Write concise, complete, runnable Python 3 code solving the user subtask with print() outputs. "
+                            "Output ONLY the Python code inside ```python ... ``` codeblocks."
+                        )
+                        raw_code = _call_agent_llm(py_sys, f"Goal: {goal}\nSubtask: {subtask.description}", model="qwen2.5-coder:7b", max_tokens=400)
+                        match = re.search(r"```(?:python)?\s*([\s\S]*?)```", raw_code)
+                        extracted = match.group(1).strip() if match else raw_code.strip()
+                        action_input = {"code": extracted}
                         tool_res = self.registry.execute("python_interpreter", **action_input)
+
                     elif subtask.tool_name == "file_system":
-                        action_input = {"action": "exists", "path": "backend/main.py"}
+                        path_match = re.search(r"([\w\-\.\/\\\:]+\.(?:py|json|md|txt|ts|tsx|csv))", goal)
+                        target_path = path_match.group(1).strip() if path_match else "backend/main.py"
+                        action_input = {"action": "exists", "path": target_path}
                         tool_res = self.registry.execute("file_system", **action_input)
+
                     else:
                         action_input = {}
                         tool_res = self.registry.execute(subtask.tool_name, **action_input)
@@ -84,8 +114,10 @@ class AgentExecutor:
                     observation = tool_res.output if tool_res.success else tool_res.error
                     step_success = tool_res.success
                 else:
-                    # Pure reasoning step
-                    observation = f"Completed analysis for objective: {subtask.description}"
+                    # Pure reasoning step with local LLM
+                    re_sys = "You are an autonomous analytical reasoning agent. Execute the reasoning subtask thoroughly and provide structured analytical deductions."
+                    context_history = "\n".join(collected_outputs) if collected_outputs else "No previous steps."
+                    observation = _call_agent_llm(re_sys, f"Goal: {goal}\nSubtask: {subtask.description}\nPrior Step Observations:\n{context_history}", model="llama3.2:3b", max_tokens=300)
                     step_success = True
 
                 duration_ms = (time.perf_counter() - start_step_time) * 1000.0
@@ -111,12 +143,14 @@ class AgentExecutor:
 
                 self.store.save(task)
 
-            # 4. Final Synthesis
-            task.result = (
-                f"Goal achieved: '{goal}'.\n\n"
-                f"Execution Summary ({len(task.steps)} steps executed):\n"
-                + "\n".join(collected_outputs)
+            # 4. Final Comprehensive Synthesis
+            synth_sys = (
+                "You are the Lead Autonomous AI Agent. "
+                "Synthesize an authoritative, highly comprehensive final solution answering the user's overall goal based on all executed steps and observations. "
+                "Include numerical answers, key findings, and clear Markdown formatting."
             )
+            synth_user = f"Overall Goal: '{goal}'\n\nExecuted Steps & Tool Observations:\n" + "\n".join(collected_outputs)
+            task.result = _call_agent_llm(synth_sys, synth_user, model="llama3.2:3b", max_tokens=500, temperature=0.2)
             task.status = TaskStatus.COMPLETED
             task.updated_at = time.time()
             self.store.save(task)
@@ -131,3 +165,4 @@ class AgentExecutor:
 
 
 agent_executor = AgentExecutor()
+

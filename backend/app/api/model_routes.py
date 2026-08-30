@@ -30,6 +30,24 @@ def get_available_models() -> dict[str, Any]:
     }
 
 
+class SetPrimaryTierRequest(BaseModel):
+    task_type: TaskType = Field(..., description="Task tier to update")
+    model_name: str = Field(..., description="Model name to promote to primary")
+
+
+@router.post("/tiers/primary", response_model=dict[str, Any])
+def set_primary_model_tier(req: SetPrimaryTierRequest) -> dict[str, Any]:
+    """Reassign the primary model for a specific task tier."""
+    updated = dynamic_model_router.set_primary_model(req.task_type, req.model_name)
+    return {
+        "status": "success",
+        "task_type": req.task_type.value,
+        "primary_model": req.model_name,
+        "tier_models": updated,
+        "preferred_tiers": {k.value: v for k, v in dynamic_model_router.preferred_models.items()},
+    }
+
+
 @router.post("/route", response_model=ModelRecommendation)
 def route_model_request(req: ModelRouteRequest) -> ModelRecommendation:
     """Determine the optimal local model for the query."""

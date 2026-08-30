@@ -83,6 +83,33 @@ def get_session_details(
     }
 
 
+class SessionUpdateRequest(BaseModel):
+    title: str
+
+
+@router.patch("/sessions/{session_id}")
+@router.put("/sessions/{session_id}")
+def update_session(
+    session_id: str,
+    payload: SessionUpdateRequest,
+    session: Session = Depends(get_session),
+):
+    updated = chat_session_service.update_session_title(
+        session, session_id=session_id, title=payload.title
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Chat session {session_id} not found",
+        )
+    return {
+        "session_id": updated.session_id,
+        "title": updated.title,
+        "created_at": updated.created_at.isoformat(),
+        "updated_at": updated.updated_at.isoformat(),
+    }
+
+
 @router.delete("/sessions/{session_id}")
 def delete_session(
     session_id: str,

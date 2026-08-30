@@ -62,6 +62,10 @@ class LocalVoiceService:
     ) -> bytes:
         """Synthesize text into WAV audio bytes using Kokoro-82M ONNX."""
         tts = self._get_tts_engine()
+        available_voices = tts.get_voices()
+        if voice not in available_voices:
+            voice = "af_sarah"
+
         samples, sample_rate = tts.create(text, voice=voice, speed=speed, lang=lang)
 
         wav_buffer = io.BytesIO()

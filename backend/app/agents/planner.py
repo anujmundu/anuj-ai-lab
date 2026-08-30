@@ -26,19 +26,19 @@ class AgentPlanner:
         # Analyze keywords in goal to select appropriate tools
         goal_lower = goal.lower()
 
-        # Check for calculation
-        if any(w in goal_lower for w in ["calculate", "compute", "sum", "multiply", "divide", "math", "+", "-", "*", "/"]):
-            if "calculator" in available_tools:
+        # Check for file system operations
+        if any(w in goal_lower for w in ["file", "directory", "folder", "main.py", "read file", "write file", "save to", "list dir", "exists", "inspect"]):
+            if "file_system" in available_tools:
                 subtasks.append(
                     SubTask(
-                        id="subtask_1",
-                        description=f"Calculate numerical values required for: {goal}",
-                        tool_name="calculator",
+                        id=f"subtask_{len(subtasks) + 1}",
+                        description=f"Perform file system operations for: {goal}",
+                        tool_name="file_system",
                     )
                 )
 
         # Check for code execution
-        if any(w in goal_lower for w in ["python", "code", "script", "program", "execute code"]):
+        elif any(w in goal_lower for w in ["python", "code", "script", "program", "execute python", "run code"]):
             if "python_interpreter" in available_tools:
                 subtasks.append(
                     SubTask(
@@ -48,14 +48,14 @@ class AgentPlanner:
                     )
                 )
 
-        # Check for file system operations
-        if any(w in goal_lower for w in ["file", "read file", "write file", "save to", "list directory"]):
-            if "file_system" in available_tools:
+        # Check for calculation (explicit math words, avoiding '/' which appears in paths)
+        elif any(w in goal_lower for w in ["calculate", "compute", "arithmetic", "sum", "multiply", "divide", "compound", "interest", "rate", "math", "percentage", "formula", "sqrt"]):
+            if "calculator" in available_tools:
                 subtasks.append(
                     SubTask(
                         id=f"subtask_{len(subtasks) + 1}",
-                        description=f"Perform file system operations for: {goal}",
-                        tool_name="file_system",
+                        description=f"Calculate numerical values required for: {goal}",
+                        tool_name="calculator",
                     )
                 )
 

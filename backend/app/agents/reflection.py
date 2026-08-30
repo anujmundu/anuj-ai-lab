@@ -36,9 +36,26 @@ class ReflectionEvaluator:
                 suggested_fix="Verify input parameters or query terms.",
             )
 
-        # Check for error keywords in text/dict observation
-        obs_str = str(step.observation).lower()
-        if "error" in obs_str or "traceback" in obs_str or "exception" in obs_str:
+        # Check for error in structured dict observation
+        if isinstance(step.observation, dict):
+            if step.observation.get("exit_code", 0) != 0 or step.observation.get("stderr"):
+                return ReflectionResult(
+                    is_successful=False,
+                    should_retry=False,
+                    feedback=f"Sandbox execution failed: {step.observation.get('stderr') or 'Non-zero exit code'}",
+                    suggested_fix="Fix syntax or runtime logic in the script.",
+                )
+            if step.observation.get("timed_out"):
+                return ReflectionResult(
+                    is_successful=False,
+                    should_retry=True,
+                    feedback="Execution timed out.",
+                    suggested_fix="Optimize execution efficiency or increase timeout limit.",
+                )
+
+        # Check for genuine traceback errors in text
+        obs_str = str(step.observation)
+        if "Traceback (most recent call last):" in obs_str or "SyntaxError:" in obs_str or "ZeroDivisionError:" in obs_str:
             return ReflectionResult(
                 is_successful=False,
                 should_retry=False,
