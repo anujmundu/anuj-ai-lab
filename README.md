@@ -67,7 +67,6 @@ Build modern AI systems completely on your own machine—from document ingestion
 - [Engineering Principles](#engineering-principles)
 - [Getting Started](#-getting-started)
 - [API Overview](#api-overview)
-- [Project Gallery](#-project-gallery)
 - [Development Timeline](#development-timeline)
 - [Release History](#release-history)
 - [Roadmap](#-roadmap)
@@ -991,134 +990,59 @@ You now have:
 
 Everything runs completely on your local machine without requiring cloud AI services.
 
-
----
-
-# 📸 Project Gallery
-
-The following screenshots showcase the major components of **Anuj AI Lab**.
-
----
-
-## Modern AI Workspace
-
-The primary workspace where users interact with the assistant, inspect retrieved context, and monitor the RAG pipeline.
-
-![Chat Workspace](assets/screenshots/chat-workspace.png)
-
----
-
-## AI Chat Interface
-
-Ask questions, generate responses, and interact with locally running language models.
-
-![Chat](assets/screenshots/chat.png)
-
----
-
-## Document Management
-
-Upload, manage, and organize documents used by the Retrieval-Augmented Generation pipeline.
-
-![Documents](assets/screenshots/documents.png)
-
----
-
-## Document Upload
-
-Upload PDFs, TXT files, and other supported document formats for automatic ingestion and indexing.
-
-![Document Upload](assets/screenshots/document-upload.png)
-
----
-
-## Pipeline Diagnostics
-
-Observe every stage of the retrieval pipeline including timings, grounding, confidence, and execution metrics.
-
-![Pipeline Diagnostics](assets/screenshots/pipeline-diagnostics.png)
-
----
-
-## Citation Viewer
-
-Inspect which retrieved document chunks were used to generate the final response.
-
-![Pipeline Citations](assets/screenshots/pipeline-citations.png)
-
----
-
-## Settings Dashboard
-
-Configure application behavior, models, and system preferences.
-
-![Settings](assets/screenshots/settings.png)
-
----
-
-## Dark Theme
-
-Modern dark interface for extended development sessions.
-
-![Dark Theme](assets/screenshots/dark-theme.png)
-
----
-
-## Light Theme
-
-Clean light interface for improved readability.
-
-![Light Theme](assets/screenshots/light-theme.png)
-
----
-
-# Additional Screenshots
-
-Additional screenshots are available inside
-
-```text
-assets/screenshots/
-```
-
-Examples include:
-
-- Backend APIs
-- Health Monitoring
-- Document Retrieval
-- RAG Responses
-- Citation Mapping
-- Prompt Diagnostics
-- Pipeline Metrics
-- Performance Logs
-- Architecture Diagrams
-- Development Workflow
-- Terminal Output
-- Swagger Documentation
-
 ---
 
 # Development Timeline
 
-The project is being developed incrementally using a milestone-driven roadmap.
+The project has achieved complete implementation across all 10 development stages.
 
 | Stage | Status | Major Deliverables |
 |--------|--------|--------------------|
-| Stage 1 | ✅ Complete | AI Foundations |
-| Stage 2 | ✅ Complete | Connectors & AI Services |
-| Stage 3 | ✅ Complete | Retrieval-Augmented Generation |
-| Stage 3.5 | ✅ Complete | Modern React Workspace |
-| Stage 4 | 🚧 In Progress | Persistent Memory |
-| Stage 5 | ⏳ Planned | Tool Calling |
-| Stage 6 | ⏳ Planned | AI Agents |
-| Stage 7 | ⏳ Planned | Multi-Agent Platform |
+| Stage 1 | ✅ Complete | AI Foundations & Local Ollama REST APIs |
+| Stage 2 | ✅ Complete | Connectors, AI Services & Workflow Engine |
+| Stage 3 | ✅ Complete | Retrieval-Augmented Generation & ChromaDB |
+| Stage 3.5 | ✅ Complete | Modern React 19 Workspace & Inspector |
+| Stage 4 | ✅ Complete | Persistent Chat Memory, Graph-RAG & Security |
+| Stage 5 | ✅ Complete | Tool Calling, Subprocess Sandbox & MCP |
+| Stage 6 | ✅ Complete | Autonomous ReAct Agents & DAG Planning |
+| Stage 7 | ✅ Complete | Multi-Agent Blackboard Deliberation & HITL |
+| Stage 8 | ✅ Complete | Continuous Learning & Memory Consolidation |
+| Stage 9 | ✅ Complete | Vector Sharding, Micro-Batching & Semantic Cache |
+| Stage 10 | ✅ Complete | 12 Curated Themes, Telemetry & Multi-Device UI |
 
 ---
 
 # Release History
 
-## v2.1.0 — High-Performance RAG Engine
+## v3.0.0 — Autonomous Agentic RAG Platform
 
-**Latest Release**
+**Latest Release (General Availability)**
+
+### Highlights
+
+- **12 Curated Theme Modes & 12 Dedicated Accent Palettes**: Fully customizable OLED, cyberpunk, nordic, and daylight themes with dynamic CSS variable engine.
+- **Multi-Device Responsive Breakpoints**: Fluid interfaces tailored for Mobile, Tablet, Laptop, Desktop PC, and 4K TV displays.
+- **12 Modular RAG Domain Sub-Packages**: Restructured `backend/app/rag/` into `chunking`, `embeddings`, `retrieval`, `context`, `prompts`, `guardrails`, `post_processing`, `matching`, `ingestion`, `observability`, `routing`, and `pipelines`.
+- **Dynamic Task Routing Engine**: 1-click model tier customization assigning fast intent, coder, reasoning, and vision LLMs.
+- **Autonomous Agents & Multi-Agent Deliberation**: ReAct thought-action-observation execution and 4-role debate blackboard.
+- **Multi-Modal Voice & Vision Tools**: faster-whisper audio/video transcription and Kokoro neural TTS synthesis.
+- **Obsidian Knowledge Graph Integration**: 41 interconnected markdown architectural documentation nodes.
+- **100% Test Pass Rate**: 419/419 passing unit, integration, and golden regression tests.
+
+---
+
+## v2.5.0 — Graph-RAG, Memory & Observability
+
+### Highlights
+
+- Entity-relation extraction and multi-hop graph traversal.
+- Episodic-to-semantic memory consolidation.
+- Adversarial prompt injection defenses and PII sanitization.
+- OpenTelemetry trace span exporters across all pipeline stages.
+
+---
+
+## v2.1.0 — High-Performance RAG Engine
 
 ### Highlights
 
