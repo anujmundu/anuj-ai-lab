@@ -12,13 +12,13 @@ Build modern AI systems completely on your own machine—from document ingestion
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-8-purple?logo=vite)
 ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38BDF8?logo=tailwindcss)
-![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-black)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Database-orange)
+![Ollama](<https://img.shields.io/badge/Ollama-Local%20LLM-black>)
+![ChromaDB](<https://img.shields.io/badge/ChromaDB-Vector%20Database-orange>)
 ![Sentence Transformers](https://img.shields.io/badge/SentenceTransformers-MiniLM-red)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Version](https://img.shields.io/badge/Version-v3.0.0-success)
 ![Status](https://img.shields.io/badge/Status-Active-success)
-![Tests](https://img.shields.io/badge/Tests-419%20Passed%20(100%25)-brightgreen)
+![Tests](<https://img.shields.io/badge/Tests-419%20Passed%20(100%25)-brightgreen>)
 ![GitHub stars](https://img.shields.io/github/stars/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/anujmundu/anuj-ai-lab?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/anujmundu/anuj-ai-lab?style=for-the-badge)
@@ -29,25 +29,23 @@ Build modern AI systems completely on your own machine—from document ingestion
 
 ## 📈 Repository Overview
 
-| Category | Details |
-|----------|---------|
-| Language | Python, TypeScript |
-| Backend | FastAPI, SQLModel / SQLite |
-| Frontend | React 19, Vite 8, TailwindCSS v4 |
-| AI Runtime | Ollama (Qwen, Gemma, Llama) |
-| Vector Database | ChromaDB & BM25 Hybrid Index |
-| Knowledge Graph | In-Memory & Persistent Graph-RAG |
-| Tool Calling | Subprocess Python Sandbox & Safe AST Math |
-| Agentic Framework | ReAct Thought-Action-Observation DAG & Multi-Agent Blackboard |
-| Memory Engine | Episodic-to-Semantic Consolidation & Dynamic Few-Shot Exemplars |
-| Scalability | Semantic Vector Cache & Multi-Tenant Partition Sharding |
-| Observability | OpenTelemetry Tracing & Real-time Telemetry Dashboard |
-| Current Version | v3.0.0 |
+| Category          | Details                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| Language          | Python, TypeScript                                                   |
+| Backend           | FastAPI, SQLModel / SQLite                                           |
+| Frontend          | React 19, Vite 8, TailwindCSS v4                                     |
+| AI Runtime        | Ollama (Qwen, Gemma, Llama)                                          |
+| Vector Database   | ChromaDB & BM25 Hybrid Index                                         |
+| Knowledge Graph   | In-Memory & Persistent Graph-RAG                                     |
+| Tool Calling      | Subprocess Python Sandbox & Safe AST Math                            |
+| Agentic Framework | ReAct Thought-Action-Observation DAG & Multi-Agent Blackboard        |
+| Memory Engine     | Episodic-to-Semantic Consolidation & Dynamic Few-Shot Exemplars      |
+| Scalability       | Semantic Vector Cache & Multi-Tenant Partition Sharding              |
+| Observability     | OpenTelemetry Tracing & Real-time Telemetry Dashboard                |
+| Current Version   | v3.0.0                                                               |
 | Development Stage | Stage 10 Completed — Autonomous Agentic RAG Platform (10/10 Stages) |
-| Automated Tests | 419 / 419 Passing (100%) |
-| License | MIT |
-
-
+| Automated Tests   | 419 / 419 Passing (100%)                                             |
+| License           | MIT                                                                  |
 
 ---
 
@@ -300,12 +298,12 @@ Every subsystem is designed to be independently maintainable, testable, and exte
 
 The latest optimization cycle dramatically improved retrieval performance.
 
-| Component | Before | After |
-|-----------|---------:|------:|
-| Semantic Reranker | ~50 s | ~0.02 s |
-| Retrieval Pipeline | ~50 s | ~0.25 s |
-| Vector Search | ~0.005 s | ~0.006 s |
-| Graph Subgraph Extraction | — | ~0.002 s |
+| Component                 |   Before |    After |
+| ------------------------- | -------: | -------: |
+| Semantic Reranker         |    ~50 s |  ~0.02 s |
+| Retrieval Pipeline        |    ~50 s |  ~0.25 s |
+| Vector Search             | ~0.005 s | ~0.006 s |
+| Graph Subgraph Extraction |       — | ~0.002 s |
 
 ### Highlights
 
@@ -320,20 +318,19 @@ The latest optimization cycle dramatically improved retrieval performance.
 
 # Current Roadmap
 
-| Stage | Status |
-|---------|--------|
-| Stage 1 – AI Foundations | ✅ Complete |
-| Stage 2 – Connectors & AI Services | ✅ Complete |
-| Stage 3 – RAG Platform | ✅ Complete |
-| Stage 3.5 – Modern React Workspace | ✅ Complete |
-| Stage 4 – Memory, Graph-RAG & Observability | ✅ Complete |
-| Stage 5 – Tool Calling, Sandboxing & MCP | ✅ Complete |
-| Stage 6 – Autonomous ReAct Agents & DAG | ✅ Complete |
+| Stage                                          | Status      |
+| ---------------------------------------------- | ----------- |
+| Stage 1 – AI Foundations                      | ✅ Complete |
+| Stage 2 – Connectors & AI Services            | ✅ Complete |
+| Stage 3 – RAG Platform                        | ✅ Complete |
+| Stage 3.5 – Modern React Workspace            | ✅ Complete |
+| Stage 4 – Memory, Graph-RAG & Observability   | ✅ Complete |
+| Stage 5 – Tool Calling, Sandboxing & MCP      | ✅ Complete |
+| Stage 6 – Autonomous ReAct Agents & DAG       | ✅ Complete |
 | Stage 7 – Multi-Agent Blackboard Deliberation | ✅ Complete |
 | Stage 8 – Continuous Learning & Consolidation | ✅ Complete |
-| Stage 9 – Vector Sharding & Semantic Caching | ✅ Complete |
-| Stage 10 – Production Telemetry & UI Themes | ✅ Complete |
-
+| Stage 9 – Vector Sharding & Semantic Caching  | ✅ Complete |
+| Stage 10 – Production Telemetry & UI Themes   | ✅ Complete |
 
 ---
 
@@ -544,13 +541,13 @@ Instead of recomputing document embeddings for every query, the platform now reu
 
 ## Performance Comparison
 
-| Component | Previous | Current |
-|-----------|----------:|---------:|
-| Query Embedding | ~0.05 s | ~0.07 s |
-| Vector Search | ~0.005 s | ~0.006 s |
-| Semantic Reranker | ~50 s | ~0.02 s |
-| Retrieval Pipeline | ~50 s | ~0.25 s |
-| LLM Generation | ~7 s | ~8 s |
+| Component          | Previous |  Current |
+| ------------------ | -------: | -------: |
+| Query Embedding    |  ~0.05 s |  ~0.07 s |
+| Vector Search      | ~0.005 s | ~0.006 s |
+| Semantic Reranker  |    ~50 s |  ~0.02 s |
+| Retrieval Pipeline |    ~50 s |  ~0.25 s |
+| LLM Generation     |     ~7 s |     ~8 s |
 
 ### Result
 
@@ -648,12 +645,12 @@ These principles make the platform easier to maintain, extend, and evolve toward
 Before running the project, ensure the following software is installed.
 
 | Software | Recommended Version |
-|-----------|---------------------|
-| Python | 3.12+ |
-| Node.js | 20+ |
-| npm | Latest |
-| Git | Latest |
-| Ollama | Latest |
+| -------- | ------------------- |
+| Python   | 3.12+               |
+| Node.js  | 20+                 |
+| npm      | Latest              |
+| Git      | Latest              |
+| Ollama   | Latest              |
 
 ---
 
@@ -844,106 +841,105 @@ The backend exposes REST APIs for all major modules.
 
 ## System
 
-| Endpoint | Description |
-|----------|-------------|
-| `/` | Root endpoint |
-| `/system/health` | Health check |
-| `/system/info` | Application information |
+| Endpoint           | Description             |
+| ------------------ | ----------------------- |
+| `/`              | Root endpoint           |
+| `/system/health` | Health check            |
+| `/system/info`   | Application information |
 
 ---
 
 ## Document Ingestion & Background Processing
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/ingest` | POST | Upload documents for async background ingestion |
-| `/ingestion/jobs/{job_id}/stream` | GET | Real-time Server-Sent Events (SSE) progress stream |
-| `/ingestion/jobs/{job_id}` | GET | Get ingestion job status, progress, and metadata |
-| `/ingestion/jobs` | GET | List all background ingestion jobs |
-| `/ingestion/jobs/{job_id}/retry` | POST | Retry a failed ingestion job |
-| `/documents` | GET | List indexed documents |
-| `/documents/{filename}` | DELETE | Delete an indexed document |
+| Endpoint                            | Method | Description                                        |
+| ----------------------------------- | ------ | -------------------------------------------------- |
+| `/ingest`                         | POST   | Upload documents for async background ingestion    |
+| `/ingestion/jobs/{job_id}/stream` | GET    | Real-time Server-Sent Events (SSE) progress stream |
+| `/ingestion/jobs/{job_id}`        | GET    | Get ingestion job status, progress, and metadata   |
+| `/ingestion/jobs`                 | GET    | List all background ingestion jobs                 |
+| `/ingestion/jobs/{job_id}/retry`  | POST   | Retry a failed ingestion job                       |
+| `/documents`                      | GET    | List indexed documents                             |
+| `/documents/{filename}`           | DELETE | Delete an indexed document                         |
 
 ---
 
 ## Multi-Session Chat & Context Memory
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/chat/sessions` | POST | Create a new persistent chat session |
-| `/chat/sessions` | GET | List all active chat sessions |
-| `/chat/sessions/{session_id}` | GET | Get chat session details and message history |
-| `/chat/sessions/{session_id}` | DELETE | Delete a chat session and its history |
-| `/chat/sessions/{session_id}/messages` | POST | Send a message to a session, triggering contextual RAG execution |
+| Endpoint                                 | Method | Description                                                      |
+| ---------------------------------------- | ------ | ---------------------------------------------------------------- |
+| `/chat/sessions`                       | POST   | Create a new persistent chat session                             |
+| `/chat/sessions`                       | GET    | List all active chat sessions                                    |
+| `/chat/sessions/{session_id}`          | GET    | Get chat session details and message history                     |
+| `/chat/sessions/{session_id}`          | DELETE | Delete a chat session and its history                            |
+| `/chat/sessions/{session_id}/messages` | POST   | Send a message to a session, triggering contextual RAG execution |
 
 ---
 
 ## Retrieval-Augmented Generation & Graph-RAG
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/rag/ask` | POST | Ask questions using hybrid retrieval & graph context |
-| `/rag/search` | POST | Semantic and sparse search over vector store |
-| `/rag/diagnostics` | GET | Pipeline diagnostics and component latencies |
-| `/rag/add` | POST | Add documents directly to vector database |
+| Endpoint             | Method | Description                                          |
+| -------------------- | ------ | ---------------------------------------------------- |
+| `/rag/ask`         | POST   | Ask questions using hybrid retrieval & graph context |
+| `/rag/search`      | POST   | Semantic and sparse search over vector store         |
+| `/rag/diagnostics` | GET    | Pipeline diagnostics and component latencies         |
+| `/rag/add`         | POST   | Add documents directly to vector database            |
 
 ---
 
 ## Autonomous AI Agents & ReAct Multi-Step Reasoning (Stage 6)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/agents/tasks` | POST | Create and start an autonomous multi-step reasoning task in background worker |
-| `/agents/tasks/{task_id}` | GET | Retrieve task status, plan, thoughts, tool actions, and final result |
-| `/agents/tasks` | GET | List all registered autonomous agent tasks |
-| `/agents/tasks/{task_id}/stream` | GET | Real-time Server-Sent Events (SSE) stream of live agent thoughts & actions |
+| Endpoint                           | Method | Description                                                                   |
+| ---------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| `/agents/tasks`                  | POST   | Create and start an autonomous multi-step reasoning task in background worker |
+| `/agents/tasks/{task_id}`        | GET    | Retrieve task status, plan, thoughts, tool actions, and final result          |
+| `/agents/tasks`                  | GET    | List all registered autonomous agent tasks                                    |
+| `/agents/tasks/{task_id}/stream` | GET    | Real-time Server-Sent Events (SSE) stream of live agent thoughts & actions    |
 
 ---
 
 ## Multi-Agent Collaboration & Interactive HITL (Stage 7)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/collaboration/sessions` | POST | Start a 4-role multi-agent deliberation session (Researcher, Coder, Critic, Orchestrator) |
-| `/collaboration/sessions/{session_id}` | GET | Retrieve session dialogue, shared blackboard state, and final consensus |
-| `/collaboration/sessions` | GET | List all multi-agent collaboration sessions |
-| `/collaboration/sessions/{session_id}/approve` | POST | Submit Human-in-the-Loop (HITL) approval decision for sensitive actions |
-| `/collaboration/sessions/{session_id}/stream` | GET | Real-time Server-Sent Events (SSE) stream of multi-agent dialogue |
+| Endpoint                                         | Method | Description                                                                               |
+| ------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------- |
+| `/collaboration/sessions`                      | POST   | Start a 4-role multi-agent deliberation session (Researcher, Coder, Critic, Orchestrator) |
+| `/collaboration/sessions/{session_id}`         | GET    | Retrieve session dialogue, shared blackboard state, and final consensus                   |
+| `/collaboration/sessions`                      | GET    | List all multi-agent collaboration sessions                                               |
+| `/collaboration/sessions/{session_id}/approve` | POST   | Submit Human-in-the-Loop (HITL) approval decision for sensitive actions                   |
+| `/collaboration/sessions/{session_id}/stream`  | GET    | Real-time Server-Sent Events (SSE) stream of multi-agent dialogue                         |
 
 ---
 
 ## Continuous Learning, Memory Consolidation & Evolution (Stage 8)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/memory/consolidate` | POST | Trigger episodic chat history distillation into durable semantic memory |
-| `/memory/feedback` | POST | Submit user vote (+1/-1), rating, and promote high-quality answers to few-shot exemplars |
-| `/memory/feedback/metrics` | GET | Retrieve system-wide user satisfaction metrics |
-| `/memory/exemplars` | GET | List verified few-shot exemplars for dynamic prompt injection |
-| `/rag/graph/optimize` | POST | Deduplicate entity aliases and prune redundant relations in Knowledge Graph |
+| Endpoint                     | Method | Description                                                                              |
+| ---------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| `/memory/consolidate`      | POST   | Trigger episodic chat history distillation into durable semantic memory                  |
+| `/memory/feedback`         | POST   | Submit user vote (+1/-1), rating, and promote high-quality answers to few-shot exemplars |
+| `/memory/feedback/metrics` | GET    | Retrieve system-wide user satisfaction metrics                                           |
+| `/memory/exemplars`        | GET    | List verified few-shot exemplars for dynamic prompt injection                            |
+| `/rag/graph/optimize`      | POST   | Deduplicate entity aliases and prune redundant relations in Knowledge Graph              |
 
 ---
 
 ## Enterprise Scalability, Vector Sharding & Caching (Stage 9)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/cache/stats` | GET | Retrieve semantic cache hit rate, entries count, and performance statistics |
-| `/cache/clear` | DELETE | Invalidate all cached entries in the semantic cache |
-| `/shards/list` | GET | List active multi-tenant vector shards and document counts |
-| `/shards/route` | POST | Calculate isolated shard collection name for a tenant and workspace |
-| `/batch/ingest` | POST | High-throughput asynchronous micro-batch vector ingestion pipeline |
+| Endpoint          | Method | Description                                                                 |
+| ----------------- | ------ | --------------------------------------------------------------------------- |
+| `/cache/stats`  | GET    | Retrieve semantic cache hit rate, entries count, and performance statistics |
+| `/cache/clear`  | DELETE | Invalidate all cached entries in the semantic cache                         |
+| `/shards/list`  | GET    | List active multi-tenant vector shards and document counts                  |
+| `/shards/route` | POST   | Calculate isolated shard collection name for a tenant and workspace         |
+| `/batch/ingest` | POST   | High-throughput asynchronous micro-batch vector ingestion pipeline          |
 
 ---
 
 ## Production Health Diagnostics & Telemetry Dashboard (Stage 10)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health/detailed` | GET | Deep health diagnostics & latency measurements for SQLite, ChromaDB, and Cache |
-| `/eval/synthetic/generate` | POST | Generate synthetic ground-truth Q&A evaluation datasets from text chunks |
-| `/telemetry/dashboard` | GET | Consolidated enterprise observability dashboard with real-time system metrics |
-
+| Endpoint                     | Method | Description                                                                    |
+| ---------------------------- | ------ | ------------------------------------------------------------------------------ |
+| `/health/detailed`         | GET    | Deep health diagnostics & latency measurements for SQLite, ChromaDB, and Cache |
+| `/eval/synthetic/generate` | POST   | Generate synthetic ground-truth Q&A evaluation datasets from text chunks       |
+| `/telemetry/dashboard`     | GET    | Consolidated enterprise observability dashboard with real-time system metrics  |
 
 ---
 
@@ -996,19 +992,19 @@ Everything runs completely on your local machine without requiring cloud AI serv
 
 The project has achieved complete implementation across all 10 development stages.
 
-| Stage | Status | Major Deliverables |
-|--------|--------|--------------------|
-| Stage 1 | ✅ Complete | AI Foundations & Local Ollama REST APIs |
-| Stage 2 | ✅ Complete | Connectors, AI Services & Workflow Engine |
-| Stage 3 | ✅ Complete | Retrieval-Augmented Generation & ChromaDB |
-| Stage 3.5 | ✅ Complete | Modern React 19 Workspace & Inspector |
-| Stage 4 | ✅ Complete | Persistent Chat Memory, Graph-RAG & Security |
-| Stage 5 | ✅ Complete | Tool Calling, Subprocess Sandbox & MCP |
-| Stage 6 | ✅ Complete | Autonomous ReAct Agents & DAG Planning |
-| Stage 7 | ✅ Complete | Multi-Agent Blackboard Deliberation & HITL |
-| Stage 8 | ✅ Complete | Continuous Learning & Memory Consolidation |
-| Stage 9 | ✅ Complete | Vector Sharding, Micro-Batching & Semantic Cache |
-| Stage 10 | ✅ Complete | 12 Curated Themes, Telemetry & Multi-Device UI |
+| Stage     | Status      | Major Deliverables                               |
+| --------- | ----------- | ------------------------------------------------ |
+| Stage 1   | ✅ Complete | AI Foundations & Local Ollama REST APIs          |
+| Stage 2   | ✅ Complete | Connectors, AI Services & Workflow Engine        |
+| Stage 3   | ✅ Complete | Retrieval-Augmented Generation & ChromaDB        |
+| Stage 3.5 | ✅ Complete | Modern React 19 Workspace & Inspector            |
+| Stage 4   | ✅ Complete | Persistent Chat Memory, Graph-RAG & Security     |
+| Stage 5   | ✅ Complete | Tool Calling, Subprocess Sandbox & MCP           |
+| Stage 6   | ✅ Complete | Autonomous ReAct Agents & DAG Planning           |
+| Stage 7   | ✅ Complete | Multi-Agent Blackboard Deliberation & HITL       |
+| Stage 8   | ✅ Complete | Continuous Learning & Memory Consolidation       |
+| Stage 9   | ✅ Complete | Vector Sharding, Micro-Batching & Semantic Cache |
+| Stage 10  | ✅ Complete | 12 Curated Themes, Telemetry & Multi-Device UI   |
 
 ---
 
@@ -1241,30 +1237,29 @@ The long-term goal of **Anuj AI Lab** is to evolve from a high-performance local
 
 # 📊 Current Project Status
 
-| Area | Status |
-|-------|--------|
-| FastAPI Backend | ✅ |
-| React Frontend | ✅ |
-| Document Upload & Ingestion | ✅ |
-| Async Streaming Ingestion (SSE) | ✅ |
-| ChromaDB Integration | ✅ |
-| Semantic & Hybrid Retrieval | ✅ |
-| Multi-Session Chat & Memory | ✅ |
-| Structured & Multi-Modal Ingestion | ✅ |
-| Knowledge Graph (Graph-RAG) | ✅ |
-| Security Guardrails (PII / Injections) | ✅ |
-| OpenTelemetry Trace Observability | ✅ |
-| Citation Generation | ✅ |
-| Diagnostics Dashboard | ✅ |
-| Embedding Provider Architecture | ✅ |
-| Performance Profiling | ✅ |
-| Tool Calling & Sandboxed Execution | ✅ |
-| Autonomous AI Agents (ReAct) | ✅ |
-| Multi-Agent Platform & Blackboard | ✅ |
-| Continuous Learning & Consolidation | ✅ |
-| Semantic Caching & Sharding | ✅ |
-| Production Telemetry Dashboard | ✅ |
-
+| Area                                   | Status |
+| -------------------------------------- | ------ |
+| FastAPI Backend                        | ✅     |
+| React Frontend                         | ✅     |
+| Document Upload & Ingestion            | ✅     |
+| Async Streaming Ingestion (SSE)        | ✅     |
+| ChromaDB Integration                   | ✅     |
+| Semantic & Hybrid Retrieval            | ✅     |
+| Multi-Session Chat & Memory            | ✅     |
+| Structured & Multi-Modal Ingestion     | ✅     |
+| Knowledge Graph (Graph-RAG)            | ✅     |
+| Security Guardrails (PII / Injections) | ✅     |
+| OpenTelemetry Trace Observability      | ✅     |
+| Citation Generation                    | ✅     |
+| Diagnostics Dashboard                  | ✅     |
+| Embedding Provider Architecture        | ✅     |
+| Performance Profiling                  | ✅     |
+| Tool Calling & Sandboxed Execution     | ✅     |
+| Autonomous AI Agents (ReAct)           | ✅     |
+| Multi-Agent Platform & Blackboard      | ✅     |
+| Continuous Learning & Consolidation    | ✅     |
+| Semantic Caching & Sharding            | ✅     |
+| Production Telemetry Dashboard         | ✅     |
 
 ---
 
@@ -1291,13 +1286,13 @@ Major accomplishments include:
 
 # 📈 Performance Snapshot
 
-| Metric | Result |
-|---------|---------:|
-| Semantic Reranking | ~20 ms |
-| Retrieval Pipeline | ~250 ms |
-| Vector Search | ~6 ms |
-| Graph Subgraph Extraction | ~2 ms |
-| Local Generation | ~8 s |
+| Metric                    |  Result |
+| ------------------------- | ------: |
+| Semantic Reranking        |  ~20 ms |
+| Retrieval Pipeline        | ~250 ms |
+| Vector Search             |   ~6 ms |
+| Graph Subgraph Extraction |   ~2 ms |
+| Local Generation          |    ~8 s |
 
 Major optimization achievements:
 
@@ -1390,12 +1385,3 @@ Every contribution helps improve the project.
 ---
 
 <div align="center">
-
-### 🚀 Building Production-Grade Local AI Systems
-
-**Anuj AI Lab • v3.0.0**
-
-*Designed, developed, and maintained by Anuj Mundu.*
-
-</div>
-
