@@ -39,10 +39,7 @@ export const documentService = {
             const cached: DocumentInfo[] = JSON.parse(localStorage.getItem("anuj_ai_documents") || "[]");
             const newDoc: DocumentInfo = {
                 filename: file.name,
-                chunks_count: data.chunks_stored || 1,
-                created_at: new Date().toISOString(),
-                file_size_bytes: file.size,
-                status: "indexed",
+                chunks: data.chunks_indexed || 1,
             };
             const updated = [newDoc, ...cached.filter((d) => d.filename !== file.name)];
             localStorage.setItem("anuj_ai_documents", JSON.stringify(updated));
