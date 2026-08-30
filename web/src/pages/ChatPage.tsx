@@ -218,6 +218,13 @@ export default function ChatPage() {
         }
     }, [editingSessionId]);
 
+    // Listen for inline trigger from chat messages
+    useEffect(() => {
+        const handler = () => setKeyModalOpen(true);
+        window.addEventListener("open-llm-key-modal", handler);
+        return () => window.removeEventListener("open-llm-key-modal", handler);
+    }, []);
+
     async function handleCreateNewSession() {
         try {
             const newSession = await chatSessionService.createSession("New Conversation");

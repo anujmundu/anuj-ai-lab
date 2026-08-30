@@ -1,6 +1,6 @@
 import type { ChatSource } from "@/types";
 import { useUIStore } from "@/stores";
-import { FileText } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
 
 interface ChatMessageProps {
     role: "user" | "assistant";
@@ -15,6 +15,8 @@ export function ChatMessage({
 }: ChatMessageProps) {
     const toggleInspector = useUIStore((state) => state.toggleInspector);
     const inspectorOpen = useUIStore((state) => state.inspectorOpen);
+
+    const isLlmRequiredPrompt = content.includes("Neural LLM Engine Required");
 
     return (
         <div
@@ -38,9 +40,20 @@ export function ChatMessage({
                 )}
             </div>
 
-            <p className="whitespace-pre-wrap leading-7 text-sm">
+            <div className="whitespace-pre-wrap leading-7 text-sm">
                 {content}
-            </p>
+            </div>
+
+            {isLlmRequiredPrompt && (
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-llm-key-modal"))}
+                        className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    >
+                        <Sparkles className="h-4 w-4" /> ⚡ Connect Free Cloud LLM (Groq / Gemini)
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
