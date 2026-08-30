@@ -193,20 +193,57 @@ Every subsystem is designed to be independently maintainable, testable, and exte
 - **Knowledge Graph (Graph-RAG)**: Entity extraction, relational triplet indexing (`is_a`, `stores`, `uses`, `connects_to`), 1-hop & 2-hop subgraph expansion, and multi-hop BFS path traversal.
 - **Enterprise Security Guardrails**: Adversarial prompt injection defense & PII masking (API keys, credit cards, emails, SSNs, phone numbers).
 - **OpenTelemetry Observability**: Distributed trace span export across pipeline stages (`rag.bm25_search`, `rag.semantic_retrieval`, `rag.llm_generation`).
-- **Production Test Suite**: 341/341 tests passing (100%) and 6/6 Golden Benchmark Regression Gates.
 
 ---
 
-🚧 Current Focus
+✅ Stage 5 — Tool Calling, Sandboxing & MCP Protocols
 
-## Stage 5 — Tool Calling & Function Execution
+- **Sandboxed Python Code Execution**: In-memory and isolated subprocess Python sandbox.
+- **AST Mathematical Calculator**: Safe arithmetic parsing without `eval()`.
+- **Sandboxed File System Tools**: Path traversal validation and safe workspace directory inspection.
+- **Model Context Protocol (MCP)**: JSON-RPC 2.0 stdio MCP client and dynamic ToolAdapter integration.
 
-Current development focuses on expanding the platform with:
+---
 
-- Local Python execution environment
-- File system tools
-- Dynamic tool registry
-- Permission-based function calling
+✅ Stage 6 — Autonomous ReAct Agents & DAG Planning
+
+- **Thought-Action-Observation Loop**: Autonomous ReAct agent executor with live SSE streaming.
+- **DAG Task Planner**: Decomposes complex natural language goals into directed acyclic dependency graphs.
+- **Self-Correction & Reflection**: Evaluator agent checking intermediate steps and auto-revising execution plans.
+
+---
+
+✅ Stage 7 — Multi-Agent Deliberation & Blackboard Collaboration
+
+- **Specialist Roles**: Dedicated Lead Researcher (`deepseek-r1:8b`), Coder (`qwen2.5-coder:7b`), Critic (`llama3.2:3b`), and Consensus Synthesizer.
+- **Shared Agent Blackboard**: Multi-agent dialogue history and state broadcasting.
+- **Human-in-the-Loop (HITL) Gate**: Interactive approval checkpoints for sensitive tool executions.
+
+---
+
+✅ Stage 8 — Continuous Learning & Semantic Memory
+
+- **Episodic-to-Semantic Consolidation**: Distills multi-turn chat threads into long-term factual memories.
+- **Dynamic Few-Shot Exemplar Store**: Automatically injects top-voted examples into system prompts.
+- **Graph-RAG Pruning**: Merges entity aliases and prunes redundant graph relations.
+
+---
+
+✅ Stage 9 — Vector Sharding, Micro-Batching & Semantic Caching
+
+- **Semantic Vector Cache**: Cosine similarity caching with LRU eviction for zero-latency retrieval.
+- **Multi-Tenant Sharding**: Virtual collection partition router for multi-tenant isolation.
+- **Micro-Batch Pipeline**: High-throughput asynchronous vector embedding ingestor.
+
+---
+
+✅ Stage 10 — Production Telemetry, Health & UI Theme Engine
+
+- **12 Curated Theme Modes**: Pure Light, Midnight Obsidian, Cyberpunk, Nordic, Velvet Espresso, Ocean, Amethyst, Crimson, Sunset, Sepia, Arctic Frost, and System Adaptive.
+- **12 Dedicated Accent Palettes**: Electric Indigo, Emerald, Cyan, Violet, Amber, Rose, Sapphire, Sunset Orange, Teal, Magenta, Jade, and Carbon.
+- **Multi-Device Responsive Breakpoints**: Fluid interfaces tailored for Mobile, Tablet, Laptop, Desktop PC, and 4K TVs.
+- **Execution Inspector Routing**: Reroutes citations and diagnostic telemetry into an expandable studio inspector.
+- **Deep Health & Synthetic Evaluation**: SQLite, ChromaDB, and Cache diagnostics with automated Q&A test generation.
 
 ---
 
@@ -291,9 +328,12 @@ The latest optimization cycle dramatically improved retrieval performance.
 | Stage 3 – RAG Platform | ✅ Complete |
 | Stage 3.5 – Modern React Workspace | ✅ Complete |
 | Stage 4 – Memory, Graph-RAG & Observability | ✅ Complete |
-| Stage 5 – Tool Calling & Function Execution | 🚧 In Progress |
-| Stage 6 – AI Agents | ⏳ Planned |
-| Stage 7 – Multi-Agent Platform | ⏳ Planned |
+| Stage 5 – Tool Calling, Sandboxing & MCP | ✅ Complete |
+| Stage 6 – Autonomous ReAct Agents & DAG | ✅ Complete |
+| Stage 7 – Multi-Agent Blackboard Deliberation | ✅ Complete |
+| Stage 8 – Continuous Learning & Consolidation | ✅ Complete |
+| Stage 9 – Vector Sharding & Semantic Caching | ✅ Complete |
+| Stage 10 – Production Telemetry & UI Themes | ✅ Complete |
 
 
 ---
@@ -530,95 +570,57 @@ anuj-ai-lab/
 │
 ├── backend/
 │   ├── app/
-│   │   ├── api/                 # REST API endpoints
-│   │   ├── core/                # Application configuration
-│   │   ├── db/                  # Database layer
-│   │   ├── models/              # Shared data models
-│   │   ├── services/            # Business services
-│   │   ├── utils/               # Utility functions
+│   │   ├── agents/              # ReAct Agent Executor, DAG Planner & Reflection Evaluators
+│   │   ├── api/                 # REST API endpoints & SSE real-time streaming routes
+│   │   ├── collaboration/       # Multi-Agent Blackboard, Persona Roles & HITL Gate
+│   │   ├── core/                # System configuration, logging & global constants
+│   │   ├── db/                  # SQLModel & SQLite database session management
+│   │   ├── media/               # Multi-modal faster-whisper STT & Kokoro TTS voice engine
+│   │   ├── memory/              # Episodic-to-semantic consolidation & few-shot exemplars
+│   │   ├── models/              # Shared Pydantic data schemas & state models
+│   │   ├── services/            # Chat sessions, model registry & telemetry services
+│   │   ├── storage/             # Micro-batch ingestion processor & asset streams
+│   │   ├── tools/               # AST Math, Subprocess Python Sandbox & MCP protocols
 │   │   │
-│   │   └── rag/
-│   │       ├── Retrieval/
-│   │       │   ├── Hybrid Retrieval
-│   │       │   ├── BM25 Retrieval
-│   │       │   ├── Keyword Retrieval
-│   │       │   ├── Rank Fusion
-│   │       │   ├── Result Fusion
-│   │       │   ├── Retrieval Filtering
-│   │       │   └── Semantic Reranking
-│   │       │
-│   │       ├── Embeddings/
-│   │       │   ├── Embedding Service
-│   │       │   ├── Embedding Provider
-│   │       │   ├── Ollama Provider
-│   │       │   └── SentenceTransformer Provider
-│   │       │
-│   │       ├── Prompt Pipeline/
-│   │       │   ├── Prompt Builder
-│   │       │   ├── Prompt Optimizer
-│   │       │   ├── Prompt Analyzer
-│   │       │   ├── Prompt Renderer
-│   │       │   └── Token Budget Manager
-│   │       │
-│   │       ├── Answer Quality/
-│   │       │   ├── Answer Processor
-│   │       │   ├── Answer Quality
-│   │       │   ├── Answer Consistency Checker
-│   │       │   ├── Hallucination Detector
-│   │       │   ├── Contradiction Detector
-│   │       │   └── Evidence Aligner
-│   │       │
-│   │       ├── Citation Pipeline/
-│   │       │   ├── Citation Processor
-│   │       │   ├── Citation Grounder
-│   │       │   └── Citation Inserter
-│   │       │
-│   │       ├── Diagnostics/
-│   │       │   ├── Performance Profiler
-│   │       │   ├── Pipeline Health
-│   │       │   ├── RAG Scorecard
-│   │       │   ├── Retrieval Explainer
-│   │       │   └── Retrieval Quality
-│   │       │
-│   │       ├── Context Builder
-│   │       ├── Semantic Matcher
-│   │       ├── Vector Store
-│   │       └── RAG Service
+│   │   └── rag/                 # 12 Modular Domain-Driven Sub-Packages
+│   │       ├── chunking/        # Parent-child chunkers & hierarchical splitters
+│   │       ├── embeddings/      # SentenceTransformers, Ollama & cosine similarity math
+│   │       ├── retrieval/       # Hybrid, BM25, Contextual MaxSim & multi-query search
+│   │       ├── context/         # Context assembly, token budget managers & compression
+│   │       ├── prompts/         # Prompt contracts, optimizers, normalizers & renderers
+│   │       ├── guardrails/      # Hallucination detectors, grounding & citation inserters
+│   │       ├── post_processing/ # Answer processors, quality scoring & consistency
+│   │       ├── matching/        # Semantic matchers & neural cross-encoder re-rankers
+│   │       ├── ingestion/       # Document loaders, duplicate detection & ChromaDB stores
+│   │       ├── observability/   # Performance profiling, pipeline health & scorecards
+│   │       ├── routing/         # Dynamic task routing & model tier assignment
+│   │       └── pipelines/       # End-to-end staged pipeline coordinators
 │   │
-│   ├── data/
-│   │   ├── documents/
-│   │   ├── embeddings/
-│   │   └── sample_documents/
-│   │
-│   ├── tests/
-│   ├── requirements.txt
-│   └── main.py
+│   ├── tests/                   # 419 unit, integration & golden regression benchmark tests
+│   ├── requirements.txt         # Production Python dependencies
+│   └── main.py                  # FastAPI gateway entry point
 │
-├── web/
+├── web/                         # Modern React 19 Frontend SPA
 │   ├── src/
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── lib/
-│   │   ├── pages/
-│   │   ├── providers/
-│   │   ├── services/
-│   │   ├── stores/
-│   │   ├── types/
-│   │   └── main.tsx
-│   │
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.ts
+│   │   ├── app/                 # Client routing & layout shells
+│   │   ├── components/          # Chat, Inspector, Dropzones, Memory & Header UI
+│   │   ├── hooks/               # React Query data fetching & mutation hooks
+│   │   ├── pages/               # Chat, Documents, Agents, Debate, Pipeline, Tools, Settings
+│   │   ├── services/            # Typed Axios API clients for all backend modules
+│   │   ├── stores/              # Zustand UI state (12 Theme Modes & 12 Accent Palettes)
+│   │   ├── types/               # TypeScript domain interfaces & API contracts
+│   │   └── main.tsx             # Application bootstrap & CSS variable styling
+│   ├── package.json             # Frontend dependencies (Vite 8, TailwindCSS v4)
+│   └── vite.config.ts           # Build configuration & proxy routing
 │
-├── docs/
-├── infrastructure/
-├── notebooks/
-├── portfolio/
-├── scripts/
-├── .github/
-├── LICENSE
-└── README.md
+├── docs/                        # Obsidian Knowledge Graph (41 linked notes with [[WikiLinks]])
+├── infrastructure/              # Docker deployment blueprints & local hardware guides
+├── notebooks/                   # RAG benchmarking, recall evaluations & analysis
+├── portfolio/                   # System architecture blueprints & dataflow diagrams
+├── scripts/                     # Re-indexing, vector deduplication & warmup automations
+├── .github/                     # GitHub workflows & issue templates
+├── LICENSE                      # MIT Open Source License
+└── README.md                    # Project documentation
 ```
 
 ---
