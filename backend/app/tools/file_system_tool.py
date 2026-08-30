@@ -37,8 +37,26 @@ class FileSystemTool(BaseTool):
     ]
 
     def _resolve_safe_path(self, path_str: str) -> Path:
-        target = Path(path_str).resolve()
-        return target
+        target = Path(path_str)
+        if target.is_absolute():
+            return target
+
+        if target.exists():
+            return target.resolve()
+
+        # If path starts with "backend/" but cwd is already inside backend directory
+        if path_str.startswith("backend/") or path_str.startswith("backend\\"):
+            trimmed = Path(path_str[8:])
+            if trimmed.exists():
+                return trimmed.resolve()
+
+        # Check relative to workspace root (parent of backend)
+        workspace_root = Path(__file__).resolve().parents[3]
+        from_root = workspace_root / path_str
+        if from_root.exists():
+            return from_root.resolve()
+
+        return target.resolve()
 
     def _run(
         self,

@@ -32,6 +32,7 @@ class CalculatorTool(BaseTool):
         ast.FloorDiv: operator.floordiv,
         ast.Mod: operator.mod,
         ast.Pow: operator.pow,
+        ast.BitXor: operator.pow,  # Math caret notation support (e.g. 2^3 -> 8)
         ast.USub: operator.neg,
         ast.UAdd: operator.pos,
     }
@@ -101,7 +102,11 @@ class CalculatorTool(BaseTool):
         if not expression or not expression.strip():
             raise ValueError("Expression cannot be empty")
 
-        parsed = ast.parse(expression.strip(), mode="eval")
+        clean_expr = expression.strip().replace(",", "")
+        if "=" in clean_expr:
+            clean_expr = clean_expr.split("=")[0].strip()
+
+        parsed = ast.parse(clean_expr, mode="eval")
         result = self._eval_node(parsed.body)
         return str(result)
 
