@@ -109,5 +109,13 @@ class DynamicModelRouter:
             fallback_used=True,
         )
 
+    def set_primary_model(self, task_type: TaskType, model_name: str) -> list[str]:
+        """Promotes model_name to the primary position for the given task tier."""
+        current = self.preferred_models.get(task_type, [])
+        filtered = [m for m in current if m != model_name]
+        updated = [model_name] + filtered
+        self.preferred_models[task_type] = updated
+        return updated
+
 
 dynamic_model_router = DynamicModelRouter()

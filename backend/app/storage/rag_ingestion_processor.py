@@ -85,9 +85,15 @@ class RagIngestionProcessor:
                     temporary_file.fileno()
                 )
 
-            result = ingestion_service.ingest(
-                temporary_path
-            )
+            try:
+                result = ingestion_service.ingest(
+                    temporary_path,
+                    original_filename=asset.original_filename,
+                )
+            except TypeError:
+                result = ingestion_service.ingest(
+                    temporary_path
+                )
 
             return IngestionProcessorResult(
                 status=result["status"],
