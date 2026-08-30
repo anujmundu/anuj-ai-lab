@@ -31,12 +31,32 @@ import type { ChatMessage } from "@/types";
 export default function ChatPage() {
     const queryClient = useQueryClient();
     const [question, setQuestion] = useState("");
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isPending, setIsPending] = useState(false);
-    const [sessions, setSessions] = useState<ChatSessionSummary[]>([]);
-    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
+    
+    // Persistent initial state from local storage
+    const [sessions, setSessions] = useState<ChatSessionSummary[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem("anuj_ai_chat_sessions") || "[]");
+        } catch {
+            return [];
+        }
+    });
+
+    const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
+        return localStorage.getItem("anuj_ai_active_session_id") || null;
+    });
+
+    const [messages, setMessages] = useState<ChatMessage[]>(() => {
+        try {
+            const savedId = localStorage.getItem("anuj_ai_active_session_id");
+            if (!savedId) return [];
+            return JSON.parse(localStorage.getItem(`anuj_ai_messages_${savedId}`) || "[]");
+        } catch {
+            return [];
+        }
+    });
     
     // Inline rename state
     const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -52,6 +72,22 @@ export default function ChatPage() {
     const inspectorOpen = useUIStore((state) => state.inspectorOpen);
     const toggleInspector = useUIStore((state) => state.toggleInspector);
 
+    // Save active session & messages to local storage whenever they change
+    useEffect(() => {
+        if (activeSessionId) {
+            localStorage.setItem("anuj_ai_active_session_id", activeSessionId);
+            if (messages.length > 0) {
+                localStorage.setItem(`anuj_ai_messages_${activeSessionId}`, JSON.stringify(messages));
+            }
+        }
+    }, [messages, activeSessionId]);
+
+    useEffect(() => {
+        if (sessions.length > 0) {
+            localStorage.setItem("anuj_ai_chat_sessions", JSON.stringify(sessions));
+        }
+    }, [sessions]);
+
     // Automatically hide AI Platform Engine sidebar when inside AI Assistant
     useEffect(() => {
         setGlobalSidebarOpen(false);
@@ -60,9 +96,11 @@ export default function ChatPage() {
     async function loadSessions() {
         try {
             const list = await chatSessionService.listSessions();
-            setSessions(list);
-            if (list.length > 0 && !activeSessionId) {
-                loadSessionMessages(list[0].session_id);
+            if (list && list.length > 0) {
+                setSessions(list);
+                const currentId = activeSessionId || localStorage.getItem("anuj_ai_active_session_id");
+                const targetSession = list.find((s) => s.session_id === currentId) || list[0];
+                loadSessionMessages(targetSession.session_id);
             }
         } catch (err) {
             console.error("Failed to load sessions", err);
@@ -82,6 +120,18 @@ export default function ChatPage() {
 
     async function loadSessionMessages(sessionId: string) {
         setActiveSessionId(sessionId);
+        localStorage.setItem("anuj_ai_active_session_id", sessionId);
+
+        // Preload from local cache immediately for 0ms visual latency
+        try {
+            const cached = localStorage.getItem(`anuj_ai_messages_${sessionId}`);
+            if (cached) {
+                setMessages(JSON.parse(cached));
+            }
+        } catch {
+            // ignore
+        }
+
         try {
             const detail = await chatSessionService.getSession(sessionId);
             const formatted: ChatMessage[] = detail.messages.map((m) => ({
@@ -89,7 +139,10 @@ export default function ChatPage() {
                 content: m.content,
                 sources: m.sources,
             }));
-            setMessages(formatted);
+            if (formatted.length > 0) {
+                setMessages(formatted);
+                localStorage.setItem(`anuj_ai_messages_${sessionId}`, JSON.stringify(formatted));
+            }
         } catch (err) {
             console.error("Failed to load session messages", err);
         }
