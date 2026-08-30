@@ -112,3 +112,5 @@ backend/models/
 *.pth
 .cache/
 .huggingface/
+
+RELEASE_NOTES*.md
