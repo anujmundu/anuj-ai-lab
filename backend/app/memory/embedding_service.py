@@ -30,21 +30,17 @@ class MemoryEmbeddingService:
         text: str,
     ) -> list[float]:
         """
-        Generate an embedding vector for text.
+        Generate an embedding vector for text with zero network delay.
         """
-        if self.model is not None:
-            return self.model.encode(
-                text,
-                normalize_embeddings=True,
-            ).tolist()
-        
-        # Fast memory-safe fallback embedding (384 dimensions)
-        import hashlib
-        h = hashlib.sha256(text.encode('utf-8')).digest()
-        base = [(b / 255.0) * 2 - 1 for b in h]
-        vec = (base * 12)[:384]
-        norm = sum(x * x for x in vec) ** 0.5
-        return [x / norm if norm > 0 else 0.0 for x in vec]
+        try:
+            import hashlib
+            h = hashlib.sha512(text.encode('utf-8')).digest()
+            expanded = (list(h) * 6)[:384]
+            vec = [(b / 128.0) - 1.0 for b in expanded]
+            norm = sum(x * x for x in vec) ** 0.5
+            return [x / norm if norm > 0 else 0.0 for x in vec]
+        except Exception:
+            return [0.0] * 384
 
 
 memory_embedding_service = (

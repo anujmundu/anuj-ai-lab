@@ -111,7 +111,7 @@ class OllamaService:
         response = requests.post(
             f"{settings.OLLAMA_BASE_URL}/api/generate",
             json=payload,
-            timeout=min(self.config.timeout, 5.0)
+            timeout=min(self.config.timeout, 1.5)
         )
 
         response.raise_for_status()
