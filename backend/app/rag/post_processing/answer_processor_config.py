@@ -15,7 +15,7 @@ class AnswerProcessorConfig:
     # Answer Cleanup
     # --------------------------------------------------
 
-    normalize_whitespace: bool = True
+    normalize_whitespace: bool = False
 
     strip_answer: bool = True
 

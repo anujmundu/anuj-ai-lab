@@ -80,11 +80,14 @@ class RetrievalPipeline:
             results,
         )
 
-        documents = results["documents"][0]
+        docs_list = results.get("documents", [])
+        documents = docs_list[0] if docs_list and len(docs_list) > 0 else []
 
-        metadatas = results["metadatas"][0]
+        metas_list = results.get("metadatas", [])
+        metadatas = metas_list[0] if metas_list and len(metas_list) > 0 else []
 
-        retrieval = results["retrieval"][0]
+        rets_list = results.get("retrieval", [])
+        retrieval = rets_list[0] if rets_list and len(rets_list) > 0 else []
 
         pipeline = results.get(
             "pipeline",

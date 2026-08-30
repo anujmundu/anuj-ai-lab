@@ -35,15 +35,20 @@ class Ranker:
         results: dict,
     ) -> dict:
 
-        documents = results["documents"][0]
-        metadatas = results["metadatas"][0]
-        ids = results["ids"][0]
-        distances = results["distances"][0]
+        docs_raw = results.get("documents", [[]])
+        documents = docs_raw[0] if docs_raw and len(docs_raw) > 0 else []
 
-        retrieval = results.get(
-            "retrieval",
-            [[]],
-        )[0]
+        metas_raw = results.get("metadatas", [[]])
+        metadatas = metas_raw[0] if metas_raw and len(metas_raw) > 0 else []
+
+        ids_raw = results.get("ids", [[]])
+        ids = ids_raw[0] if ids_raw and len(ids_raw) > 0 else []
+
+        dists_raw = results.get("distances", [[]])
+        distances = dists_raw[0] if dists_raw and len(dists_raw) > 0 else []
+
+        rets_raw = results.get("retrieval", [[]])
+        retrieval = rets_raw[0] if rets_raw and len(rets_raw) > 0 else []
 
         diagnostics = results.get(
             "diagnostics",
@@ -84,7 +89,7 @@ class Ranker:
             retrieval,
         ):
 
-            combined_score = scores["combined_score"]
+            combined_score = scores.get("combined_score", 1.0) if isinstance(scores, dict) else 1.0
 
             if (
                 combined_score
@@ -96,7 +101,7 @@ class Ranker:
 
             if self.config.remove_duplicate_chunks:
 
-                chunk = metadata["chunk_id"]
+                chunk = metadata.get("chunk_id", str(doc_id)) if isinstance(metadata, dict) else str(doc_id)
 
                 if chunk in seen_chunks:
                     removed_duplicates += 1

@@ -51,13 +51,9 @@ class AnswerProcessor:
         if not self.config.normalize_whitespace:
             return answer
 
-        answer = re.sub(
-            r"\s+",
-            " ",
-            answer
-        )
-
-        return answer.strip()
+        # Preserve line breaks, only collapse multiple spaces/tabs within lines
+        lines = [re.sub(r"[ \t]+", " ", line).strip() for line in answer.split("\n")]
+        return "\n".join(lines).strip()
 
     def _is_unknown_answer(
         self,

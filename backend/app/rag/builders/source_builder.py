@@ -7,12 +7,13 @@ class SourceBuilder:
 
         return [
             {
-                "filename": metadata["filename"],
-                "chunk_id": metadata["chunk_id"],
-                "chunk_number": metadata["chunk_number"],
-                "total_chunks": metadata["total_chunks"],
+                "filename": metadata.get("filename", metadata.get("source", "Document")),
+                "chunk_id": metadata.get("chunk_id", str(idx)),
+                "chunk_number": metadata.get("chunk_number", idx + 1),
+                "total_chunks": metadata.get("total_chunks", len(metadatas)),
             }
-            for metadata in metadatas
+            for idx, metadata in enumerate(metadatas)
+            if isinstance(metadata, dict)
         ]
 
 
