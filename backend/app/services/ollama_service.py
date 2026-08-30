@@ -159,11 +159,28 @@ class OllamaService:
         from datetime import datetime, timezone
 
         # 1. Extract user query and retrieved context accurately
-        clean_q = prompt
-        if "Question:" in prompt:
+        clean_q = prompt.strip()
+        if "QUESTION\n--------" in prompt:
+            clean_q = prompt.split("QUESTION\n--------")[-1].split("ANSWER\n------")[0].strip()
+        elif "Question:" in prompt:
             clean_q = prompt.split("Question:")[-1].split("Assistant:")[0].split("\n")[0].strip()
         elif "Human:" in prompt:
             clean_q = prompt.split("Human:")[-1].split("Assistant:")[0].split("\n")[0].strip()
+
+        # Extract retrieved context if present
+        retrieved_context = ""
+        if "CONTEXT\n-------" in prompt:
+            retrieved_context = prompt.split("CONTEXT\n-------")[-1].split("QUESTION\n--------")[0].strip()
+            if retrieved_context == "(none)" or retrieved_context.startswith("###"):
+                retrieved_context = ""
+        elif "Context:" in prompt:
+            retrieved_context = prompt.split("Context:")[1].split("Question:")[0].strip()
+            if retrieved_context == "(none)" or retrieved_context.startswith("###"):
+                retrieved_context = ""
+
+        llm_user_prompt = clean_q
+        if retrieved_context:
+            llm_user_prompt = f"Grounded Context:\n{retrieved_context}\n\nQuestion: {clean_q}\n\nAnswer using the provided context when relevant, and provide a clear, accurate, conversational response."
         
         q_lower = clean_q.lower()
         now = datetime.now(timezone.utc)
@@ -178,6 +195,7 @@ class OllamaService:
         # 2a. Direct user-provided key or Groq Cloud (Llama 3.3 70B / 8B / Qwen)
         groq_key = (api_key if (api_key and (provider == "groq" or api_key.startswith("gsk_"))) else os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
         if groq_key:
+            last_groq_error = None
             for model_candidate in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-32b", "deepseek-r1-distill-llama-70b"]:
                 try:
                     res = requests.post(
@@ -192,22 +210,25 @@ class OllamaService:
                                 },
                                 {
                                     "role": "user",
-                                    "content": clean_q
+                                    "content": llm_user_prompt
                                 }
                             ],
                             "temperature": 0.7,
-                            "max_tokens": 1500,
+                            "max_tokens": 2048,
                         },
-                        timeout=15.0
+                        timeout=20.0
                     )
                     if res.status_code == 200:
                         content = res.json()["choices"][0]["message"]["content"]
-                        if content and len(content.strip()) > 10:
+                        if content and len(content.strip()) > 5:
                             return content
                     else:
-                        print(f"[GROQ Error] Model {model_candidate} returned HTTP {res.status_code}: {res.text}")
+                        last_groq_error = f"HTTP {res.status_code}: {res.text}"
                 except Exception as e:
-                    print(f"[GROQ Exception] Model {model_candidate} call failed: {e}")
+                    last_groq_error = str(e)
+            
+            if api_key and last_groq_error:
+                return f"⚠️ **Groq API Error**: `{last_groq_error}`\n\nPlease check your Groq API key at [console.groq.com/keys](https://console.groq.com/keys)."
 
         # 2b. Google Gemini API (Gemini 1.5 Flash / Pro)
         gemini_key = (api_key if (api_key and (provider == "gemini" or api_key.startswith("AIza"))) else os.environ.get("GEMINI_API_KEY") or "").strip().strip('"').strip("'")
@@ -218,19 +239,22 @@ class OllamaService:
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [
-                            {"parts": [{"text": f"You are Anuj AI Lab Assistant. Answer informatively, naturally, and comprehensively:\n\n{clean_q}"}]}
+                            {"parts": [{"text": f"You are Anuj AI Lab Assistant. Answer informatively, naturally, and comprehensively:\n\n{llm_user_prompt}"}]}
                         ]
                     },
-                    timeout=15.0
+                    timeout=20.0
                 )
                 if res.status_code == 200:
                     candidates = res.json().get("candidates", [])
                     if candidates:
                         content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        if content and len(content.strip()) > 10:
+                        if content and len(content.strip()) > 5:
                             return content
+                elif api_key:
+                    return f"⚠️ **Google Gemini API Error**: HTTP {res.status_code}: `{res.text}`\n\nPlease verify your Gemini API key at [aistudio.google.com](https://aistudio.google.com/app/apikey)."
             except Exception as e:
-                print(f"[Gemini Exception] {e}")
+                if api_key:
+                    return f"⚠️ **Google Gemini Exception**: `{e}`"
 
         # 2c. OpenAI API (GPT-4o / GPT-4o-mini)
         openai_key = (api_key if (api_key and (provider == "openai" or api_key.startswith("sk-proj") or api_key.startswith("sk-admin"))) else os.environ.get("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
@@ -243,18 +267,21 @@ class OllamaService:
                         "model": "gpt-4o-mini",
                         "messages": [
                             {"role": "system", "content": "You are Anuj AI Lab Assistant. Answer informatively and with clear markdown."},
-                            {"role": "user", "content": clean_q}
+                            {"role": "user", "content": llm_user_prompt}
                         ],
                         "temperature": 0.7,
                     },
-                    timeout=15.0
+                    timeout=20.0
                 )
                 if res.status_code == 200:
                     content = res.json()["choices"][0]["message"]["content"]
-                    if content and len(content.strip()) > 10:
+                    if content and len(content.strip()) > 5:
                         return content
+                elif api_key:
+                    return f"⚠️ **OpenAI API Error**: HTTP {res.status_code}: `{res.text}`"
             except Exception as e:
-                print(f"[OpenAI Exception] {e}")
+                if api_key:
+                    return f"⚠️ **OpenAI Exception**: `{e}`"
 
         # 2d. OpenRouter Cloud
         openrouter_key = (api_key if (api_key and (provider == "openrouter" or api_key.startswith("sk-or"))) else os.environ.get("OPENROUTER_API_KEY") or "").strip().strip('"').strip("'")
@@ -267,32 +294,31 @@ class OllamaService:
                         "model": "meta-llama/llama-3.2-3b-instruct:free",
                         "messages": [
                             {"role": "system", "content": "You are Anuj AI Lab Assistant. Answer clearly and informatively."},
-                            {"role": "user", "content": clean_q}
+                            {"role": "user", "content": llm_user_prompt}
                         ],
                     },
-                    timeout=15.0
+                    timeout=20.0
                 )
                 if res.status_code == 200:
                     content = res.json()["choices"][0]["message"]["content"]
-                    if content and len(content.strip()) > 10:
+                    if content and len(content.strip()) > 5:
                         return content
-                else:
-                    print(f"[OpenRouter Error] HTTP {res.status_code}: {res.text}")
+                elif api_key:
+                    return f"⚠️ **OpenRouter API Error**: HTTP {res.status_code}: `{res.text}`"
             except Exception as e:
-                print(f"[OpenRouter Exception] {e}")
+                if api_key:
+                    return f"⚠️ **OpenRouter Exception**: `{e}`"
 
-        # 3. Check for Real Retrieved ChromaDB Document Context (ignoring empty boilerplate)
-        if "Context:" in prompt:
-            context_part = prompt.split("Context:")[1].split("Question:")[0].strip()
-            if len(context_part) > 20 and not context_part.startswith("###") and not context_part.startswith("---"):
-                lines = [l.strip() for l in context_part.split("\n") if l.strip() and not l.startswith("###")]
-                snippet = "\n".join(lines[:6])
-                return (
-                    f"### 📄 Grounded Knowledge Synthesis\n\n"
-                    f"{snippet}\n\n"
-                    f"--- \n"
-                    f"*Source: Verified ChromaDB semantic retrieval. Model: `{model_name}`.*"
-                )
+        # 3. Check for Real Retrieved ChromaDB Document Context
+        if retrieved_context and len(retrieved_context) > 20:
+            lines = [l.strip() for l in retrieved_context.split("\n") if l.strip() and not l.startswith("###")]
+            snippet = "\n".join(lines[:6])
+            return (
+                f"### 📄 Grounded Knowledge Synthesis\n\n"
+                f"{snippet}\n\n"
+                f"--- \n"
+                f"*Source: Verified ChromaDB semantic retrieval.*"
+            )
 
         # 4. Strict Regex Matching for System Queries (Never triggers on arbitrary text)
         import re
