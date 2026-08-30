@@ -51,7 +51,13 @@ export const chatSessionService = {
     },
 
     async sendMessage(sessionId: string, content: string): Promise<{ answer: string; sources: any[]; session_title?: string; confidence?: number }> {
-        const { data } = await api.post(`/chat/sessions/${sessionId}/messages`, { content });
+        const apiKey = localStorage.getItem("anuj_ai_cloud_api_key") || undefined;
+        const provider = localStorage.getItem("anuj_ai_cloud_provider") || undefined;
+        const { data } = await api.post(`/chat/sessions/${sessionId}/messages`, {
+            content,
+            api_key: apiKey,
+            provider: provider,
+        });
         return data;
     },
 };

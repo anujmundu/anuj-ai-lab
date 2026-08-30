@@ -27,6 +27,8 @@ class GenerationPipeline:
         *,
         prompt: str,
         profiler: PerformanceProfiler | None = None,
+        api_key: str | None = None,
+        provider: str | None = None,
     ) -> GenerationPipelineResult:
 
         if profiler:
@@ -37,19 +39,27 @@ class GenerationPipeline:
 
                 return self._generate(
                     prompt,
+                    api_key=api_key,
+                    provider=provider,
                 )
 
         return self._generate(
             prompt,
+            api_key=api_key,
+            provider=provider,
         )
         
     def _generate(
         self,
         prompt: str,
+        api_key: str | None = None,
+        provider: str | None = None,
     ) -> GenerationPipelineResult:
 
         raw_answer = ollama_service.generate(
             prompt=prompt,
+            api_key=api_key,
+            provider=provider,
         )
 
         generation_seconds = (

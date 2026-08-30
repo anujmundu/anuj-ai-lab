@@ -156,6 +156,8 @@ class RAGService:
         question: str,
         conversation: str | None = None,
         k: int = 3,
+        api_key: str | None = None,
+        provider: str | None = None,
     ) -> dict:
 
         total_start = time.perf_counter()
@@ -238,6 +240,8 @@ class RAGService:
             generation_pipeline.run(
                 prompt=prompt,
                 profiler=profiler,
+                api_key=api_key,
+                provider=provider,
             )
         )
 

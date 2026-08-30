@@ -124,6 +124,8 @@ class ChatSessionService:
         *,
         session_id: str,
         content: str,
+        api_key: str | None = None,
+        provider: str | None = None,
     ) -> dict:
         chat_session = self.get_session(session, session_id=session_id)
         if not chat_session:
@@ -151,6 +153,8 @@ class ChatSessionService:
             rag_response = rag_service.ask(
                 question=content,
                 conversation=conversation_context,
+                api_key=api_key,
+                provider=provider,
             )
             answer = rag_response.get("answer", "")
             sources = rag_response.get("sources", [])
@@ -158,11 +162,15 @@ class ChatSessionService:
             import traceback
             traceback.print_exc()
             try:
-                answer = ollama_service.generate(f"Question: {content}")
+                answer = ollama_service.generate(
+                    f"Question: {content}",
+                    api_key=api_key,
+                    provider=provider,
+                )
             except Exception:
                 answer = (
                     f"### ⚡ Analysis: {content}\n\n"
-                    f"Processed via Anuj AI Lab v3.0.0 Cloud Gateway. All ChromaDB vector pipelines and multi-agent planners are active."
+                    f"Processed via Anuj AI Lab v3.0.0 Cloud Gateway."
                 )
             sources = []
 

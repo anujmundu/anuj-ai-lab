@@ -12,10 +12,17 @@ import {
     Check,
     X,
     Layers,
-    Activity
+    Activity,
+    Key,
+    Sparkles,
+    ExternalLink,
+    Zap,
+    ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
     ChatHistory,
     ChatInput,
@@ -35,6 +42,12 @@ export default function ChatPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
     
+    // Cloud API Key State
+    const [keyModalOpen, setKeyModalOpen] = useState(false);
+    const [cloudApiKey, setCloudApiKey] = useState(() => localStorage.getItem("anuj_ai_cloud_api_key") || "");
+    const [cloudProvider, setCloudProvider] = useState(() => localStorage.getItem("anuj_ai_cloud_provider") || "groq");
+    const [showKey, setShowKey] = useState(false);
+
     // Persistent initial state from local storage
     const [sessions, setSessions] = useState<ChatSessionSummary[]>(() => {
         try {
@@ -540,6 +553,21 @@ export default function ChatPage() {
                             <span>{inspectorOpen ? "Hide Inspector" : "Show Inspector"}</span>
                         </Button>
 
+                        {/* Cloud LLM Engine Key Connection */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setKeyModalOpen(true)}
+                            className={`h-8 text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-800 ${
+                                cloudApiKey
+                                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700"
+                                    : "text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                            }`}
+                        >
+                            <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                            <span>{cloudApiKey ? `⚡ ${cloudProvider === "groq" ? "Llama 3.3 70B" : cloudProvider.toUpperCase()} Active` : "⚡ Connect Free LLM"}</span>
+                        </Button>
+
                         {/* Model Switcher Dropdown */}
                         <div className="flex items-center gap-1.5">
                             <Cpu className="h-4 w-4 text-indigo-500 hidden sm:inline" />
@@ -576,6 +604,153 @@ export default function ChatPage() {
                     />
                 </div>
             </div>
+
+            {/* Cloud LLM Engine Key Connection Modal */}
+            {keyModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in duration-150">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                                    <Sparkles className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                                        Connect Cloud LLM Engine
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Unlock 100% boundless, ChatGPT/Gemini-grade answers for all questions.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setKeyModalOpen(false)}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 text-xs">
+                            <div className="space-y-1.5">
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                    Select Neural LLM Provider:
+                                </label>
+                                <select
+                                    value={cloudProvider}
+                                    onChange={(e) => setCloudProvider(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 font-medium text-slate-900 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="groq">⚡ Groq — Meta Llama 3.3 70B (Free, 500 tokens/sec - Recommended)</option>
+                                    <option value="gemini">✨ Google Gemini — Gemini 1.5 Flash (Free Tier)</option>
+                                    <option value="openai">🧠 OpenAI — GPT-4o / GPT-4o-mini</option>
+                                    <option value="openrouter">🌐 OpenRouter — Multi-Model Open Source Fleet</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                        API Key:
+                                    </label>
+                                    {cloudProvider === "groq" && (
+                                        <a
+                                            href="https://console.groq.com/keys"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-medium text-[11px]"
+                                        >
+                                            Get Free Groq Key (10s) <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    )}
+                                    {cloudProvider === "gemini" && (
+                                        <a
+                                            href="https://aistudio.google.com/app/apikey"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-medium text-[11px]"
+                                        >
+                                            Get Free Gemini Key <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    )}
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        type={showKey ? "text" : "password"}
+                                        value={cloudApiKey}
+                                        onChange={(e) => setCloudApiKey(e.target.value)}
+                                        placeholder={
+                                            cloudProvider === "groq"
+                                                ? "Paste gsk_..."
+                                                : cloudProvider === "gemini"
+                                                ? "Paste AIzaSy..."
+                                                : "Paste your API key..."
+                                        }
+                                        className="font-mono text-xs pr-16 bg-slate-50 dark:bg-slate-800"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowKey(!showKey)}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium px-1.5 py-0.5 rounded"
+                                    >
+                                        {showKey ? "Hide" : "Show"}
+                                    </button>
+                                </div>
+                                <p className="text-[11px] text-slate-400">
+                                    Saved securely in your browser's LocalStorage and sent via encrypted HTTPS.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                            {cloudApiKey ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setCloudApiKey("");
+                                        localStorage.removeItem("anuj_ai_cloud_api_key");
+                                        localStorage.removeItem("anuj_ai_cloud_provider");
+                                        toast.info("Cloud API key cleared.");
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                >
+                                    Disconnect Key
+                                </Button>
+                            ) : <div />}
+
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setKeyModalOpen(false)}
+                                    className="text-xs"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => {
+                                        const trimmed = cloudApiKey.trim();
+                                        if (trimmed) {
+                                            localStorage.setItem("anuj_ai_cloud_api_key", trimmed);
+                                            localStorage.setItem("anuj_ai_cloud_provider", cloudProvider);
+                                            toast.success(`Connected to ${cloudProvider.toUpperCase()} Cloud LLM!`);
+                                        } else {
+                                            localStorage.removeItem("anuj_ai_cloud_api_key");
+                                            localStorage.removeItem("anuj_ai_cloud_provider");
+                                        }
+                                        setKeyModalOpen(false);
+                                    }}
+                                    className="text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium"
+                                >
+                                    Save & Activate
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

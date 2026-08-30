@@ -16,6 +16,8 @@ class SessionCreateRequest(BaseModel):
 
 class MessagePostRequest(BaseModel):
     content: str
+    api_key: str | None = None
+    provider: str | None = None
 
 
 @router.post("/test-message")
@@ -146,6 +148,8 @@ def send_session_message(
                 session,
                 session_id=session_id,
                 content=payload.content,
+                api_key=payload.api_key,
+                provider=payload.provider,
             )
             return result
     except Exception as exc:
@@ -153,7 +157,11 @@ def send_session_message(
         traceback.print_exc()
         try:
             from app.services.ollama_service import ollama_service
-            answer = ollama_service.generate(f"Question: {payload.content}")
+            answer = ollama_service.generate(
+                f"Question: {payload.content}",
+                api_key=payload.api_key,
+                provider=payload.provider,
+            )
         except Exception:
             answer = (
                 f"### ⚡ Analysis: {payload.content}\n\n"
