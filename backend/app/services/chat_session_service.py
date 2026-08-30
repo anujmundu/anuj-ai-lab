@@ -145,6 +145,8 @@ class ChatSessionService:
         session.commit()
 
         # 3. Call RAG service with resilient fallback
+        rag_response = {}
+        sources = []
         try:
             rag_response = rag_service.ask(
                 question=content,
