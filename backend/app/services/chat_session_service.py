@@ -129,7 +129,13 @@ class ChatSessionService:
         if not chat_session:
             raise ValueError(f"Chat session {session_id} not found")
 
-        # 1. Save user message
+        # 1. Build conversation context from past messages (prior turns)
+        conversation_context = self.format_conversation_context(
+            session,
+            session_id=session_id,
+        )
+
+        # 2. Save current user message
         user_msg = ChatMessage(
             session_id=session_id,
             role="user",
@@ -137,12 +143,6 @@ class ChatSessionService:
         )
         session.add(user_msg)
         session.commit()
-
-        # 2. Build conversation context from past messages
-        conversation_context = self.format_conversation_context(
-            session,
-            session_id=session_id,
-        )
 
         # 3. Call RAG service
         rag_response = rag_service.ask(
@@ -162,10 +162,15 @@ class ChatSessionService:
         )
         session.add(assistant_msg)
 
-        # Update session title if first turn
-        if chat_session.title == "New Conversation":
-            chat_session.title = content[:40].strip() + (
-                "..." if len(content) > 40 else ""
+        # Update session title if first turn or still has default placeholder
+        if (
+            chat_session.title == "New Conversation"
+            or chat_session.title.startswith("Chat ")
+            or not chat_session.title.strip()
+        ):
+            clean_title = content.strip().replace("\n", " ")
+            chat_session.title = clean_title[:40].strip() + (
+                "..." if len(clean_title) > 40 else ""
             )
 
         chat_session.updated_at = datetime.now(timezone.utc)
@@ -176,12 +181,30 @@ class ChatSessionService:
 
         return {
             "session_id": session_id,
+            "session_title": chat_session.title,
             "user_message_id": user_msg.id,
             "assistant_message_id": assistant_msg.id,
             "answer": answer,
             "sources": sources,
             "diagnostics": rag_response.get("diagnostics", {}),
         }
+
+    def update_session_title(
+        self,
+        session: Session,
+        *,
+        session_id: str,
+        title: str,
+    ) -> ChatSession | None:
+        chat_session = self.get_session(session, session_id=session_id)
+        if not chat_session:
+            return None
+        chat_session.title = title.strip() or "Conversation"
+        chat_session.updated_at = datetime.now(timezone.utc)
+        session.add(chat_session)
+        session.commit()
+        session.refresh(chat_session)
+        return chat_session
 
 
 chat_session_service = ChatSessionService()
