@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import os
-import soundfile as sf
 from typing import Any
 
 
@@ -68,6 +67,7 @@ class LocalVoiceService:
 
         samples, sample_rate = tts.create(text, voice=voice, speed=speed, lang=lang)
 
+        import soundfile as sf
         wav_buffer = io.BytesIO()
         sf.write(wav_buffer, samples, sample_rate, format="WAV")
         wav_buffer.seek(0)
