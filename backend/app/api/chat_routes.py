@@ -18,6 +18,11 @@ class MessagePostRequest(BaseModel):
     content: str
 
 
+@router.post("/test-message")
+def test_message(payload: MessagePostRequest):
+    return {"status": "ok", "echo": payload.content}
+
+
 @router.post("/sessions")
 def create_session(
     payload: SessionCreateRequest | None = None,
