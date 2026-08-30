@@ -425,10 +425,10 @@ export default function ChatPage() {
                             {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
                         </Button>
                         <div>
-                            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
+                            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
                                 AI Assistant
                             </h1>
-                            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1 sm:line-clamp-none">
+                            <p className="text-[11px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-none" style={{ color: "var(--text-muted)" }}>
                                 Multi-turn semantic conversations grounded in your ChromaDB knowledge base.
                             </p>
                         </div>

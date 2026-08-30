@@ -308,6 +308,17 @@ body, html, #root {
   transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
+/* Explicit High-Contrast Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground) !important;
+}
+
+.text-muted-foreground,
+.text-slate-500,
+.text-slate-400 {
+  color: var(--text-muted) !important;
+}
+
 header {
   background-color: var(--header-bg) !important;
   border-color: var(--card-border) !important;
