@@ -136,10 +136,10 @@ export function Header() {
                     </div>
 
                     <div className="cursor-pointer" onClick={() => navigate("/")}>
-                        <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                        <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
                             Anuj AI Lab
                         </h1>
-                        <p className="hidden text-xs text-muted-foreground sm:block">
+                        <p className="hidden text-xs text-slate-500 dark:text-slate-400 font-medium sm:block">
                             Local AI Engineering Platform
                         </p>
                     </div>

@@ -100,6 +100,55 @@ export default function ChatPage() {
         loadModels();
     }, []);
 
+    // Multi-device real-time message sync (e.g. desktop + mobile opened side-by-side)
+    useEffect(() => {
+        if (!activeSessionId) return;
+
+        const interval = setInterval(async () => {
+            if (isPending) return;
+            try {
+                const detail = await chatSessionService.getSession(activeSessionId);
+                const formatted: ChatMessage[] = detail.messages.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                    sources: m.sources,
+                }));
+                setMessages((prev) => {
+                    if (prev.length !== formatted.length) return formatted;
+                    if (
+                        prev.length > 0 &&
+                        (prev[prev.length - 1].content !== formatted[formatted.length - 1].content ||
+                         prev[prev.length - 1].role !== formatted[formatted.length - 1].role)
+                    ) {
+                        return formatted;
+                    }
+                    return prev;
+                });
+            } catch {
+                // Silently ignore polling errors
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [activeSessionId, isPending]);
+
+    // Multi-device session list sync
+    useEffect(() => {
+        const sessionInterval = setInterval(async () => {
+            try {
+                const list = await chatSessionService.listSessions();
+                setSessions((prev) => {
+                    if (prev.length !== list.length) return list;
+                    return prev;
+                });
+            } catch {
+                // Silently ignore
+            }
+        }, 5000);
+
+        return () => clearInterval(sessionInterval);
+    }, []);
+
     useEffect(() => {
         if (editingSessionId && editInputRef.current) {
             editInputRef.current.focus();
@@ -376,10 +425,10 @@ export default function ChatPage() {
                             {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
                         </Button>
                         <div>
-                            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                 AI Assistant
                             </h1>
-                            <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-1 sm:line-clamp-none">
+                            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1 sm:line-clamp-none">
                                 Multi-turn semantic conversations grounded in your ChromaDB knowledge base.
                             </p>
                         </div>
