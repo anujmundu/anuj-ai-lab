@@ -128,21 +128,21 @@ def delete_session(
 def send_session_message(
     session_id: str,
     payload: MessagePostRequest,
-    session: Session = Depends(get_session),
 ):
-    if not payload.content.strip():
+    if not payload.content or not payload.content.strip():
         raise HTTPException(
             status_code=400,
             detail="Message content cannot be empty",
         )
 
     try:
-        result = chat_session_service.post_message(
-            session,
-            session_id=session_id,
-            content=payload.content,
-        )
-        return result
+        with Session(engine) as session:
+            result = chat_session_service.post_message(
+                session,
+                session_id=session_id,
+                content=payload.content,
+            )
+            return result
     except Exception as exc:
         import traceback
         traceback.print_exc()
