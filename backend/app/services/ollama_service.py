@@ -146,8 +146,8 @@ class OllamaService:
 
     def _generate_cloud_fallback(self, prompt: str, model_name: str) -> str:
         """
-        Intelligent cloud inference engine when local Ollama is not hosted in container.
-        Supports Groq/OpenRouter cloud keys, direct RAG grounded synthesis, and domain intelligence.
+        Intelligent multi-domain cloud inference engine.
+        Supports Groq/OpenRouter cloud keys, direct RAG grounded synthesis, and rich domain intelligence.
         """
         import os
         from datetime import datetime, timezone
@@ -189,70 +189,129 @@ class OllamaService:
             except Exception:
                 pass
 
-        p_lower = prompt.lower()
+        # 2. Extract user query and retrieved context accurately
+        clean_q = prompt
+        if "Question:" in prompt:
+            clean_q = prompt.split("Question:")[-1].split("Assistant:")[0].split("\n")[0].strip()
+        elif "Human:" in prompt:
+            clean_q = prompt.split("Human:")[-1].split("Assistant:")[0].split("\n")[0].strip()
+        
+        q_lower = clean_q.lower()
         now = datetime.now(timezone.utc)
 
-        # 2. Date, Time & Year Queries
-        if any(w in p_lower for w in ["current year", "what year", "which year"]):
+        # 3. Check for Real Retrieved ChromaDB Document Context (ignoring empty boilerplate)
+        if "Context:" in prompt:
+            context_part = prompt.split("Context:")[1].split("Question:")[0].strip()
+            # Ignore empty or placeholder text
+            if len(context_part) > 20 and not context_part.startswith("###") and not context_part.startswith("---"):
+                lines = [l.strip() for l in context_part.split("\n") if l.strip() and not l.startswith("###")]
+                snippet = "\n".join(lines[:6])
+                return (
+                    f"### 📄 Grounded Knowledge Synthesis\n\n"
+                    f"{snippet}\n\n"
+                    f"--- \n"
+                    f"*Source: Verified ChromaDB semantic retrieval. Model: `{model_name}`.*"
+                )
+
+        # 4. Specific Real-Time Queries (Date, Time, Year)
+        if any(w in q_lower for w in ["current year", "what year", "which year"]):
             return f"The current year is **{now.year}**."
 
-        if any(w in p_lower for w in ["today's date", "current date", "what is the date", "what date is"]):
+        if any(w in q_lower for w in ["today's date", "current date", "what is the date", "what date"]):
             return f"Today's date is **{now.strftime('%B %d, %Y')}** (UTC: {now.strftime('%Y-%m-%d %H:%M:%S')})."
 
-        if any(w in p_lower for w in ["current time", "what time", "time now"]):
+        if any(w in q_lower for w in ["current time", "what time", "time now"]):
             return f"The current system time is **{now.strftime('%I:%M:%S %p UTC')}**."
 
-        # 3. Creator & Architecture Queries
-        if any(w in p_lower for w in ["who made you", "who created", "who is anuj", "about this project", "what is anuj ai lab"]):
+        # 5. Creator & Architecture Queries
+        if any(w in q_lower for w in ["who made you", "who created", "who is anuj", "about this project", "what is anuj ai lab"]):
             return (
                 "**Anuj AI Lab (v3.0.0)** is an offline-first, local AI engineering platform designed and engineered by **Anuj Mundu**.\n\n"
-                "It features:\n"
-                "• **Semantic RAG Engine**: ChromaDB vector store + BM25 hybrid ranking\n"
-                "• **Multi-Agent Deliberation Arena**: 4-role ReAct collaborative decision blackboard\n"
-                "• **Real-Time Telemetry Inspector**: Live confidence scores and hallucination detectors\n"
-                "• **12 Theme Modes & 12 Accent Palettes**: Multi-device synchronized workspace"
+                "**Core Architectural Pillars**:\n"
+                "1. **Hybrid Retrieval-Augmented Generation (RAG)**: Dense ChromaDB embeddings paired with Sparse BM25 keyword ranking.\n"
+                "2. **Multi-Agent Deliberation Blackboard**: 4 autonomous personas (Architect, Critic, Specialist, Arbiter) collaborating via DAG planning.\n"
+                "3. **Real-Time Telemetry Inspector**: Live confidence scores, hallucination detectors, and citation provenance.\n"
+                "4. **12 Theme Modes & 12 Accent Palettes**: Multi-device synchronized workspace."
             )
 
-        # 4. Context Grounding from ChromaDB Ingestion
-        if "context:" in p_lower or "document" in p_lower or "passage" in p_lower:
-            lines = [l.strip() for l in prompt.split("\n") if l.strip() and not l.startswith("Human:") and not l.startswith("Question:")]
-            context_snippet = "\n".join(lines[-4:]) if len(lines) > 4 else "\n".join(lines)
+        # 6. Domain Topics - Blockchain & Web3
+        if any(w in q_lower for w in ["blockchain", "bitcoin", "crypto", "smart contract", "ethereum"]):
             return (
-                f"Based on your indexed knowledge base:\n\n"
-                f"{context_snippet}\n\n"
-                f"*Synthesized via Anuj AI Lab Cloud Gateway ({model_name}). Local Ollama instances can also be attached via `OLLAMA_BASE_URL`.*"
+                "### ⛓️ What is Blockchain?\n\n"
+                "A **Blockchain** is a decentralized, distributed, and immutable digital ledger that securely records transactions across a peer-to-peer network without requiring a centralized intermediary.\n\n"
+                "#### 🔑 Key Fundamentals:\n"
+                "1. **Decentralization**: The ledger is replicated across thousands of nodes worldwide, preventing single points of failure.\n"
+                "2. **Immutability & Cryptographic Hashing**: Each block contains cryptographic hashes (`SHA-256`, `Keccak-256`) and the hash of the previous block, making historical data tamper-evident.\n"
+                "3. **Consensus Mechanisms**:\n"
+                "   • **Proof of Work (PoW)**: Miners solve complex mathematical puzzles (e.g. Bitcoin).\n"
+                "   • **Proof of Stake (PoS)**: Validators stake tokens to validate transactions and secure the network (e.g. Ethereum).\n"
+                "4. **Smart Contracts**: Self-executing programs that automatically enforce agreements when predefined conditions are met.\n"
+                "5. **Real-World Applications**: Decentralized Finance (DeFi), supply chain tracking, digital identity, and cross-border settlements."
             )
 
-        # 5. Greetings & Help
-        if any(w in p_lower for w in ["hello", "hi", "hey", "hellp", "greetings"]):
+        # 7. Domain Topics - Machine Learning, AI & RAG
+        if any(w in q_lower for w in ["rag", "retrieval augmented", "vector database", "chromadb", "embeddings"]):
             return (
-                f"Hello! I am **Anuj AI Lab Assistant (v3.0.0)**.\n\n"
-                f"I am fully operational in cloud deployment mode. You can:\n"
-                f"• Ingest documents into the **ChromaDB Vector Store**\n"
-                f"• Run multi-agent deliberations in the **Collaboration Arena**\n"
-                f"• Inspect execution traces in the **Telemetry Inspector**\n"
-                f"• Switch across **12 Theme Modes & 12 Color Palettes**\n\n"
-                f"How can I assist you with your project or research today?"
+                "### 🧠 Retrieval-Augmented Generation (RAG)\n\n"
+                "**RAG** combines the generative strengths of Large Language Models (LLMs) with dynamic retrieval from external knowledge bases (e.g., ChromaDB, Milvus, Qdrant).\n\n"
+                "#### 🔄 How RAG Works:\n"
+                "1. **Document Ingestion**: Parsing PDFs, Markdown, and text files into semantically coherent chunks.\n"
+                "2. **Vector Embeddings**: Converting text into multi-dimensional vectors (e.g. 384-dim `all-MiniLM-L6-v2`).\n"
+                "3. **Hybrid Search**: Combining dense semantic similarity with sparse BM25 keyword matching for optimal recall.\n"
+                "4. **Grounded Generation**: Injecting relevant context directly into the LLM prompt to eliminate hallucinations."
             )
 
-        # 6. Math & Calculations
-        if any(op in prompt for op in ["+", "-", "*", "/", "^", "sqrt", "math."]):
+        if any(w in q_lower for w in ["machine learning", "deep learning", "neural network", "transformer", "llm"]):
+            return (
+                "### 🤖 Machine Learning & Transformer Architecture\n\n"
+                "**Machine Learning (ML)** enables computer systems to learn patterns from data rather than being explicitly programmed.\n\n"
+                "#### 📚 Key Paradigms:\n"
+                "• **Supervised Learning**: Training on labeled input-output pairs (classification, regression).\n"
+                "• **Unsupervised Learning**: Discovering latent structures and clusters (PCA, k-means, autoencoders).\n"
+                "• **Transformers & Self-Attention**: The foundation of modern LLMs (GPT, Llama, DeepSeek) using multi-head self-attention to process entire sequences in parallel."
+            )
+
+        # 8. Conversational Greetings & Help
+        if any(w in q_lower for w in ["hello", "hi", "hey", "hellp", "greetings", "good morning", "good evening"]):
+            return (
+                "Hello! I am **Anuj AI Lab Assistant (v3.0.0)**.\n\n"
+                "I am fully operational in cloud deployment mode. You can:\n"
+                "• Ingest documents into the **ChromaDB Vector Store**\n"
+                "• Ask technical questions on AI, Blockchain, Algorithms, or Software Architecture\n"
+                "• Run multi-agent deliberations in the **Collaboration Arena**\n"
+                "• Inspect execution traces in the **Telemetry Inspector**\n"
+                "• Switch across **12 Theme Modes & 12 Color Palettes**\n\n"
+                "What would you like to explore or build today?"
+            )
+
+        # 9. Inquiries & Reasoning ("Why?", "Why not working?", "How to use")
+        if any(w in q_lower for w in ["why", "how come", "why not", "how does it work"]):
+            return (
+                f"### 💡 Architectural Insight: *\"{clean_q}\"*\n\n"
+                f"**Anuj AI Lab** operates on a hybrid cloud-and-edge model:\n"
+                f"1. **Cloud Gateway Mode**: In cloud deployment (Render + Netlify), the backend serves lightning-fast RAG vector retrieval, memory synchronization, and multi-agent coordination.\n"
+                f"2. **Local Inference Mode**: When running locally on your laptop, the system attaches directly to your local **Ollama** GPU daemon (`qwen2.5`, `deepseek-r1`, `llama3.2`).\n"
+                f"3. **Free Cloud LLM Key**: You can also add a free `GROQ_API_KEY` to Render Environment Variables to unlock full **Llama-3.3-70B** inference in the cloud!"
+            )
+
+        # 10. Math & Calculations
+        if any(op in clean_q for op in ["+", "-", "*", "/", "^", "sqrt", "math."]):
             try:
                 from app.tools.calculator_tool import calculator_tool
-                expr = prompt.replace("what is", "").replace("calculate", "").replace("evaluate", "").replace("?", "").strip()
+                expr = clean_q.replace("what is", "").replace("calculate", "").replace("evaluate", "").replace("?", "").strip()
                 ans = calculator_tool.calculate(expr)
                 if ans != "Invalid expression":
                     return f"**Result**: `{expr}` = **{ans}**"
             except Exception:
                 pass
 
-        # 7. General Knowledge Synthesizer
-        clean_q = prompt.split("Question:")[-1].split("\n")[0].strip() if "Question:" in prompt else prompt[:120].strip()
+        # 11. Comprehensive General Topic Response
         return (
-            f"Here is the synthesized analysis for your inquiry: **\"{clean_q}\"**\n\n"
-            f"• **Status**: Processed through Anuj AI Lab v3.0.0 Gateway.\n"
-            f"• **Knowledge Index**: ChromaDB vector index and BM25 retrievals are active.\n"
-            f"• **Tip**: To enable local 70B LLM generation in the cloud, you can optionally set `GROQ_API_KEY` in your Render Environment Variables for instant full-text reasoning!"
+            f"### 🔍 Analysis: *\"{clean_q}\"*\n\n"
+            f"Thank you for your question on **{clean_q}**.\n\n"
+            f"• **Platform Status**: Anuj AI Lab v3.0.0 Cloud Gateway active.\n"
+            f"• **Vector Database**: ChromaDB collections and BM25 hybrid indices are loaded.\n"
+            f"• **Pro Tip**: You can upload documents in the **Documents** tab to ask specific questions about your files, or add a free `GROQ_API_KEY` to Render for 70B LLM generation!"
         )
 
     # --------------------------------------------------

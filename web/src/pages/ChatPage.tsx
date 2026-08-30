@@ -314,11 +314,16 @@ export default function ChatPage() {
                 );
             }
         } catch (err: any) {
+            const isNetworkError = err.message === "Network Error" || err.code === "ERR_NETWORK";
+            const errorMsg = isNetworkError
+                ? "Could not reach Anuj AI Lab API Gateway. Please check your internet connection or try again."
+                : (err.message || "An unexpected error occurred.");
+            toast.error(errorMsg);
             setMessages((prev) => [
                 ...prev,
                 {
                     role: "assistant",
-                    content: err.message || "An unexpected error occurred.",
+                    content: `⚠️ **Connection Issue**: ${errorMsg}\n\n*If your Render free tier backend is spinning up from idle, please retry in 10-15 seconds.*`,
                 },
             ]);
         } finally {
