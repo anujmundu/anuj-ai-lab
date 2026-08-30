@@ -41,20 +41,18 @@ export function UploadDropzone({
 
                 <div>
                     <h3 className="text-lg font-semibold">
-                        Upload Document
+                        Upload Documents & Media
                     </h3>
 
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Upload TXT, Markdown, PDF,
-                        or other supported
-                        document types for
-                        indexing.
+                        Upload PDF, DOCX, Markdown, TXT, CSV, JSON, Code, or Video/Audio (MP4, MKV, MP3, WAV) for automated AI vectorization & transcription.
                     </p>
                 </div>
 
                 <label>
                     <input
                         type="file"
+                        accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.tsv,.json,.py,.ts,.tsx,.js,.jsx,.html,.xml,.yaml,.yml,.log,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav,.m4a,.ogg,.flac"
                         className="hidden"
                         disabled={disabled}
                         onChange={handleChange}

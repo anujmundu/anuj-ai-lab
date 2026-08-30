@@ -14,6 +14,8 @@ export function useDiagnostics() {
 
         refetchOnWindowFocus: true,
 
-        staleTime: 0,
+        refetchInterval: 3000,
+
+        staleTime: 1000,
     });
 }
