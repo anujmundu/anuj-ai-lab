@@ -141,16 +141,21 @@ export default function SettingsPage() {
     const tiers = modelsData?.preferred_tiers || modelsData?.tier_mapping || {};
     const installedModels = modelsData?.installed_models || [];
 
+    // Cloud LLM Key State
+    const [cloudApiKey, setCloudApiKey] = useState(() => localStorage.getItem("anuj_ai_cloud_api_key") || "");
+    const [cloudProvider, setCloudProvider] = useState(() => localStorage.getItem("anuj_ai_cloud_provider") || "groq");
+    const [showKey, setShowKey] = useState(false);
+
     return (
         <section className="flex flex-1 flex-col gap-6 p-6 overflow-y-auto w-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        Settings & Appearance Preferences
+                        Settings & Model Engines
                     </h1>
 
                     <p className="mt-1 text-xs text-muted-foreground">
-                        Customize your local AI workspace aesthetics with 12 handcrafted color modes, 12 vibrant accent themes, and inspect your Ollama model fleet.
+                        Connect cloud neural LLMs (Groq Llama 3.3 70B, Google Gemini, OpenAI), customize 12 workspace theme modes, and inspect your Ollama fleet.
                     </p>
                 </div>
 
@@ -164,6 +169,141 @@ export default function SettingsPage() {
                     <span>Back to AI Assistant</span>
                 </Button>
             </div>
+
+            {/* Cloud Neural LLM Engine Settings Card */}
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-base text-slate-900 dark:text-white">
+                                <Sparkles className="h-4 w-4 text-purple-500" /> Cloud LLM Engine & API Keys
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                                Connect high-speed cloud neural networks for unlimited, ChatGPT/Gemini-grade answers across any subject.
+                            </CardDescription>
+                        </div>
+                        {cloudApiKey ? (
+                            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">
+                                ⚡ {cloudProvider.toUpperCase()} Connected
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-xs text-slate-400">
+                                Offline / Local Only
+                            </Badge>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                Select LLM Provider:
+                            </label>
+                            <select
+                                value={cloudProvider}
+                                onChange={(e) => setCloudProvider(e.target.value)}
+                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 font-medium text-slate-900 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                                <option value="groq">⚡ Groq — Meta Llama 3.3 70B (Free, 500 tokens/sec - Recommended)</option>
+                                <option value="gemini">✨ Google Gemini — Gemini 1.5 Flash (Free Tier)</option>
+                                <option value="openai">🧠 OpenAI — GPT-4o / GPT-4o-mini</option>
+                                <option value="openrouter">🌐 OpenRouter — Multi-Model Open Source Fleet</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                    API Key:
+                                </label>
+                                {cloudProvider === "groq" && (
+                                    <a
+                                        href="https://console.groq.com/keys"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-purple-600 dark:text-purple-400 hover:underline text-[11px] font-medium"
+                                    >
+                                        Get Free Groq Key (10s) ↗
+                                    </a>
+                                )}
+                                {cloudProvider === "gemini" && (
+                                    <a
+                                        href="https://aistudio.google.com/app/apikey"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-purple-600 dark:text-purple-400 hover:underline text-[11px] font-medium"
+                                    >
+                                        Get Free Gemini Key ↗
+                                    </a>
+                                )}
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type={showKey ? "text" : "password"}
+                                    value={cloudApiKey}
+                                    onChange={(e) => setCloudApiKey(e.target.value)}
+                                    placeholder={
+                                        cloudProvider === "groq"
+                                            ? "Paste gsk_..."
+                                            : cloudProvider === "gemini"
+                                            ? "Paste AIzaSy..."
+                                            : "Paste API key..."
+                                    }
+                                    className="w-full font-mono text-xs pr-16 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowKey(!showKey)}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium px-1.5 py-0.5 rounded"
+                                >
+                                    {showKey ? "Hide" : "Show"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <p className="text-[11px] text-slate-400">
+                            Keys are stored locally in your browser and sent securely over encrypted HTTPS.
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            {cloudApiKey && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setCloudApiKey("");
+                                        localStorage.removeItem("anuj_ai_cloud_api_key");
+                                        localStorage.removeItem("anuj_ai_cloud_provider");
+                                        toast.info("Cloud API key disconnected.");
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                >
+                                    Disconnect
+                                </Button>
+                            )}
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    const trimmed = cloudApiKey.trim();
+                                    if (trimmed) {
+                                        localStorage.setItem("anuj_ai_cloud_api_key", trimmed);
+                                        localStorage.setItem("anuj_ai_cloud_provider", cloudProvider);
+                                        toast.success(`Connected to ${cloudProvider.toUpperCase()} Cloud LLM!`);
+                                    } else {
+                                        localStorage.removeItem("anuj_ai_cloud_api_key");
+                                        localStorage.removeItem("anuj_ai_cloud_provider");
+                                    }
+                                }}
+                                className="text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium px-4"
+                            >
+                                Save Key & Activate
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* 12 Theme Modes */}
