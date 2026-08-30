@@ -186,7 +186,7 @@ class ChatSessionService:
                 "..." if len(clean_title) > 40 else ""
             )
 
-        chat_session.updated_at = datetime.now(timezone.utc)
+        chat_session.updated_at = datetime.utcnow()
         session.add(chat_session)
         session.commit()
         session.refresh(chat_session)
