@@ -162,16 +162,17 @@ class OllamaService:
         q_lower = clean_q.lower()
         now = datetime.now(timezone.utc)
 
-        # 2. Check for free Cloud LLM API Keys (Groq / OpenRouter / OpenAI)
+        # 2. Check for Cloud LLM API Keys (Groq / Gemini / OpenAI / OpenRouter)
         try:
             from dotenv import load_dotenv
             load_dotenv()
         except Exception:
             pass
 
+        # 2a. Groq Cloud (Llama 3.3 70B / 8B / Qwen)
         groq_key = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
         if groq_key:
-            for model_candidate in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
+            for model_candidate in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-32b", "deepseek-r1-distill-llama-70b"]:
                 try:
                     res = requests.post(
                         "https://api.groq.com/openai/v1/chat/completions",
@@ -181,7 +182,7 @@ class OllamaService:
                             "messages": [
                                 {
                                     "role": "system",
-                                    "content": "You are Anuj AI Lab Assistant (v3.0.0), an expert AI and software engineering platform assistant. Answer the question thoroughly, accurately, and informatively with clean markdown formatting."
+                                    "content": "You are Anuj AI Lab Assistant (v3.0.0), a world-class AI engineering assistant. Answer questions thoroughly, accurately, conversationally, and with clean markdown formatting."
                                 },
                                 {
                                     "role": "user",
@@ -202,6 +203,54 @@ class OllamaService:
                 except Exception as e:
                     print(f"[GROQ Exception] Model {model_candidate} call failed: {e}")
 
+        # 2b. Google Gemini API (Gemini 1.5 Flash / Pro)
+        gemini_key = (os.environ.get("GEMINI_API_KEY") or "").strip().strip('"').strip("'")
+        if gemini_key:
+            try:
+                res = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "contents": [
+                            {"parts": [{"text": f"You are Anuj AI Lab Assistant. Answer informatively and naturally:\n\n{clean_q}"}]}
+                        ]
+                    },
+                    timeout=15.0
+                )
+                if res.status_code == 200:
+                    candidates = res.json().get("candidates", [])
+                    if candidates:
+                        content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        if content and len(content.strip()) > 10:
+                            return content
+            except Exception as e:
+                print(f"[Gemini Exception] {e}")
+
+        # 2c. OpenAI API (GPT-4o / GPT-4o-mini)
+        openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
+        if openai_key:
+            try:
+                res = requests.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"},
+                    json={
+                        "model": "gpt-4o-mini",
+                        "messages": [
+                            {"role": "system", "content": "You are Anuj AI Lab Assistant. Answer informatively and with clear markdown."},
+                            {"role": "user", "content": clean_q}
+                        ],
+                        "temperature": 0.7,
+                    },
+                    timeout=15.0
+                )
+                if res.status_code == 200:
+                    content = res.json()["choices"][0]["message"]["content"]
+                    if content and len(content.strip()) > 10:
+                        return content
+            except Exception as e:
+                print(f"[OpenAI Exception] {e}")
+
+        # 2d. OpenRouter Cloud
         openrouter_key = (os.environ.get("OPENROUTER_API_KEY") or "").strip().strip('"').strip("'")
         if openrouter_key:
             try:
@@ -229,7 +278,6 @@ class OllamaService:
         # 3. Check for Real Retrieved ChromaDB Document Context (ignoring empty boilerplate)
         if "Context:" in prompt:
             context_part = prompt.split("Context:")[1].split("Question:")[0].strip()
-            # Ignore empty or placeholder text
             if len(context_part) > 20 and not context_part.startswith("###") and not context_part.startswith("---"):
                 lines = [l.strip() for l in context_part.split("\n") if l.strip() and not l.startswith("###")]
                 snippet = "\n".join(lines[:6])
@@ -241,14 +289,14 @@ class OllamaService:
                 )
 
         # 4. Specific Real-Time Queries (Date, Time, Year)
-        if any(w in q_lower for w in ["current year", "what year", "which year"]):
+        if any(w in q_lower for w in ["year", "which year"]):
             return f"The current year is **{now.year}**."
 
-        if any(w in q_lower for w in ["today's date", "current date", "what is the date", "what date"]):
+        if any(w in q_lower for w in ["date", "what day is it", "today's date", "current date"]):
             return f"Today's date is **{now.strftime('%B %d, %Y')}** (UTC: {now.strftime('%Y-%m-%d %H:%M:%S')})."
 
-        if any(w in q_lower for w in ["current time", "what time", "time now"]):
-            return f"The current system time is **{now.strftime('%I:%M:%S %p UTC')}**."
+        if any(w in q_lower for w in ["time", "clock"]):
+            return f"The current system time is **{now.strftime('%I:%M:%S %p UTC')}** (Date: {now.strftime('%B %d, %Y')})."
 
         # 5. Creator & Architecture Queries
         if any(w in q_lower for w in ["who made you", "who created", "who is anuj", "about this project", "what is anuj ai lab"]):
