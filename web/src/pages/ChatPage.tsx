@@ -587,7 +587,10 @@ export default function ChatPage() {
 
                 <div className="flex flex-1 flex-col gap-4 sm:gap-6 overflow-y-auto w-full max-w-5xl 2xl:max-w-6xl mx-auto">
                     {messages.length === 0 ? (
-                        <EmptyChat />
+                        <EmptyChat
+                            onConnectLLM={() => setKeyModalOpen(true)}
+                            onSelectPrompt={(text) => setQuestion(text)}
+                        />
                     ) : (
                         <ChatHistory messages={messages} />
                     )}
