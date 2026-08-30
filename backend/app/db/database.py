@@ -10,7 +10,8 @@ sqlite_url = "sqlite:///experiments.db"
 
 engine = create_engine(
     sqlite_url,
-    echo=True
+    echo=False,
+    connect_args={"check_same_thread": False},
 )
 
 
